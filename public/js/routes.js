@@ -10,6 +10,10 @@ define(['angular', 'app'], function(angular, app) {
 			templateUrl: 'partials/partial2.html',
 			controller: 'MyCtrl2'
 		});
+        $routeProvider.when('/mysqlTest', {
+            templateUrl: 'partials/mysqlTest.html',
+            controller: 'MysqlTest'
+        });
 		$routeProvider.otherwise({redirectTo: '/view1'});
 	}]);
 

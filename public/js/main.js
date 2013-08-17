@@ -16,7 +16,7 @@ require.config({
 	]
 });
 
-require( [
+require([
 	'angular',
 	'app',
 	'routes',

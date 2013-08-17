@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "file": "mysqlTest.js",
+  "sourceRoot": "",
+  "sources": [
+    "mysqlTest.coffee"
+  ],
+  "names": [],
+  "mappings": ";AAAA;CAAA,CAAA,CAAW,GAAX,GAAW;WACT;EAAW,CAAS,EAAA,CAAA,CAAnB,CAAD,CAAqB;CAEnB,EAAwB,GAAlB,EAAN,MAAA,EAAA;CAAA,CAAA,CACiB,GAAX,CAAN,CAAA;CADA,EAGA,CAA4B,CAAvB,EAAL,CAAA,CAA6B;CACpB,EAAU,GAAX,CAAN,UAAA;CADF,QAA4B;CAMrB,KAAD,SAAN;CAXF,MAAoB;CADX;CAAX,EAAW;CAAX"
+}

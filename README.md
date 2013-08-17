@@ -27,6 +27,19 @@ To create this github project which is also pushed to openshift:
         remote = origin
         merge = refs/heads/master
 
+### Deployment
+
+Create a ~/.dataglue-settings.yml in your home directory if you are deploying locally or in $OPENSHIFT_DATA_DIR/.dataglue-settings.yml if deploying to Openshift.
+
+    env: 'dev'
+
+    mysql_refs: 
+        - name: "mysqlConnA"
+          host: "someaddress.com"
+          user: "someuser"
+          pass: "somepass"
+          db: "somedb"
+
 
 ### Repo layout
 * tmp/ - Temporary storage
