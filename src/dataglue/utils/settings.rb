@@ -6,7 +6,11 @@ module DataGlueSettings
 
   def self.config
     if @config.nil?
-      @config = YAML.load_file(File.expand_path('~/.dataglue-settings.yml'))
+      if ENV['OPENSHIFT_DATA_DIR']
+        @config = YAML.load_file(File.expand_path('$OPENSHIFT_DATA_DIR/.dataglue-settings.yml'))
+      else
+        @config = YAML.load_file(File.expand_path('~/.dataglue-settings.yml'))
+      end
     end
     @config
   end
