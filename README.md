@@ -1,22 +1,47 @@
 https://www.openshift.com/kb/kb-e1006-sync-new-git-repo-with-your-own-existing-git-repo
 
-Feel free to change or remove this file, it is informational only.
+### Project creation
+To create this github project which is also pushed to openshift:
 
-Repo layout
-===========
-tmp/ - Temporary storage
-public/ - Content (images, css, etc. available to the public)
-config.ru - This file is used by Rack-based servers to start the application.
-../data - For persistent data
-.openshift/action_hooks/pre_build - Script that gets run every git push before the build
-.openshift/action_hooks/build - Script that gets run every git push as part of the build process (on the CI system if available)
+* Create the github project and do the intial push
+* Create the openshift project in a seperate directory so Openshift will create the app on the server
+* In your project directory: git pull ssh://<hash>@<path to openshift>.com/~/git/dataglue.git/
+* git commit -a -m "fixing OpenShift merge"
+* git push ssh://<hash>@<path to openshift>.com/~/git/dataglue.git/ master
+* Edit the .git/config and add
+<blockquote>
+[core]
+    repositoryformatversion = 0
+    filemode = true
+    bare = false
+    logallrefupdates = true
+[remote "all"]
+    url = git@github.com:engineersamuel/dataglue.git
+    url = ssh://<hash>@<path to openshift>.com/~/git/dataglue.git/
+[remote "origin"]
+    fetch = +refs/heads/*:refs/remotes/origin/*
+    url = git@github.com:engineersamuel/dataglue.git
+[remote "openshift"]
+    fetch = +refs/heads/*:refs/remotes/origin/*
+    url = ssh://<hash>@<path to openshift>.com/~/git/dataglue.git/
+[branch "master"]
+    remote = origin
+    merge = refs/heads/master
+</blockquote>
+
+
+### Repo layout
+* tmp/ - Temporary storage
+* public/ - Content (images, css, etc. available to the public)
+* config.ru - This file is used by Rack-based servers to start the application.
+* ../data - For persistent data
+* .openshift/action_hooks/pre_build - Script that gets run every git push before the build
+* .openshift/action_hooks/build - Script that gets run every git push as part of the build process (on the CI system if available)
 .openshift/action_hooks/deploy - Script that gets run every git push after build but before the app is restarted
-.openshift/action_hooks/post_deploy - Script that gets run every git push after the app is restarted
+* .openshift/action_hooks/post_deploy - Script that gets run every git push after the app is restarted
 
 
-Environment Variables
-=====================
-
+### Environment Variables
 OpenShift provides several environment variables to reference for ease
 of use.  The following list are some common variables but far from exhaustive:
 
@@ -38,23 +63,8 @@ To get a full list of environment variables, simply add a line in your
 .openshift/action_hooks/build script that says "export" and push.
 
 
-Notes about layout
-==================
+### Notes about layout
 Every time you push, everything in your remote application path gets recreated
 please store long term items (like an sqlite database) in ../data which will
 persist between pushes of your repo.
-
-
-Rails 3.0
-===========
-
-Option 1) (Recommended) Git push your application Gemfile/Gemfile.lock.  This will 
-cause the remote OpenShift node to run bundle install --deployment to download and 
-install your dependencies.  Each subsequent git push will use the previously 
-downloaded dependencies as a starting point, so additional downloads will be a delta.
-
-Option 2) Git add your .bundle and vendor/bundle directories after running 
-'bundle install --deployment' locally.  Be sure to exclude any gems that have native 
-code or ensure they can run on RHEL x86_64.
-
 
