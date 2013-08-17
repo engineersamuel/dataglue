@@ -1,0 +1,19 @@
+# Include your project-specific ignores in this file
+# Read about how to use .gitignore: https://help.github.com/articles/ignoring-files
+
+# Ignore Jetbrains
+.idea/
+
+# OS generated files #
+# ######################
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+
+# Thumbnails
+._*
+
+# # Files that might appear on external disk
+.Spotlight-V100
+.Trashes
