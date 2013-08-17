@@ -9,6 +9,7 @@ To create this github project which is also pushed to openshift:
 * git commit -a -m "fixing OpenShift merge"
 * git push ssh://<hash>@<path to openshift>.com/~/git/dataglue.git/ master
 * Edit the .git/config and add
+
     [core]
         repositoryformatversion = 0
         filemode = true

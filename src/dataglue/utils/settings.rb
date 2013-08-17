@@ -8,7 +8,7 @@ module DataGlueSettings
     if @config.nil?
       if ENV['OPENSHIFT_DATA_DIR']
         #@config = YAML.load_file(File.expand_path('$OPENSHIFT_DATA_DIR/.dataglue-settings.yml'))
-        @config = YAML.load_file(File.join(ENV['$OPENSHIFT_DATA_DIR'], '.dataglue-settings.yml'))
+        @config = YAML.load_file(File.join(ENV['OPENSHIFT_DATA_DIR'], '.dataglue-settings.yml'))
       else
         @config = YAML.load_file(File.expand_path('~/.dataglue-settings.yml'))
       end
