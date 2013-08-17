@@ -1,3 +1,5 @@
+https://www.openshift.com/kb/kb-e1006-sync-new-git-repo-with-your-own-existing-git-repo
+
 Feel free to change or remove this file, it is informational only.
 
 Repo layout
