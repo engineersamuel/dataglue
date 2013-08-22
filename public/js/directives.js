@@ -1,7 +1,7 @@
 define(['angular', 'services'], function(angular, services) {
 	'use strict';
 
-	angular.module('myApp.directives', ['myApp.services'])
+	angular.module('dataGlue.directives', ['dataGlue.services'])
 		.directive('appVersion', ['version', function(version) {
 			return function(scope, elm, attrs) {
 				elm.text(version);

@@ -1,0 +1,29 @@
+
+<div class="container">
+  <div class="row">
+    <div class="col-xs-12 col-sm-6 col-md-3">
+      <h4>Connections</h4>
+      <ul>
+        <li ng-repeat="c in connections">{{ c }}</li>
+      </ul>
+    </div>
+    <div class="col-xs-12 col-sm-6 col-md-3">
+      <h4>Schemas/Databases</h4>
+      <ul>
+        <li ng-repeat="d in databases">{{ d }}</li>
+      </ul>
+    </div>
+    <div class="col-xs-12 col-sm-6 col-md-3">
+      <h4>Tables/Collections</h4>
+      <ul>
+        <li ng-repeat="c in collections">{{ c }}</li>
+      </ul>
+    </div>
+    <div class="col-xs-12 col-sm-6 col-md-3">
+      <h4>Fields</h4>
+      <ul>
+        <li ng-repeat="f in fields">{{ f }}</li>
+      </ul>
+    </div>
+  </div>
+</div>

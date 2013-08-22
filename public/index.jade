@@ -1,14 +1,18 @@
 !!! transitional
 
-html(lang="en",ng-app="")
+//html(lang="en", ng-app="")
+html(lang="en")
     head
         title Data Glue
+        //base(href="/index.html")
         meta(name="viewport",content="width=device-width, initial-scale=1.0")
-        script(data-main="js/main",src="js/lib/require/require.js")
+        script(data-main="js/main",src="js/bower_components/requirejs/require.js")
         link(rel="stylesheet",type="text/css",media="all",href="css/bootstrap.min.css")
         link(rel="stylesheet",type="text/css",media="all",href="css/app.css")
+        link(rel="stylesheet",type="text/css",media="all",href="js/bower_components/pines-notify/jquery.pnotify.default.css")
+        link(rel="stylesheet",type="text/css",media="all",href="js/bower_components/pines-notify/jquery.pnotify.default.icons.css")
 
-    body
+    body(ng-cloak="")
         div.navbar.navbar-static-top
             div.container
                 div.navbar-header
@@ -20,7 +24,7 @@ html(lang="en",ng-app="")
                 div.navbar-collapse.collapse
                     ul.nav.navbar-nav
                         li.active
-                            a(href="#") Home
+                            a(href="#/AddData") Add
                         li
                             a(href="#about") About
                         li
@@ -31,11 +35,11 @@ html(lang="en",ng-app="")
                                 b.caret
                             ul.dropdown-menu
                                 li
-                                    a(href="#") Action
+                                    a(href="#/view1") View 1
                                 li
-                                    a(href="#") Action 2
+                                    a(href="#/view2") View 2
                                 li
-                                    a(href="#") Action 3
+                                    a(href="#mysqlTest") Test Mysql
                                 li.divider
                                 li.dropdown-header Nav header
                                 li
@@ -46,13 +50,4 @@ html(lang="en",ng-app="")
                         li
                             a(href="#") Right Action
 
-        div.container
-            h1 AngularJS + RequireJS
-            ul.menu
-                li
-                    a(href="#/view1") View 1
-                li
-                    a(href="#/view2") View 2
-                li
-                    a(href="#/mysqlTest") Test Mysql
-            div(ng-view='')
+        div.reveal-animation(ng-view="")

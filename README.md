@@ -1,32 +1,5 @@
 https://www.openshift.com/kb/kb-e1006-sync-new-git-repo-with-your-own-existing-git-repo
 
-### Project creation
-To create this github project which is also pushed to openshift:
-
-* Create the github project and do the intial push
-* Create the openshift project in a seperate directory so Openshift will create the app on the server
-* In your project directory: git pull ssh://<hash>@<path to openshift>.com/~/git/dataglue.git/
-* git commit -a -m "fixing OpenShift merge"
-* git push ssh://<hash>@<path to openshift>.com/~/git/dataglue.git/ master
-* Edit the .git/config and add
-
-    [core]
-        repositoryformatversion = 0
-        filemode = true
-        bare = false
-        logallrefupdates = true
-    [remote "all"]
-        url = git@github.com:engineersamuel/dataglue.git
-        url = ssh://<hash>@<path to openshift>.com/~/git/dataglue.git/
-    [remote "origin"]
-        fetch = +refs/heads/*:refs/remotes/origin/*
-        url = git@github.com:engineersamuel/dataglue.git
-    [remote "openshift"]
-        fetch = +refs/heads/*:refs/remotes/origin/*
-        url = ssh://<hash>@<path to openshift>.com/~/git/dataglue.git/
-    [branch "master"]
-        remote = origin
-        merge = refs/heads/master
 
 ### Deployment
 
@@ -84,9 +57,63 @@ Every time you push, everything in your remote application path gets recreated
 please store long term items like an sqlite database in data which will
 persist between pushes of your repo.
 
+### Project creation and internals
+To create this github project which is also pushed to openshift:
+
+* Create the github project and do the intial push
+* Create the openshift project in a seperate directory so Openshift will create the app on the server
+* In your project directory: git pull ssh://<hash>@<path to openshift>.com/~/git/dataglue.git/
+* git commit -a -m "fixing OpenShift merge"
+* git push ssh://<hash>@<path to openshift>.com/~/git/dataglue.git/ master
+* Edit the .git/config and add
+
+    [core]
+        repositoryformatversion = 0
+        filemode = true
+        bare = false
+        logallrefupdates = true
+    [remote "all"]
+        url = git@github.com:engineersamuel/dataglue.git
+        url = ssh://<hash>@<path to openshift>.com/~/git/dataglue.git/
+    [remote "origin"]
+        fetch = +refs/heads/*:refs/remotes/origin/*
+        url = git@github.com:engineersamuel/dataglue.git
+    [remote "openshift"]
+        fetch = +refs/heads/*:refs/remotes/origin/*
+        url = ssh://<hash>@<path to openshift>.com/~/git/dataglue.git/
+    [branch "master"]
+        remote = origin
+        merge = refs/heads/master
+* Bower
+ * For zsh, to ~/.zshrc add alias bower='noglob bower'
+
 ### References
 * [Getting Started with Openshift](https://www.openshift.com/get-started)
 * [Deploying a Sinatra application on OpenShift](https://www.openshift.com/kb/kb-e1009-deploying-a-sinatra-application-on-openshift)
 * [Github Openshift Sinatra Example](https://github.com/openshift/sinatra-example)
 * [Existing project with Openshift](https://gist.github.com/ryanj/5267357)
 * [Sync new git repo with your own existing git repo](https://www.openshift.com/kb/kb-e1006-sync-new-git-repo-with-your-own-existing-git-repo)
+* [RequireJS + Bower + Masonry example](https://github.com/gigablox/angular-art-gallery)
+
+### Research
+
+* [Laravel](http://laravel.com/) -- Programmatically create SQL querys in Ruby
+* [Knex.js](http://knexjs.org/) -- Node package for programmatically creating SQL
+
+### License
+
+(Apache License, Version 2.0)
+
+Copyright 2013 Samuel Mendenhall
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.

@@ -14,13 +14,20 @@ module DatabaseManagerModule
   #  @mysql_conns
   #end
 
-  def self.mysql_query(name, sql, single=false)
-    host = DataGlueSettings::mysql_refs[name]['host']
-    user = DataGlueSettings::mysql_refs[name]['user']
-    pass = Base64.decode64(DataGlueSettings::mysql_refs[name]['pass']).strip()
-    db = DataGlueSettings::mysql_refs[name]['db']
+  def self.mysql_query(ref, sql, single=false)
+    host = DataGlueSettings::mysql_refs[ref]['host']
+    user = DataGlueSettings::mysql_refs[ref]['user']
+    pass = Base64.decode64(DataGlueSettings::mysql_refs[ref]['pass']).strip()
+    db = DataGlueSettings::mysql_refs[ref]['db']
     client = Mysql2::Client.new(:host => host, :username => user, :password => pass, :database => db)
     client.query(sql)
+  end
+
+  def self.query(ref, sql, single=false)
+    type = DataGlueSettings::mysql_refs[ref]['type']
+    if type == 'mysql'
+      return self.mysql_query(ref, sql, single)
+    end
   end
 
 end

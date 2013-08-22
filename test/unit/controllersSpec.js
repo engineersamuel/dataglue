@@ -11,7 +11,7 @@ define([
 		var MyCtrl1, scope;
 
 		beforeEach(function() {
-			mocks.module('myApp.controllers');
+			mocks.module('dataGlue.controllers');
 			mocks.inject(function($rootScope, $controller) {
 				scope = $rootScope.$new();
 				MyCtrl1 = $controller('MyCtrl1', {

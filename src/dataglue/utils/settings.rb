@@ -2,7 +2,7 @@ require 'yaml'
 require 'base64'
 
 module DataGlueSettings
-  attr_reader :config, :mysql_refs
+  attr_reader :config, :mysql_refs, :db_refs
 
   def self.config
     if @config.nil?
@@ -16,9 +16,16 @@ module DataGlueSettings
     @config
   end
 
+  def self.db_refs
+    if @db_refs.nil?
+      @db_refs = Hash[DataGlueSettings::config['db_refs'].map { |i| [i['name'], i] }] || {}
+    end
+    @db_refs
+  end
+
   def self.mysql_refs
     if @mysql_refs.nil?
-      @mysql_refs = Hash[DataGlueSettings::config['mysql_refs'].map { |i| [i['name'], i] }] || {}
+      @mysql_refs = Hash[DataGlueSettings::config['db_refs'].select{ |i| i['type'] == 'mysql'}.map { |i| [i['name'], i] }] || {}
     end
     @mysql_refs
   end
