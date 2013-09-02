@@ -7,27 +7,30 @@ require.config({
         angular: 'bower_components/angular/angular',
         'angular-route': 'bower_components/angular-route/angular-route',
         'angular-animate': 'bower_components/angular-animate/angular-animate',
+        'angular-resource': 'bower_components/angular-resource/angular-resource',
+        'ui-bootstrap': 'bower_components/angular-bootstrap/ui-bootstrap-tpls',
         text: 'bower_components/require/text',
         bootstrap: 'bower_components/bootstrap/dist/js/bootstrap',
         base64: 'bower_components/requirejs-base64/base64',
-        underscore: 'bower_components/lodash',
+        underscore: 'bower_components/lodash/lodash',
         pnotify: 'bower_components/pines-notify/jquery.pnotify', // https://github.com/sciactive/pnotify
+        d3: 'bower_components/d3/d3',
+        nv: 'bower_components/nvd3/nv.d3'
+
         //pnotify: 'https://raw.github.com/sciactive/pnotify/master/jquery.pnotify.min'
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // masonry related
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // http://stackoverflow.com/questions/17763828/how-to-use-masonry-3-0-with-require-and-bower
-        eventie: 'bower_components/eventie',
-        'doc-ready': 'bower_components/doc-ready',
-        eventEmitter: 'bower_components/eventEmitter',
-        'get-style-property': 'bower_components/get-style-property',
-        'get-size': 'bower_components/get-size',
-        'matches-selector': 'bower_components/matches-selector',
-        outlayer: 'bower_components/outlayer',
-        masonry: 'bower_components/masonry/masonry',
-        imagesloaded: 'bower_components/imagesloaded/imagesloaded',
-        'angular-masonry': 'lib/angular-masonry/angular-masonry'  //http://passy.github.io/angular-masonry/
+//        eventie: 'bower_components/eventie',
+//        'doc-ready': 'bower_components/doc-ready',
+//        eventEmitter: 'bower_components/eventEmitter',
+//        'get-style-property': 'bower_components/get-style-property',
+//        'get-size': 'bower_components/get-size',
+//        'matches-selector': 'bower_components/matches-selector',
+//        outlayer: 'bower_components/outlayer',
+//        masonry: 'bower_components/masonry/masonry'
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     },
@@ -36,11 +39,15 @@ require.config({
         angularMocks: {deps:['angular'], 'exports':'angular.mock'},
         'angular-route': ['angular'],
         'angular-animate': ['angular'],
+        'angular-resource': ['angular'],
+        'ui-bootstrap': ['angular'],
         bootstrap: ['jquery'],
         pnotify: ['jquery'],
-        masonry: ['jquery'],
-        "imagesloaded": ["jquery"],
-        'angular-masonry': ['angular', 'masonry']
+        d3: { exports: 'd3' },
+        nv: { exports: 'nv'}
+
+//        masonry: ['jquery']
+//        'angular-masonry': ['angular', 'masonry']
         // Maybe add in a shim for underscore -> _
     },
     priority: [

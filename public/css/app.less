@@ -1,17 +1,121 @@
 @import "../js/bower_components/bootstrap/less/bootstrap";
+@import "./elements";  // https://github.com/dmitryf/elements
+// http://bootswatch.com/
+@import "../js/bower_components/bootswatch/cyborg/variables";
+@import "../js/bower_components/bootswatch/cyborg/bootswatch";
+@import "../js/bower_components/nvd3/src/nv.d3.css";
 
-//@body-bg: #2E2E2E;
+@dataglue_green: #1eff00;
+
+.data-glue-brand {
+  color: black;
+  .transition(.5s, ease-out);
+  font-weight: bold;
+}
+.data-glue-brand:hover {
+  color: @dataglue_green;
+  .transition(.20s, ease-in);
+  font-weight: bold;
+}
+
+
+//----------------------------------------------------------------------------------------------------------------------
+// Ideas and research
+//----------------------------------------------------------------------------------------------------------------------
+// I like the box shadown on the left hand container: http://www.dzone.com/links/r/light_table_050.html  The colors
+// on that site are nice too
+
+//----------------------------------------------------------------------------------------------------------------------
+// Bootstrap overrides
+//----------------------------------------------------------------------------------------------------------------------
+@body-bg: #2E2E2E;
+@font-family-base: @font-family-serif;
+@font-size-base: 20px;
+@text-color: #cccccc;
+
+// Panels -- Accordians
+@panel-bg: @body-bg;
+@panel-default-heading-bg: @navbar-inverse-bg;
+@panel-default-text: @text-color;
+//@panel-inner-border: @navbar-inverse-bg;
+@panel-primary-text: @text-color;
+
+//http://noisetexturegenerator.com/
+body {
+  background-image: url('data:image/png;base64,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');
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+// Styles for mixins
+//----------------------------------------------------------------------------------------------------------------------
+.vertical-gradient-black {
+  // Generated at http://www.colorzilla.com/gradient-editor
+  background: rgb(69,72,77);
+  background: -moz-linear-gradient(top, rgba(69,72,77,1) 0%, rgba(0,0,0,1) 100%);
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(69,72,77,1)), color-stop(100%,rgba(0,0,0,1)));
+  background: -webkit-linear-gradient(top, rgba(69,72,77,1) 0%,rgba(0,0,0,1) 100%);
+  background: -o-linear-gradient(top, rgba(69,72,77,1) 0%,rgba(0,0,0,1) 100%);
+  background: -ms-linear-gradient(top, rgba(69,72,77,1) 0%,rgba(0,0,0,1) 100%);
+  background: linear-gradient(to bottom, rgba(69,72,77,1) 0%,rgba(0,0,0,1) 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#45484d', endColorstr='#000000',GradientType=0 );
+}
+.header-border-bottom {
+//  margin-top: 4px;
+//  width: 75%;
+//  border-bottom: 2px ridge #bcbcbc;
+//  border-bottom-left-radius: 1px;
+//  border-bottom-right-radius: 1px;
+  text-decoration: underline;
+}
+.rounded-border {
+  //http://border-radius.com/ -- http://www.cssmatic.com/border-radius
+  .rounded(5px);
+  border: 1px solid #000000;
+}
+.pointer {
+  cursor: pointer;
+}
+.center-text {
+  text-align: center;
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 // Example animation for easing in the various partials
 //----------------------------------------------------------------------------------------------------------------------
-.masonry-brick {
- margin:5px 5px 0px 0px;
- float: left;
+.dataglue-green {
+  color: @dataglue_green;
+}
+.add-data-href {
+  color: @text-color;
+  .transition(.20s, ease-out);
+}
+.add-data-href:hover {
+  color: @text-color;
+  text-decoration: none;
+}
+.add-data-href:hover i {
+  color: @dataglue_green;
+  .transition(.40s, ease-in);
+  text-decoration: none;
 }
 
-.masonry-brick img{
-  width:225px;
+.db-info-header {
+  .header-border-bottom;
+//  .center-text;
+}
+.db-info-item {
+  .pointer;
+//  #3a3a3a;
+  border-bottom: 1px solid darken(@text-color, 50%);
+  // custom styles
+  width: 90%;
+  height: 50px;
+  margin-bottom: 5px;
+  overflow: hidden;
+}
+.db-info-item:hover {
+  color: lighten(@text-color, 20%);
+  border-bottom-color: lighten(@text-color, 10%);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -39,3 +143,25 @@
   from { opacity:0; }
   to { opacity:1; }
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+// nvd3/d3 styles
+//----------------------------------------------------------------------------------------------------------------------
+#graph_container svg {
+  height: auto;
+  width: auto;
+}
+.nvd3 .nv-axis line {
+  fill: none;
+  stroke: @text-color;
+  shape-rendering: crispEdges;
+}
+
+
+
+//----------------------------------------------------------------------------------------------------------------------
+// Bootstrap 3 left out tabs-left, why?  Adding it back in based on Bootstrap 2 css code
+// https://github.com/angular-ui/bootstrap/issues/102
+// Responsive bootstrap modals -- http://jschr.github.io/bootstrap-modal/
+// Increasing the modal width -- http://stackoverflow.com/questions/10169432/how-can-i-change-the-default-width-of-a-twitter-bootstrap-modal-box
+//----------------------------------------------------------------------------------------------------------------------

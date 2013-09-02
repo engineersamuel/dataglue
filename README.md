@@ -62,6 +62,7 @@ To create this github project which is also pushed to openshift:
 
 * Create the github project and do the intial push
 * Create the openshift project in a seperate directory so Openshift will create the app on the server
+* Add the mongo cartridge: `rhc cartridge add mongodb-2.2 -a dataglue`
 * In your project directory: git pull ssh://<hash>@<path to openshift>.com/~/git/dataglue.git/
 * git commit -a -m "fixing OpenShift merge"
 * git push ssh://<hash>@<path to openshift>.com/~/git/dataglue.git/ master

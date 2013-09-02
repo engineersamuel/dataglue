@@ -1,29 +1,20 @@
 
 <div class="container">
   <div class="row">
-    <div class="col-xs-12 col-sm-6 col-md-3">
-      <h4>Connections</h4>
-      <ul>
-        <li ng-repeat="c in connections">{{ c }}</li>
-      </ul>
+    <div class="col-xs-12 col-sm-4 col-md-4">
+      <h4 class="db-info-header">Connections</h4>
+      <div ng-repeat="c in connections" ng-click="select_connection(c)" class="db-info-item"><span>{{ c }}</span></div>
     </div>
-    <div class="col-xs-12 col-sm-6 col-md-3">
-      <h4>Schemas/Databases</h4>
-      <ul>
-        <li ng-repeat="d in databases">{{ d }}</li>
-      </ul>
+    <div class="col-xs-12 col-sm-4 col-md-4">
+      <h4 class="db-info-header">Schemas/Databases</h4>
+      <div ng-repeat="s in schemas" ng-click="select_schema(s.schema)" class="db-info-item"><span>{{ s.schema }}</span></div>
     </div>
-    <div class="col-xs-12 col-sm-6 col-md-3">
-      <h4>Tables/Collections</h4>
-      <ul>
-        <li ng-repeat="c in collections">{{ c }}</li>
-      </ul>
-    </div>
-    <div class="col-xs-12 col-sm-6 col-md-3">
-      <h4>Fields</h4>
-      <ul>
-        <li ng-repeat="f in fields">{{ f }}</li>
-      </ul>
-    </div>
+    <div class="col-xs-12 col-sm-4 col-md-4">
+      <h4 class="db-info-header">Tables/Collections</h4>
+      <!--dir-table-vis(val="tables")-->
+      <div ng-repeat="t in tables" ng-click="select_table(t.TABLE_NAME)" class="db-info-item"><span>{{t.TABLE_NAME}}</span></div>
+    </div><!--div.col-xs-12.col-sm-6.col-md-3
+    <h4 class="text-center">Fields</h4>
+    <div ng-repeat="f in fields" class="db-info-item"><span>{{f.COLUMN_NAME}}</span></div>-->
   </div>
 </div>

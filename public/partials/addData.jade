@@ -1,18 +1,21 @@
 div.container
     div.row
-        div.col-xs-12.col-sm-6.col-md-3
-            h4 Connections
-            ul
-                li(ng-repeat="c in connections") {{ c }}
-        div.col-xs-12.col-sm-6.col-md-3
-            h4 Schemas/Databases
-            ul
-                li(ng-repeat="d in databases") {{ d }}
-        div.col-xs-12.col-sm-6.col-md-3
-            h4 Tables/Collections
-            ul
-                li(ng-repeat="c in collections") {{ c }}
-        div.col-xs-12.col-sm-6.col-md-3
-            h4 Fields
-            ul
-                li(ng-repeat="f in fields") {{ f }}
+        div.col-xs-12.col-sm-4.col-md-4
+            h4.db-info-header Connections
+            div.db-info-item(ng-repeat="c in connections", ng-click="select_connection(c)")
+                span {{ c }}
+        div.col-xs-12.col-sm-4.col-md-4
+            h4.db-info-header Schemas/Databases
+            div.db-info-item(ng-repeat="s in schemas", ng-click="select_schema(s.schema)")
+                span {{ s.schema }}
+        div.col-xs-12.col-sm-4.col-md-4
+            h4.db-info-header Tables/Collections
+            //dir-table-vis(val="tables")
+            div.db-info-item(ng-repeat="t in tables", ng-click="select_table(t.TABLE_NAME)")
+                span {{t.TABLE_NAME}}
+
+
+        //div.col-xs-12.col-sm-6.col-md-3
+            h4.text-center Fields
+            div.db-info-item(ng-repeat="f in fields")
+                span {{f.COLUMN_NAME}}

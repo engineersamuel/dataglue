@@ -1,0 +1,87 @@
+
+<!-- TODO add in an accordian -- http://getbootstrap.com/javascript/#collapse-->
+<div class="row">
+  <div class="col-lg-3">
+    <!-- TODO -- Really this Graph button isn't necessary.  I should watch the dataSet for changes and-->
+    <!-- Dynamically update the graph based on the selected options and such-->
+    <div>
+      <div class="pull-left"><a ng-href="#/AddData/{{_id}}" class="add-data-href"><i class="icon-plus"></i><span>&nbsp;Add more data</span></a></div>
+    </div>
+    <div class="clearfix"></div>
+    <div id="graph_options_accordian" class="panel-group">
+      <div ng-repeat="r in dataSet.dbReferences" class="panel panel-default">
+        <div class="panel-heading">
+          <h4 class="panel-title"><a data-toggle="collapse" data-parent="#accordian_graph_options" href="#{{ r.key }}" class="accordion-toggle text-right">{{ r.table }}
+              <!--| {{ r.connection }} / {{ r.schema }} / {{ r.table }}--></a></h4>
+        </div>
+        <!-- If you'd like it to default open, add the additional class in-->
+        <div id="{{r.key}}" ng-class="{in: $index == 0}" class="panel-collapse collapse">
+          <div class="panel-body">
+            <div ng-repeat="f in r.fields" class="db-info-item text-right"><span>{{f.COLUMN_NAME}}&nbsp;</span>
+              <!--i.icon-edit.pointer(data-toggle="modal", href="#graph_field_modal")")--><i ng-click="openModalForField(r, f)" class="icon-edit pointer"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!--accordion
+    <accordion-group ng-repeat="r in dataSet.dbReferences">
+      <accordion-heading>{{ r.table }}</accordion-heading>
+      <div ng-repeat="f in r.fields" class="db-info-item text-right"><span>{{f.COLUMN_NAME}}</span>
+        <select ng-model="f.selectedOptions" ng-options="x.value as x.label for x in fieldOptions"></select>
+      </div>
+    </accordion-group>-->
+  </div>
+  <div class="col-lg-9">
+    <d3-visualization id="graph_container" val="dataSet">
+      <svg></svg>
+    </d3-visualization><!--div#graph_container(d3-visualization="", val="dataSet")
+    <svg></svg>-->
+  </div>
+</div>
+<div id="graph_field_modal" tabindex="-1" role="dialog" aria-labelledby="graph_field_modal_label" aria-hidden="true" class="modal fade">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" data-dismiss="modal" aria-hidden="true" class="close">&times;</button>
+        <h4 class="modal-title">{{ selectedFieldName }}</h4>
+      </div>
+      <div class="modal-body">
+        <div id="field_options_tabs" class="tabbable">
+          <ul class="nav nav-tabs">
+            <li class="active"><a href="#aggregation" data-toggle="tab">Aggregation</a></li>
+            <li><a href="#fieldGroupBy" data-toggle="tab">Group by</a></li>
+            <li><a href="#where" data-toggle="tab">Where</a></li>
+          </ul>
+          <div class="tab-content">
+            <div id="aggregation" class="tab-pane active">
+              <div ng-repeat="o in aggregationOptions" class="radio">
+                <label>
+                  <input type="radio" name="{{o.name}}" value="{{o.value}}" ng-model="$parent.aggregation"/>{{o.label}}
+                </label>
+              </div>
+            </div>
+            <div id="fieldGroupBy" class="tab-pane">
+              <div ng-repeat="o in groupByOptions" class="radio">
+                <label>
+                  <input type="radio" name="{{o.name}}" value="{{o.value}}" ng-model="$parent.groupBy"/>{{o.label}}
+                </label>
+              </div>
+            </div>
+            <div id="where" class="tab-pane">
+              <div class="form-horizontal">
+                <input type="text" datepicker-popup="MM-dd-yyyy" ng-model="beginDate" open="beginDateOpened" min="minDate" max="'2016-06-22'" datepicker-options="dateOptions" show-weeks="false" ng-required="true"/><span>&nbsp;<i ng-click="openBeginDate()" class="icon-calendar"></i></span>
+              </div>
+              <div class="form-horizontal">
+                <input type="text" datepicker-popup="MM-dd-yyyy" ng-model="endDate" open="endDateOpened" min="minDate" max="'2016-06-22'" datepicker-options="dateOptions" show-weeks="false" ng-required="true"/><span>&nbsp;<i ng-click="openEndDate()" class="icon-calendar"></i></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" data-dismiss="modal" class="btn btn-default">Close</button>
+        <button type="button" ng-click="updateDataSet()" class="btn btn-primary">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>

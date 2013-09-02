@@ -1,0 +1,38 @@
+D3:
+
+"Great example on redrawing the graph on resizing of the window"
+http://eyeseast.github.io/visible-data/2013/08/26/responsive-d3/
+
+"Into to Grunt.js"
+http://superbigtree.tumblr.com/post/59519017137/introduction-to-grunt-js-and-npm-scripts-and-choosing
+
+Angular d3 directives, will be good for reference:
+http://phloxblog.in/angulard3/start.html#.UhyaImRrPAA
+http://briantford.com/blog/angular-d3.html
+
+Some great CSS tools:
+http://codegeekz.com/must-have-css-tools-for-designers/
+
+Pub/Sub for Angular
+https://gist.github.com/floatingmonkey/3384419
+http://stackoverflow.com/questions/11252780/whats-the-correct-way-to-communicate-between-controllers-in-angularjs
+
+
+graphbug style charts: http://www.cotrino.com/starpaths/
+
+Simple walkthrough of d3 transitions: http://bost.ocks.org/mike/transition/
+http://bost.ocks.org/mike/selection/ -- Also has a graph I'd like to model for the front page
+Drawing divs with d3: http://chimera.labs.oreilly.com/books/1230000000345/ch06.html#_setting_attributes
+
+
+Even though I don't need this for single page apps, there are some interesting libs:
+http://blog.teamtreehouse.com/open-source-jquery-plugins-for-building-single-page-website-layouts
+
+
+Angular nested views:
+http://www.bennadel.com/blog/2441-Nested-Views-Routing-And-Deep-Linking-With-AngularJS.htm
+https://github.com/angular-ui/ui-router/wiki/Nested-States-%26-Nested-Views
+http://www.bennadel.com/blog/2420-Mapping-AngularJS-Routes-Onto-URL-Parameters-And-Client-Side-Events.htm
+
+Angular bootstrap directives:
+http://angular-ui.github.io/bootstrap/#/modal

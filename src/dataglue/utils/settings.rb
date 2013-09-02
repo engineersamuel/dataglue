@@ -2,7 +2,8 @@ require 'yaml'
 require 'base64'
 
 module DataGlueSettings
-  attr_reader :config, :mysql_refs, :db_refs
+  attr_reader :config, :mysql_refs, :db_refs, :master_ref, :environment
+
 
   def self.config
     if @config.nil?
@@ -14,6 +15,14 @@ module DataGlueSettings
       end
     end
     @config
+  end
+
+  # Set the environment depending first by the data glue settings, otherwise assing prod if on Openshift
+  def self.environment
+    if self.config['env'].nil?
+      return ENV['OPENSHIFT_DATA_DIR'].nil? ? 'dev' : 'prod'
+    end
+    return self.config['env']
   end
 
   def self.db_refs
@@ -28,5 +37,13 @@ module DataGlueSettings
       @mysql_refs = Hash[DataGlueSettings::config['db_refs'].select{ |i| i['type'] == 'mysql'}.map { |i| [i['name'], i] }] || {}
     end
     @mysql_refs
+  end
+
+  # Points to the master database for dataglue, which will be mongo
+  def self.master_ref
+    if @master_ref.nil?
+      @master_ref = DataGlueSettings::config['master_database'][self.environment] || {}
+    end
+    @master_ref
   end
 end

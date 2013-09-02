@@ -32,35 +32,56 @@ end
 get '/settings' do
   DataGlueSettings::config['env']
 end
+########################################################################################################################
+# Backend cache for client side data sets / cache / graph data / ect..
+########################################################################################################################
+post '/cache' do
+  content_type :json
+  request.body.rewind  # in case someone already read it
+  data = JSON.parse request.body.read
+  doc = data['doc'].is_a?(Hash) ? data['doc'] : JSON.parse(data['doc'])
+
+  #logger.ap_debug(doc)
+  # Remember the BSON::ObjectId
+  {
+    :_id => DatabaseManagerModule::cache_upsert(doc)
+  }.to_json
+end
+get '/cache/:_id' do
+  content_type :json
+  DatabaseManagerModule::cache_get(params[:_id]).to_json || {}
+end
 
 # https://github.com/brianmario/mysql2
-#
+########################################################################################################################
+# Informational queries
+########################################################################################################################
+# Get list of database connection references
 get '/db/info:ref?:schema?:table?' do
   content_type :json
-  #logger.info "test"
-
-  # The reference name to the database connection
-  ref = params[:ref] || nil
-  schema = params[:schema] || nil
-  table = params[:table] || nil
-  sql = nil
-
-  # If the ref is nil that means list all database connections and available schemas
-  if ref.nil?
-    DataGlueSettings::db_refs.keys.to_json || []
-  else
-    # If no schema given then this is a query to see what schemas are available
-    if schema.nil?
-      sql = 'SELECT SCHEMA_NAME AS `schema` FROM INFORMATION_SCHEMA.SCHEMATA'
-      # If a schema given and not table then this is a query to get the tables within that schema
-    elsif schema && table.nil?
-      sql = "SHOW TABLES FROM #{schema}"
-    elsif schema && table
-      sql = "SHOW COLUMNS FROM #{schema}.#{table}"
-    end
-    return DatabaseManagerModule::query(ref, sql).to_a.to_json || []
-  end
+  DataGlueSettings::db_refs.keys.to_json || []
 end
+# Get schemas
+get '/db/info/:ref' do
+  content_type :json
+  sql = 'SELECT SCHEMA_NAME AS `schema` FROM INFORMATION_SCHEMA.SCHEMATA'
+  return DatabaseManagerModule::query(params[:ref], sql).to_a.to_json || []
+end
+# Get tables
+get '/db/info/:ref/:schema' do
+  content_type :json
+  #sql = "SHOW TABLES FROM #{params[:schema]}"
+  sql = "SELECT DISTINCT TABLE_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '#{params[:schema]}'"
+  return DatabaseManagerModule::query(params[:ref], sql).to_a.to_json || []
+end
+# Get fields
+get '/db/info/:ref/:schema/:table' do
+  content_type :json
+  #sql = "SHOW COLUMNS FROM `#{params[:schema]}`.`#{params[:table]}`"
+  sql = "SELECT COLUMN_NAME, DATA_TYPE, COLUMN_KEY, COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '#{params[:schema]}' AND TABLE_NAME = '#{params[:table]}'"
+  return DatabaseManagerModule::query(params[:ref], sql).to_a.to_json || []
+end
+########################################################################################################################
 
 post '/db/query' do
   content_type :json
@@ -73,4 +94,16 @@ post '/db/query' do
   single = data['single'].to_bool
 
   DatabaseManagerModule::query(data['ref'], sql, single).to_a.to_json || []
+end
+
+post '/db/query/:ref/:schema/:table' do
+  content_type :json
+  request.body.rewind  # in case someone already read it
+  data = JSON.parse request.body.read
+
+  # TODO allow selecting 1..n fields, need to be able to exclude fields
+  ## The reference name to the database connection
+  fields = data['fields']
+
+  DatabaseManagerModule::query_dynamic(params[:ref], params[:schema], params[:table], fields).to_a.to_json || []
 end

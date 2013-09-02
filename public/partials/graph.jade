@@ -1,0 +1,85 @@
+
+// TODO add in an accordian -- http://getbootstrap.com/javascript/#collapse
+div.row
+    div.col-lg-3
+        // TODO -- Really this Graph button isn't necessary.  I should watch the dataSet for changes and
+        // Dynamically update the graph based on the selected options and such
+
+        div
+            div.pull-left
+                a.add-data-href(ng-href="#/AddData/{{_id}}")
+                    i.icon-plus
+                    span &nbsp;Add more data
+
+        div.clearfix
+
+
+        div.panel-group#graph_options_accordian
+          div.panel.panel-default(ng-repeat="r in dataSet.dbReferences")
+            div.panel-heading
+              h4.panel-title
+                a.accordion-toggle.text-right(data-toggle="collapse", data-parent="#accordian_graph_options", href='\#{{ r.key }}')
+                    | {{ r.table }}
+                    //| {{ r.connection }} / {{ r.schema }} / {{ r.table }}
+            // If you'd like it to default open, add the additional class in
+            div#collapseOne.panel-collapse.collapse(id="{{r.key}}", ng-class="{in: $index == 0}")
+              div.panel-body
+                div.db-info-item.text-right(ng-repeat="f in r.fields")
+                    span {{f.COLUMN_NAME}}&nbsp;
+                    //i.icon-edit.pointer(data-toggle="modal", href="#graph_field_modal")")
+                    i.icon-edit.pointer(ng-click="openModalForField(r, f)")
+
+        //accordion
+            accordion-group(ng-repeat="r in dataSet.dbReferences")
+                accordion-heading {{ r.table }}
+                div.db-info-item.text-right(ng-repeat="f in r.fields")
+                    span {{f.COLUMN_NAME}}
+                    select(ng-model="f.selectedOptions", ng-options="x.value as x.label for x in fieldOptions")
+
+    div.col-lg-9
+        d3-visualization#graph_container(val="dataSet")
+            svg
+        //div#graph_container(d3-visualization="", val="dataSet")
+            svg
+
+div#graph_field_modal.modal.fade(tabindex="-1",role="dialog",aria-labelledby="graph_field_modal_label",aria-hidden="true")
+    div.modal-dialog
+        div.modal-content
+            div.modal-header
+                button.close(type="button", data-dismiss="modal", aria-hidden="true") &times;
+                h4.modal-title {{ selectedFieldName }}
+            div.modal-body
+                div#field_options_tabs.tabbable
+                    ul.nav.nav-tabs
+                        li.active
+                            a(href='#aggregation', data-toggle='tab') Aggregation
+                        li
+                            a(href='#fieldGroupBy', data-toggle='tab') Group by
+                        li
+                            a(href='#where', data-toggle='tab') Where
+                    div.tab-content
+                        div#aggregation.tab-pane.active
+                            div.radio(ng-repeat="o in aggregationOptions")
+                                label
+                                    input(type="radio", name="{{o.name}}", value="{{o.value}}", ng-model="$parent.aggregation")
+                                    | {{o.label}}
+                        div#fieldGroupBy.tab-pane
+                            div.radio(ng-repeat="o in groupByOptions")
+                                label
+                                    input(type="radio", name="{{o.name}}", value="{{o.value}}", ng-model="$parent.groupBy")
+                                    | {{o.label}}
+                        div#where.tab-pane
+                            div.form-horizontal
+                                input(type="text", datepicker-popup="MM-dd-yyyy", ng-model="beginDate", open="beginDateOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")
+                                span
+                                    | &nbsp;
+                                    i.icon-calendar(ng-click="openBeginDate()")
+                            div.form-horizontal
+                                input(type="text", datepicker-popup="MM-dd-yyyy", ng-model="endDate", open="endDateOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")
+                                span
+                                    | &nbsp;
+                                    i.icon-calendar(ng-click="openEndDate()")
+
+            div.modal-footer
+                button.btn.btn-default(type="button", data-dismiss="modal") Close
+                button.btn.btn-primary(type="button", ng-click="updateDataSet()") Save changes
