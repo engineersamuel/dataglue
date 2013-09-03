@@ -88,19 +88,26 @@ define ["angular", "services", "d3", "nv"], (angular, services, d3, nv) ->
         # If no chart create the chart and add it to nv
         if not chart?
           nv.addGraph () ->
-            chart = nv.models.multiBarChart().margin({top: 10, right: 30, bottom: 150, left: 10})
+            chart = nv.models.multiBarChart()
+              .margin({top: 10, right: 30, bottom: 150, left: 10})
+              .x((d) -> return d.x)
+              .y((d) -> return d.y)
+
+            #chart.xAxis
+            #   .tickFormat(d3.format(',f'))
 
             chart.xAxis
-               .tickFormat(d3.format(',f'))
+              .tickFormat((d) -> return moment(d).format('YYYY-MM-DD'))
 
-            chart.yAxis
-               .tickFormat(d3.format(',.1f'))
+            chart.yAxis.tickFormat((d) -> d3.format("d")(d))
+            chart.yAxis.tickFormat(d3.format("d"))
+#              .tickFormat(d3.format(',.1f'))
 
-#            data = exampleData()
+            data = if not dataSet? then exampleData() else dataSet
 
             #d3.select(element[0])
             d3.select("#graph_container svg")
-              .datum(dataSet)
+              .datum(data)
               .transition().duration(500).call(chart)
 
             nv.utils.windowResize(chart.update)

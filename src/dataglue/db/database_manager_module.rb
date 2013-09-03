@@ -91,8 +91,35 @@ module DatabaseManagerModule
     end
   end
 
+  def self.query_dataset(doc)
+    data = {}
+    doc['dbReferences'].each do |key, dbReference|
+      # Db reference is a key => value (hash)
+      data[key] = self.query_dynamic(dbReference['connection'], dbReference['schema'], dbReference['table'], dbReference['fields']).to_a || []
+    end
+    return data
+  end
+
   def self.build_sql_query(ref, schema, table, fields)
-    sql = "SELECT #{fields.select {|x| x['fieldOptions'] != 'excluded'}.map {|x| x['COLUMN_NAME']}.join(',')} FROM '#{schema}'.'#{table}' LIMIT 1000"
+    sql = "SELECT #{fields.select {|x| !x['excludeField']}.map {|x| x['COLUMN_NAME']}.join(',')} FROM `#{schema}`.`#{table}`"
+
+    # Iterate over each of the fields, see if there are any WHERE clauses set, if so, restrict by that were
+    where = 'WHERE '
+    fields.each do |field|
+      conditional = ''
+      if field.key?('beginDate')
+        conditional = " #{field['COLUMN_NAME']} >= TIMESTAMP('#{field['beginDate']}')"
+      end
+      if field.key?('endDate')
+        conditional = " #{field['COLUMN_NAME']} < TIMESTAMP('#{field['endDate']}')"
+      end
+      # Add an AND if necessary
+      if where == 'WHERE '
+        where += conditional
+      else
+        where += " AND #{conditional}"
+      end
+    end
     sql
   end
 
@@ -108,7 +135,7 @@ module DatabaseManagerModule
       sql = self.build_sql_query(ref, schema, table, fields)
 
       ap sql
-      return self.mysql_query(ref, sql, single)
+      return self.mysql_query(ref, sql)
     end
   end
 

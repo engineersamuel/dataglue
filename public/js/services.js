@@ -73,9 +73,10 @@ define(['angular', 'jquery', 'pnotify'], function (angular, $) {
                     .success(function(data) { callback(data); })
                     .error(onError)
             };
+            // Query the backend connections based on the options in the dataset
             service.queryDataSet = function(callback) {
                 // Fields contains additional options set like exclude/groupOn
-                $http.post('/db/query/', {doc: JSON.stringify(service.dataSet)})
+                $http.post('/dataset/query/', {doc: JSON.stringify(service.dataSet)})
                     .success(function(data) { callback(data); })
                     .error(onError)
             };

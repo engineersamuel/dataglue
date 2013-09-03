@@ -83,15 +83,27 @@
           handleChart = function(dataSet) {
             if (chart == null) {
               return nv.addGraph(function() {
+                var data;
+
                 chart = nv.models.multiBarChart().margin({
                   top: 10,
                   right: 30,
                   bottom: 150,
                   left: 10
+                }).x(function(d) {
+                  return d.x;
+                }).y(function(d) {
+                  return d.y;
                 });
-                chart.xAxis.tickFormat(d3.format(',f'));
-                chart.yAxis.tickFormat(d3.format(',.1f'));
-                d3.select("#graph_container svg").datum(dataSet).transition().duration(500).call(chart);
+                chart.xAxis.tickFormat(function(d) {
+                  return moment(d).format('YYYY-MM-DD');
+                });
+                chart.yAxis.tickFormat(function(d) {
+                  return d3.format("d")(d);
+                });
+                chart.yAxis.tickFormat(d3.format("d"));
+                data = dataSet == null ? exampleData() : dataSet;
+                d3.select("#graph_container svg").datum(data).transition().duration(500).call(chart);
                 nv.utils.windowResize(chart.update);
                 return chart;
               });
@@ -108,7 +120,3 @@
   });
 
 }).call(this);
-
-/*
-//@ sourceMappingURL=directives.map
-*/

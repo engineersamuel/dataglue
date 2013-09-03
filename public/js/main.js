@@ -13,6 +13,7 @@ require.config({
         bootstrap: 'bower_components/bootstrap/dist/js/bootstrap',
         base64: 'bower_components/requirejs-base64/base64',
         underscore: 'bower_components/lodash/lodash',
+        moment: 'bower_components/momentjs/moment',
         pnotify: 'bower_components/pines-notify/jquery.pnotify', // https://github.com/sciactive/pnotify
         d3: 'bower_components/d3/d3',
         nv: 'bower_components/nvd3/nv.d3'

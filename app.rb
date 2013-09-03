@@ -107,3 +107,13 @@ post '/db/query/:ref/:schema/:table' do
 
   DatabaseManagerModule::query_dynamic(params[:ref], params[:schema], params[:table], fields).to_a.to_json || []
 end
+
+post '/dataset/query/' do
+  content_type :json
+  request.body.rewind  # in case someone already read it
+  data = JSON.parse request.body.read
+  doc = data['doc'].is_a?(Hash) ? data['doc'] : JSON.parse(data['doc'])
+
+  DatabaseManagerModule::query_dataset(doc).to_json || []
+end
+
