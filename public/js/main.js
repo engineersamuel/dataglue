@@ -16,7 +16,8 @@ require.config({
         moment: 'bower_components/momentjs/moment',
         pnotify: 'bower_components/pines-notify/jquery.pnotify', // https://github.com/sciactive/pnotify
         d3: 'bower_components/d3/d3',
-        nv: 'bower_components/nvd3/nv.d3'
+        nv: 'bower_components/nvd3/nv.d3',
+        dbLogic: 'db/dbLogic'
 
         //pnotify: 'https://raw.github.com/sciactive/pnotify/master/jquery.pnotify.min'
 
@@ -45,7 +46,7 @@ require.config({
         bootstrap: ['jquery'],
         pnotify: ['jquery'],
         d3: { exports: 'd3' },
-        nv: { exports: 'nv'}
+        nv: { deps:['d3'], exports: 'nv'}
 
 //        masonry: ['jquery']
 //        'angular-masonry': ['angular', 'masonry']

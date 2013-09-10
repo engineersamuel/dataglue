@@ -6229,3 +6229,6 @@ body {
   stroke: #cccccc;
   shape-rendering: crispEdges;
 }
+.nvtooltip {
+  background-color: #222222;
+}

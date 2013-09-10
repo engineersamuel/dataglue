@@ -82,7 +82,7 @@ define(['angular', 'jquery', 'pnotify'], function (angular, $) {
             };
             service.cacheUpsert = function(callback) {
                 // Fields contains additional options set like exclude/groupOn
-                $http.post('/cache', {doc: JSON.stringify(service.dataSet)})
+                $http.post('/db/ref', {doc: JSON.stringify(service.dataSet)})
                     .success(function(data) {
                         // Set the cached _id
                         service.dataSet._id = data._id;
@@ -98,7 +98,7 @@ define(['angular', 'jquery', 'pnotify'], function (angular, $) {
             };
             service.cacheGet = function(_id, callback) {
                 // Fields contains additional options set like exclude/groupOn
-                $http.get('/cache/' + _id, {})
+                $http.get('/db/ref/' + _id, {})
                     .success(function(data) {
                         service.dataSet = data;
                         callback(data);

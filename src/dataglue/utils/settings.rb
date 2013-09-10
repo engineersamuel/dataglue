@@ -2,8 +2,13 @@ require 'yaml'
 require 'base64'
 
 module DataGlueSettings
-  attr_reader :config, :mysql_refs, :db_refs, :master_ref, :environment
+  attr_reader :config, :mysql_refs, :db_refs, :master_ref, :environment, :delim
 
+  #http://unicode-table.com/en/search/?q=%E2%A6%80
+  def self.delim
+    #'\u2980'
+    '_'
+  end
 
   def self.config
     if @config.nil?

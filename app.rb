@@ -35,7 +35,7 @@ end
 ########################################################################################################################
 # Backend cache for client side data sets / cache / graph data / ect..
 ########################################################################################################################
-post '/cache' do
+post '/db/ref' do
   content_type :json
   request.body.rewind  # in case someone already read it
   data = JSON.parse request.body.read
@@ -44,12 +44,12 @@ post '/cache' do
   #logger.ap_debug(doc)
   # Remember the BSON::ObjectId
   {
-    :_id => DatabaseManagerModule::cache_upsert(doc)
+    :_id => DatabaseManagerModule::ref_upsert(doc)
   }.to_json
 end
-get '/cache/:_id' do
+get '/db/ref/:_id' do
   content_type :json
-  DatabaseManagerModule::cache_get(params[:_id]).to_json || {}
+  DatabaseManagerModule::ref_get(params[:_id]).to_json || {}
 end
 
 # https://github.com/brianmario/mysql2
@@ -112,8 +112,25 @@ post '/dataset/query/' do
   content_type :json
   request.body.rewind  # in case someone already read it
   data = JSON.parse request.body.read
+  cache = data['cache']
   doc = data['doc'].is_a?(Hash) ? data['doc'] : JSON.parse(data['doc'])
-
-  DatabaseManagerModule::query_dataset(doc).to_json || []
+  results = DatabaseManagerModule::query_dataset(doc)
+  #ap results
+  if results.nil?
+    return []
+  elsif results.is_a?(Hash) || results.is_a?(Array)
+    return results.to_json
+  elsif results.is_a?(String)
+    return results
+  end
+  logger.error "Returning nothing from /dataset/query/ with _id: #{doc['_id']}"
 end
 
+post '/dataset/query/:_id' do
+  cache = data['cache']
+  doc = DatabaseManagerModule::ref_get(params[:_id])
+
+  # TODO pass along a cache option, if true, attempt to pull from cache and put in cache using snappy
+  # TODO actually set cache to a string like builtin so in the future allow redis, default to snappy built in
+  DatabaseManagerModule::query_dataset(doc, cache).to_json || []
+end

@@ -1,4 +1,4 @@
-define ["angular", "services", "d3", "nv"], (angular, services, d3, nv) ->
+define ["angular", "services", "d3", "nv", "moment"], (angular, services, d3, nv, moment) ->
   "use strict"
   angular.module("dataGlue.directives", ["dataGlue.services"])
   .directive("appVersion", ["version", (version) ->
@@ -87,21 +87,25 @@ define ["angular", "services", "d3", "nv"], (angular, services, d3, nv) ->
       handleChart = (dataSet) ->
         # If no chart create the chart and add it to nv
         if not chart?
+          console.log "Creating a new d3 Graph"
           nv.addGraph () ->
             chart = nv.models.multiBarChart()
-              .margin({top: 10, right: 30, bottom: 150, left: 10})
+              .margin({top: 10, right: 30, bottom: 150, left: 30})
               .x((d) -> return d.x)
               .y((d) -> return d.y)
+              .tooltip((key, x, y, e, graph) ->
+                return "<h3>#{key}</h3><p>#{y} on #{x}</p>"
+              )
 
             #chart.xAxis
-            #   .tickFormat(d3.format(',f'))
+            #.tickFormat(d3.format(',f'))
 
             chart.xAxis
               .tickFormat((d) -> return moment(d).format('YYYY-MM-DD'))
 
             chart.yAxis.tickFormat((d) -> d3.format("d")(d))
             chart.yAxis.tickFormat(d3.format("d"))
-#              .tickFormat(d3.format(',.1f'))
+            # .tickFormat(d3.format(',.1f'))
 
             data = if not dataSet? then exampleData() else dataSet
 
@@ -115,6 +119,8 @@ define ["angular", "services", "d3", "nv"], (angular, services, d3, nv) ->
             return chart
         # Otherwise just update the data and redraw
         else
+          console.log "Updating the d3 graph with: #{JSON.stringify(dataSet)}"
+
           d3.select("#graph_container svg")
             .datum(dataSet)
             .transition().duration(500).call(chart)
