@@ -38,7 +38,9 @@
         };
         $scope.$on('dataSetLoaded', function() {
           return dbService.queryDataSet(function(data) {
-            return dbLogic.processDataSet(dbService.dataSet, data);
+            return dbLogic.processDataSet(dbService.dataSet, data, function(err, d3Data) {
+              return $scope.d3DataSet = d3Data;
+            });
           });
         });
         $scope.$on('dataSetFieldChange', function() {
@@ -166,3 +168,7 @@
   });
 
 }).call(this);
+
+/*
+//@ sourceMappingURL=graph.map
+*/

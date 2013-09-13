@@ -108,6 +108,7 @@ define ["angular", "services", "d3", "nv", "moment"], (angular, services, d3, nv
             # .tickFormat(d3.format(',.1f'))
 
             data = if not dataSet? then exampleData() else dataSet
+            console.log "data: #{data}"
 
             #d3.select(element[0])
             d3.select("#graph_container svg")

@@ -6,6 +6,9 @@
 # Ignore Jetbrains
 .idea/
 
+# Ignore node_modules which will be rebuilt in openshift
+node_modules/*
+
 # OS generated files #
 # ######################
 .DS_Store

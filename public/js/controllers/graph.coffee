@@ -38,7 +38,9 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
       # Handle the conversion of the dataSet to a d3DataSet
       ##################################################################################################################
       $scope.$on 'dataSetLoaded', () ->
-        dbService.queryDataSet (data) -> dbLogic.processDataSet dbService.dataSet, data
+        dbService.queryDataSet (data) ->
+          dbLogic.processDataSet dbService.dataSet, data, (err, d3Data) ->
+            $scope.d3DataSet = d3Data
 
       # TODO, create various events so I only fetch the data when necessary and re-process
       $scope.$on 'dataSetFieldChange', () -> dbLogic.processDataSet dbService.dataSet

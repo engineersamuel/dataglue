@@ -106,6 +106,7 @@
                 });
                 chart.yAxis.tickFormat(d3.format("d"));
                 data = dataSet == null ? exampleData() : dataSet;
+                console.log("data: " + data);
                 d3.select("#graph_container svg").datum(data).transition().duration(500).call(chart);
                 nv.utils.windowResize(chart.update);
                 return chart;
@@ -124,3 +125,7 @@
   });
 
 }).call(this);
+
+/*
+//@ sourceMappingURL=directives.map
+*/
