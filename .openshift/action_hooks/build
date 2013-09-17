@@ -28,6 +28,9 @@ fi
 if [ -f "${OPENSHIFT_REPO_DIR}"/package.json ]; then
    echo "  - Installing dependencies w/ new version of npm ... "
    echo
-   (cd "${OPENSHIFT_REPO_DIR}"; export TMPDIR="/tmp"; npm install -d)
+   echo "  - Fixing the ~/.npm cache to point to OPENSHIFT_DATA_DIR.npm"
+   npm config set cache $OPENSHIFT_DATA_DIR/.npm -g
+   # What is the -d for?  Removing that
+   (cd "${OPENSHIFT_REPO_DIR}"; export TMPDIR="/tmp"; npm install)
 fi
 
