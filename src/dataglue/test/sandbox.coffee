@@ -2,8 +2,8 @@ settings      = require '../utilitis/settings'
 utils         = require '../utilitis/utils'
 logger        = require('tracer').colorConsole(utils.logger_config)
 pj            = require 'prettyjson'
-dataSetCache  = require '../db/dataset_cache'
-dbLogic       = require '../db/db_logic'
+dataSetCache  = require '../db/datasetCache'
+dbLogic       = require '../db/dbLogic'
 snappy        = require 'snappy'
 zlib          = require 'zlib'
 prettyjson    = require 'prettyjson'
@@ -35,14 +35,14 @@ sandbox.test_decompress = (input) ->
     zlib.unzip buff, (err, results) ->
       logger.info "Decompressed: #{results.toString()}"
 
-sandbox.ref_get = (_id) ->
+sandbox.refGet = (_id) ->
   logger.debug "Looking up ref with _id: #{_id}"
-  dataSetCache.ref_get _id, (err, doc) ->
+  dataSetCache.refGet _id, (err, doc) ->
     logger.debug prettyjson.render result
 
 sandbox.dataset_get = (_id) ->
   logger.debug "Looking up data set with _id: #{_id}"
-  dataSetCache.ref_get _id, (err, doc) ->
+  dataSetCache.refGet _id, (err, doc) ->
     p = dbLogic.loadDataSet doc
     p.on 'resultsReady', (results) ->
       logger.debug typeof results
@@ -67,7 +67,7 @@ sandbox.test_parse_string = () ->
 #logger.debug "master database: "
 #logger.debug settings.master_ref
 
-#p = dataset_cache.ref_get('52277447f95fb65818000001')
+#p = dataset_cache.refGet('52277447f95fb65818000001')
 #p.on 'success', (doc) -> logger.debug pj.render doc
 
 #p = dbLogic.queryDataset '52277447f95fb65818000001'
@@ -78,6 +78,9 @@ sandbox.test_parse_string = () ->
 #sandbox.test_compress('Hello World!')
 #sandbox.test_decompress('eJzzSM3JyVcIzy/KSVEEABxJBD4=')
 #sandbox.test_query_dataset()
-#sandbox.ref_get '52277447f95fb65818000001'
-sandbox.dataset_get '52277447f95fb65818000001'
+#sandbox.refGet '52277447f95fb65818000001'
+#sandbox.dataset_get '52277447f95fb65818000001'
 #sandbox.test_parse_string()
+
+a = {a: 'b'}
+logger.info _.values(a)[0]

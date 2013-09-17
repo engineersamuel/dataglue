@@ -52,16 +52,16 @@ define ['underscore'], (_) ->
           dbService.fields = data
           $scope.fields = data
 
-          # Add the connectiion/schema/table combination to a hash to reference later
+          # Add the connection/schema/table combination to a hash to reference later
           key = [$scope.connection, $scope.schema, $scope.table].join('\u2980')
-          if not _.has(dbService.dataSet.dbReferences, key)
-            dbService.dataSet.dbReferences[key] = {
-              key: key,
-              connection: $scope.connection,
-              schema: $scope.schema,
-              table: $scope.table,
-              fields: $scope.fields
-            }
+          #if not _.has(dbService.dataSet.dbReferences, key)
+          # I did have it as setting a has as in key: obj, but moving to an array
+          dbService.dataSet.dbReferences.push
+            key: key,
+            connection: $scope.connection,
+            schema: $scope.schema,
+            table: $scope.table,
+            fields: $scope.fields
 
           # Now save the cache the dataSet object in the backend mongo instance for bookmarkable datasets
           dbService.cacheUpsert (data) ->

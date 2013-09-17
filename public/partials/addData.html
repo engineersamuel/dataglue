@@ -1,4 +1,12 @@
-
+<!--div.container
+<db-info-tree val="d3TreeData"></db-info-tree>--><!--div.container
+<div class="row">
+  <div class="col-lg-12">
+    <db-info-tree val="d3TreeData" svg-id="dbInfoTreeContainer">
+      <div id="dbInfoTreeContainer"></div>
+    </db-info-tree>
+  </div>
+</div>-->
 <div class="container">
   <div class="row">
     <div class="col-xs-12 col-sm-4 col-md-4">
@@ -7,7 +15,8 @@
     </div>
     <div class="col-xs-12 col-sm-4 col-md-4">
       <h4 class="db-info-header">Schemas/Databases</h4>
-      <div ng-repeat="s in schemas" ng-click="select_schema(s.schema)" class="db-info-item"><span>{{ s.schema }}</span></div>
+      <!--div.db-info-item(ng-repeat="s in schemas", ng-click="select_schema(s.schema)")-->
+      <div ng-repeat="s in schemas" ng-click="select_schema(s)" class="db-info-item"><span>{{ s }}</span></div>
     </div>
     <div class="col-xs-12 col-sm-4 col-md-4">
       <h4 class="db-info-header">Tables/Collections</h4>

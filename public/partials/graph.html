@@ -11,14 +11,14 @@
     <div id="graph_options_accordian" class="panel-group">
       <div ng-repeat="r in dataSet.dbReferences" class="panel panel-default">
         <div class="panel-heading">
-          <h4 class="panel-title"><a data-toggle="collapse" data-parent="#accordian_graph_options" href="#{{ r.key }}" class="accordion-toggle text-right">{{ r.table }}
+          <h4 class="panel-title"><a data-toggle="collapse" data-parent="#accordian_graph_options" href="#{{ $index }}" class="accordion-toggle text-right">{{ r.table }}
               <!--| {{ r.connection }} / {{ r.schema }} / {{ r.table }}--></a></h4>
         </div>
         <!-- If you'd like it to default open, add the additional class in-->
-        <div id="{{r.key}}" ng-class="{in: $index == 0}" class="panel-collapse collapse">
+        <div id="{{$index}}" ng-class="{in: $index == 0}" class="panel-collapse collapse">
           <div class="panel-body">
-            <div ng-repeat="f in r.fields" class="db-info-item text-right"><span>{{f.COLUMN_NAME}}&nbsp;</span>
-              <!--i.icon-edit.pointer(data-toggle="modal", href="#graph_field_modal")")--><i ng-click="openModalForField(r, f)" class="icon-edit pointer"></i>
+            <div ng-repeat="f in r.fields" class="db-info-item text-right"><span><span ng-if="optionsSetOnField(f)">*</span>{{f.COLUMN_NAME}}&nbsp;</span>
+              <!--i.icon-edit.pointer(data-toggle="modal", href="#graph_field_modal")")--><i ng-click="openModalForField($parent.$index, r, f)" class="icon-edit pointer"></i>
             </div>
           </div>
         </div>
@@ -34,8 +34,7 @@
   <div class="col-lg-9">
     <d3-visualization id="graph_container" val="d3DataSet">
       <svg></svg>
-    </d3-visualization><!--div#graph_container(d3-visualization="", val="dataSet")
-    <svg></svg>-->
+    </d3-visualization>
   </div>
 </div>
 <div id="graph_field_modal" tabindex="-1" role="dialog" aria-labelledby="graph_field_modal_label" aria-hidden="true" class="modal fade">

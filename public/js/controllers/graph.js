@@ -16,10 +16,28 @@
           $scope.dataSet = dbService.dataSet;
           $rootScope.$broadcast('dataSetLoaded');
         }
+        $scope.optionsSetOnField = function(field) {
+          var _ref, _ref1, _ref2, _ref3;
+
+          console.log("" + (JSON.stringify(field)));
+          if ((field.groupBy != null) && ((_ref = field.groupBy) !== (void 0) && _ref !== '')) {
+            return true;
+          }
+          if ((field.aggregation != null) && ((_ref1 = field.aggregation) !== (void 0) && _ref1 !== '')) {
+            return true;
+          }
+          if ((field.beginDate != null) && ((_ref2 = field.beginDate) !== (void 0) && _ref2 !== '')) {
+            return true;
+          }
+          if ((field.endDate != null) && ((_ref3 = field.endDate) !== (void 0) && _ref3 !== '')) {
+            return true;
+          }
+          return false;
+        };
         getSelectedFieldIndex = function() {
           var fieldIndex;
 
-          fieldIndex = _.findIndex(dbService.dataSet.dbReferences[$scope.selectedReference.key].fields, function(item) {
+          fieldIndex = _.findIndex(dbService.dataSet.dbReferences[$scope.dbRefIndex].fields, function(item) {
             if (item['COLUMN_NAME'] != null) {
               return item['COLUMN_NAME'] === $scope.selectedFieldName;
             } else {
@@ -33,7 +51,7 @@
 
           fieldIndex = getSelectedFieldIndex();
           return _.each(variableNames, function(variableName) {
-            return dbService.dataSet.dbReferences[$scope.selectedReference.key].fields[fieldIndex][variableName] = $scope[variableName];
+            return dbService.dataSet.dbReferences[$scope.dbRefIndex].fields[fieldIndex][variableName] = $scope[variableName];
           });
         };
         $scope.$on('dataSetLoaded', function() {
@@ -71,10 +89,6 @@
             name: 'aggregation',
             value: 'avg',
             label: 'Avg'
-          }, {
-            name: 'aggregation',
-            value: 'median',
-            label: 'Median'
           }
         ];
         $scope.groupBy = void 0;
@@ -103,12 +117,17 @@
             name: 'groupFieldBy',
             value: 'day',
             label: 'Day'
+          }, {
+            name: 'groupFieldBy',
+            value: 'hour',
+            label: 'Hour'
           }
         ];
         $scope.selectedReference = void 0;
         $scope.selectedField = void 0;
         $scope.selectedFieldName = void 0;
-        $scope.openModalForField = function(r, f) {
+        $scope.openModalForField = function(dbRefIndex, r, f) {
+          $scope.dbRefIndex = dbRefIndex;
           $scope.selectedReference = r;
           $scope.selectedField = f;
           $scope.selectedFieldName = f['COLUMN_NAME'] != null ? f['COLUMN_NAME'] : f;
@@ -126,7 +145,7 @@
           return dbService.cacheUpsert(function() {
             console.log("dataSet upserted, setting the scope to dbService.dataSet");
             $scope.dataSet = dbService.dataSet;
-            return $rootScope.$broadcast('dataSetUpdated');
+            return $rootScope.$broadcast('dataSetLoaded');
           });
         };
         $scope.beginDate = void 0;

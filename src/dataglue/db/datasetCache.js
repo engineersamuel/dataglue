@@ -35,7 +35,7 @@
 
   DataSetCache = {};
 
-  DataSetCache.ref_get = function(_id, callback) {
+  DataSetCache.refGet = function(_id, callback) {
     var self;
 
     self = this;
@@ -68,7 +68,7 @@
     return self;
   };
 
-  DataSetCache.ref_upsert = function(doc, callback) {
+  DataSetCache.refUpsert = function(doc, callback) {
     _.each(doc.dbReferences, function(value, key) {
       return _.each(value.fields, function(field) {
         if (_.has(field, '$$hashKey')) {
@@ -105,11 +105,20 @@
               return conn.close();
             });
           } else {
-            return coll.insert(doc, function(err, insertedId) {
+            return coll.insert(doc, {
+              safe: true
+            }, function(err, insertedId) {
+              if (err) {
+                logger.warn(err.message);
+              }
+              if (err && err.message.indexOf('E11000') !== -1) {
+                logger.error("This _id was already inserted in the database");
+              }
               if (err) {
                 callback(err);
               } else {
-                callback(null, insertedId.toString());
+                logger.debug(prettyjson.render("insertedId: " + insertedId));
+                callback(null, doc['_id'].toString());
               }
               return conn.close();
             });
@@ -219,5 +228,5 @@
 }).call(this);
 
 /*
-//@ sourceMappingURL=dataset_cache.map
+//@ sourceMappingURL=datasetCache.map
 */

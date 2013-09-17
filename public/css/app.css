@@ -6230,5 +6230,9 @@ body {
   shape-rendering: crispEdges;
 }
 .nvtooltip {
+  background-color: #2e2e2e;
+}
+.nvtooltip h3 {
+  font-size: 16px;
   background-color: #222222;
 }

@@ -42,6 +42,174 @@ define ["angular", "services", "d3", "nv", "moment"], (angular, services, d3, nv
           return
 
         tables newVal
+#  .directive "dbInfoTree", () ->
+#      restrict: "E"
+#      scope:
+#        val: "="
+#
+#      link: (scope, element, attrs) ->
+#        #id = scope.svgId
+#        id = attrs.svgId
+#        jQueryId = "##{id}"
+#
+#        # Auto set the width/height
+#        m = {top: 10, left: 40, bottom: 10, right: 10}
+##        w = parseInt(d3.select($(element)).style('width'))
+##        h = parseInt(d3.select($(element)).style('height'))
+#        w = $(jQueryId).width()
+#        h = $(jQueryId).height()
+#        w = w - m.left - m.right
+#        h = h - m.top - m.bottom
+#        i = 0
+#
+#        diagonal = d3.svg.diagonal()
+#          .projection((d) -> return [d.y, d.x])
+#
+#        tree = undefined
+#        vis = undefined
+#        root = undefined
+#
+#        console.log "scope: #{scope}"
+##        console.log "attrs: #{JSON.stringify(attrs)}"
+##        console.log "element: #{JSON.stringify(element)}"
+#        console.log "jQueryId: #{jQueryId}, w: #{w}, h: #{h}"
+#        console.log "attrs.svgId: #{attrs.svgId}"
+#
+#        toggleAll = (d) ->
+#          if d.children
+#            d.children.forEach(toggleAll)
+#            toggle(d)
+#
+#        toggle = (d) ->
+#          if d.children
+#            d._children = d.children
+#            d.children = null
+#          else
+#            d.children = d._children
+#            d._children = null
+#
+#        handleVisualization = (data) ->
+#
+#          if not tree
+#            tree = d3.layout.tree().size([h, w])
+#
+#          if not vis
+#            vis = d3.select(jQueryId).append("svg:svg")
+#              .attr("width", w + m.left + m.right)
+#              .attr("height", h + m.top + m.bottom)
+#              .append("svg:g")
+#              .attr("transform", "translate(" + m.right + "," + m.top + ")");
+#
+#          duration = d3.event && if d3.event.altKey then 5000 else 500
+#
+#          # Compute the new tree layout.
+#          nodes = tree.nodes(root).reverse()
+#
+#          # Normalize for fixed-depth.
+#          nodes.forEach((d) -> d.y = d.depth * 180)
+#
+#          # Update the nodes…
+#          node = vis.selectAll("g.node")
+#            .data(nodes, (d) -> d.id or (d.id = ++i))
+#
+#          # Enter any new nodes at the parent's previous position.
+#          nodeEnter = node.enter().append("svg:g")
+#            .attr("class", "node")
+#            .attr("transform", (d) -> return "translate(" + data.y0 + "," + data.x0 + ")")
+#            .on("click", (d) ->
+#              toggle(d)
+#              handleVisualization(d)
+#            )
+#
+#          nodeEnter.append("svg:circle")
+#            .attr("r", 1e-6)
+#            .style("fill", (d) -> `d._children ? "lightsteelblue" : "#fff"`)
+#
+#          nodeEnter.append("svg:text")
+#            .attr("x", (d) -> `d.children || d._children ? -10 : 10`)
+#            .attr("dy", ".35em")
+#            .attr("text-anchor", (d) -> `d.children || d._children ? "end" : "start"`)
+#            .text((d) -> d.name)
+#            .style("fill", '#cccccc')
+#            .style("fill-opacity", 1e-6)
+#
+#          # Transition nodes to their new position.
+#          nodeUpdate = node.transition()
+#            .duration(duration)
+#            .attr("transform", (d) -> "translate(" + d.y + "," + d.x + ")")
+#
+#          nodeUpdate.select("circle")
+#            .attr("r", 4.5)
+#            .style("fill", (d) -> `d._children ? "#1eff00" : "#fff"`)
+#
+#          nodeUpdate.select("text")
+#            .style("fill-opacity", 1)
+#
+#          # Transition exiting nodes to the parent's new position.
+#          nodeExit = node.exit().transition()
+#            .duration(duration)
+#            .attr("transform", (d) -> "translate(" + data.y + "," + data.x + ")")
+#            .remove()
+#
+#          nodeExit.select("circle")
+#            .attr("r", 1e-6)
+#
+#          nodeExit.select("text")
+#            .style("fill-opacity", 1e-6)
+#
+#          # Update the links…
+#          link = vis.selectAll("path.link")
+#            .data(tree.links(nodes), (d) -> d.target.id)
+#
+#          # Enter any new links at the parent's previous position.
+#          link.enter().insert("svg:path", "g")
+#            .attr("class", "link")
+#            .attr("d", (d) ->
+#              o = {x: data.x0, y: data.y0}
+#              return diagonal({source: o, target: o})
+#            )
+#            .transition()
+#            .duration(duration)
+#            .attr("d", diagonal)
+#
+#          # Transition links to their new position.
+#          link.transition()
+#            .duration(duration)
+#            .attr("d", diagonal)
+#
+#          # Transition exiting nodes to the parent's new position.
+#          link.exit().transition()
+#            .duration(duration)
+#            .attr("d", (d) ->
+#              o = {x: data.x, y: data.y}
+#              return diagonal({source: o, target: o})
+#            )
+#            .remove()
+#
+#          # Stash the old positions for transition.
+#          nodes.forEach((d) ->
+#            d.x0 = d.x
+#            d.y0 = d.y
+#          )
+#        scope.$watch "val", (newVal, oldVal) ->
+#          console.log "newVal.length: #{newVal?.length}"
+#
+#          if newVal
+#            root = newVal
+#            root.x0 = h / 2
+#            root.y0 = 10
+#
+#            # Initialize the display to show a few nodes.
+#            console.log "newVal: #{JSON.stringify(newVal)}"
+#            if root.children
+#              root.children.forEach(toggleAll)
+#              # toggle(root.children[1]);
+#              # toggle(root.children[1].children[2]);
+#              # toggle(root.children[9]);
+#              # toggle(root.children[9].children[0]);
+#
+#              handleVisualization(root)
+
   .directive "d3Visualization", () ->
     restrict: "E"
     scope:
@@ -84,6 +252,32 @@ define ["angular", "services", "d3", "nv", "moment"], (angular, services, d3, nv
 #      height = height - margin.top - margin.bottom
 
       chart = undefined
+
+      setAxisFormatting = (dataSet, chart) ->
+        xAxisDataType = dataSet[0]?[0]?.xType
+        xAxisGroupBy = dataSet[0]?[0]?.xGroupBy
+        yAxisDataType = dataSet[0]?[0]?.yType
+
+        if yAxisDataType in ['int']
+          chart.yAxis.tickFormat((d) -> d3.format("d")(d))
+        else if yAxisDataType in ['float']
+          chart.yAxis.tickFormat(d3.format(',.1f'))
+
+        if xAxisDataType in ['datatime']
+          if xAxisGroupBy? is 'day'
+            chart.xAxis
+              .tickFormat((d) -> return moment(d).format('YYYY-MM-DD'))
+          else if xAxisGroupBy? is 'month'
+            chart.xAxis
+              .tickFormat((d) -> return moment(d).format('YYYY-MM'))
+          # Default
+          else
+            chart.xAxis
+              .tickFormat((d) -> return moment(d).format('YYYY-MM-DD'))
+
+        chart.yAxis.tickFormat((d) -> d3.format("d")(d))
+
+
       handleChart = (dataSet) ->
         # If no chart create the chart and add it to nv
         if not chart?
@@ -97,15 +291,9 @@ define ["angular", "services", "d3", "nv", "moment"], (angular, services, d3, nv
                 return "<h3>#{key}</h3><p>#{y} on #{x}</p>"
               )
 
-            #chart.xAxis
-            #.tickFormat(d3.format(',f'))
-
-            chart.xAxis
-              .tickFormat((d) -> return moment(d).format('YYYY-MM-DD'))
-
-            chart.yAxis.tickFormat((d) -> d3.format("d")(d))
-            chart.yAxis.tickFormat(d3.format("d"))
-            # .tickFormat(d3.format(',.1f'))
+            setAxisFormatting dataSet, chart
+#            chart.xAxis.tickFormat((d) -> return moment(d).format('YYYY-MM-DD'))
+#            chart.yAxis.tickFormat((d) -> d3.format("d")(d))
 
             data = if not dataSet? then exampleData() else dataSet
             console.log "data: #{data}"
@@ -122,12 +310,18 @@ define ["angular", "services", "d3", "nv", "moment"], (angular, services, d3, nv
         else
           console.log "Updating the d3 graph with: #{JSON.stringify(dataSet)}"
 
+          setAxisFormatting dataSet, chart
+
           d3.select("#graph_container svg")
             .datum(dataSet)
             .transition().duration(500).call(chart)
 
+          nv.utils.windowResize(chart.update)
+
       scope.$watch "val", (newVal, oldVal) ->
-        handleChart(newVal)
+        # console.log "handleChart: #{JSON.stringify(newVal)}"
+        if newVal?
+          handleChart(newVal)
 
 
 

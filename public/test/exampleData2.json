@@ -1,0 +1,95 @@
+{
+    "name": "dbInfo1",
+    "children": [
+        {
+            "name": "conn1",
+            "children": [
+                {
+                    "name": "schemaA",
+                    "children": [
+                        {"name": "table1", "size": 3938},
+                        {"name": "table2", "size": 3812},
+                        {"name": "table3", "size": 6714},
+                        {"name": "table4", "size": 743}
+                    ]
+                },
+                {
+                    "name": "schemaB",
+                    "children": [
+                        {"name": "table1", "size": 3534},
+                        {"name": "table2", "size": 5731},
+                        {"name": "table3", "size": 7840},
+                        {"name": "table4", "size": 5914},
+                        {"name": "table5", "size": 3416}
+                    ]
+                },
+                {
+                    "name": "schemaC",
+                    "children": [
+                        {"name": "table1", "size": 7074}
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "conn2",
+            "children": [
+                {
+                    "name": "schemaA",
+                    "children": [
+                        {"name": "table1", "size": 3938},
+                        {"name": "table2", "size": 3812},
+                        {"name": "table3", "size": 6714},
+                        {"name": "table4", "size": 743}
+                    ]
+                },
+                {
+                    "name": "schemaB",
+                    "children": [
+                        {"name": "table1", "size": 3534},
+                        {"name": "table2", "size": 5731},
+                        {"name": "table3", "size": 7840},
+                        {"name": "table4", "size": 5914},
+                        {"name": "table5", "size": 3416}
+                    ]
+                },
+                {
+                    "name": "schemaC",
+                    "children": [
+                        {"name": "table1", "size": 7074}
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "conn3",
+            "children": [
+                {
+                    "name": "schemaA",
+                    "children": [
+                        {"name": "table1", "size": 3938},
+                        {"name": "table2", "size": 3812},
+                        {"name": "table3", "size": 6714},
+                        {"name": "table4", "size": 743}
+                    ]
+                },
+                {
+                    "name": "schemaB",
+                    "children": [
+                        {"name": "table1", "size": 3534},
+                        {"name": "table2", "size": 5731},
+                        {"name": "table3", "size": 7840},
+                        {"name": "table4", "size": 5914},
+                        {"name": "table5", "size": 3416}
+                    ]
+                },
+                {
+                    "name": "schemaC",
+                    "children": [
+                        {"name": "table1", "size": 7074}
+                    ]
+                }
+            ]
+        }
+    ]
+}

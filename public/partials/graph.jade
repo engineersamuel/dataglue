@@ -18,16 +18,19 @@ div.row
           div.panel.panel-default(ng-repeat="r in dataSet.dbReferences")
             div.panel-heading
               h4.panel-title
-                a.accordion-toggle.text-right(data-toggle="collapse", data-parent="#accordian_graph_options", href='\#{{ r.key }}')
+                a.accordion-toggle.text-right(data-toggle="collapse", data-parent="#accordian_graph_options", href='\#{{ $index }}')
                     | {{ r.table }}
                     //| {{ r.connection }} / {{ r.schema }} / {{ r.table }}
+
             // If you'd like it to default open, add the additional class in
-            div#collapseOne.panel-collapse.collapse(id="{{r.key}}", ng-class="{in: $index == 0}")
+            div#collapseOne.panel-collapse.collapse(id="{{$index}}", ng-class="{in: $index == 0}")
               div.panel-body
                 div.db-info-item.text-right(ng-repeat="f in r.fields")
-                    span {{f.COLUMN_NAME}}&nbsp;
+                    span
+                        span(ng-if="optionsSetOnField(f)") *
+                        | {{f.COLUMN_NAME}}&nbsp;
                     //i.icon-edit.pointer(data-toggle="modal", href="#graph_field_modal")")
-                    i.icon-edit.pointer(ng-click="openModalForField(r, f)")
+                    i.icon-edit.pointer(ng-click="openModalForField($parent.$index, r, f)")
 
         //accordion
             accordion-group(ng-repeat="r in dataSet.dbReferences")
@@ -38,8 +41,6 @@ div.row
 
     div.col-lg-9
         d3-visualization#graph_container(val="d3DataSet")
-            svg
-        //div#graph_container(d3-visualization="", val="dataSet")
             svg
 
 div#graph_field_modal.modal.fade(tabindex="-1",role="dialog",aria-labelledby="graph_field_modal_label",aria-hidden="true")

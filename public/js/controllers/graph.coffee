@@ -21,9 +21,19 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
         $scope.dataSet = dbService.dataSet
         $rootScope.$broadcast('dataSetLoaded')
 
+      # Returns true if there is an aggregation, group by, or where set on the field
+      $scope.optionsSetOnField = (field) ->
+        console.log "#{JSON.stringify(field)}"
+        if field.groupBy? and field.groupBy not in [undefined, ''] then return true
+        if field.aggregation? and field.aggregation not in [undefined, ''] then return true
+        if field.beginDate? and field.beginDate not in [undefined, ''] then return true
+        if field.endDate? and field.endDate not in [undefined, ''] then return true
+        return false
+
       # find the field index of the selected field
       getSelectedFieldIndex = () ->
-        fieldIndex = _.findIndex dbService.dataSet.dbReferences[$scope.selectedReference.key].fields, (item) ->
+        # fieldIndex = _.findIndex dbService.dataSet.dbReferences[$scope.selectedReference.key].fields, (item) ->
+        fieldIndex = _.findIndex dbService.dataSet.dbReferences[$scope.dbRefIndex].fields, (item) ->
           if item['COLUMN_NAME']? then item['COLUMN_NAME'] is $scope.selectedFieldName else item is $scope.selectedFieldName
         return fieldIndex
 
@@ -32,7 +42,7 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
         fieldIndex = getSelectedFieldIndex()
           # Set each designated field name to the scope field name
         _.each variableNames, (variableName) ->
-          dbService.dataSet.dbReferences[$scope.selectedReference.key].fields[fieldIndex][variableName] = $scope[variableName]
+          dbService.dataSet.dbReferences[$scope.dbRefIndex].fields[fieldIndex][variableName] = $scope[variableName]
 
       ##################################################################################################################
       # Handle the conversion of the dataSet to a d3DataSet
@@ -55,8 +65,7 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
         {name: 'aggregation', value: 'count', label: 'Count'},
         {name: 'aggregation', value: 'distinctCount', label: 'Distinct Count'},
         {name: 'aggregation', value: 'sum', label: 'Sum'},
-        {name: 'aggregation', value: 'avg', label: 'Avg'},
-        {name: 'aggregation', value: 'median', label: 'Median'},
+        {name: 'aggregation', value: 'avg', label: 'Avg'}
       ]
 
       ##################################################################################################################
@@ -70,6 +79,7 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
         {name: 'groupFieldBy', value: 'quarter', label: 'Quarter'},
         {name: 'groupFieldBy', value: 'month', label: 'Month'},
         {name: 'groupFieldBy', value: 'day', label: 'Day'},
+        {name: 'groupFieldBy', value: 'hour', label: 'Hour'},
       ]
 
       ##################################################################################################################
@@ -78,7 +88,8 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
       $scope.selectedReference = undefined
       $scope.selectedField = undefined
       $scope.selectedFieldName = undefined
-      $scope.openModalForField = (r, f) ->
+      $scope.openModalForField = (dbRefIndex, r, f) ->
+        $scope.dbRefIndex = dbRefIndex
         $scope.selectedReference = r
         $scope.selectedField = f
         $scope.selectedFieldName = if f['COLUMN_NAME']? then f['COLUMN_NAME'] else f
@@ -98,7 +109,7 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
         dbService.cacheUpsert () ->
           console.log "dataSet upserted, setting the scope to dbService.dataSet"
           $scope.dataSet = dbService.dataSet
-          $rootScope.$broadcast('dataSetUpdated')
+          $rootScope.$broadcast('dataSetLoaded')
       ##################################################################################################################
 
       ##################################################################################################################
@@ -123,7 +134,6 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
           console.log data
         console.log "Test graph #{JSON.stringify($scope.fields)}"
 
-
-      $scope.$apply();
+      $scope.$apply()
   ]
 

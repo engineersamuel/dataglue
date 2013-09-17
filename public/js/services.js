@@ -1,7 +1,7 @@
 // http://iffycan.blogspot.com/2013/05/angular-service-or-factory.html
 //If you want your function to be called like a normal function, use factory. If you want your function to be instantiated with the new operator, use service. If you don't know the difference, use factory.
 
-define(['angular', 'jquery', 'pnotify'], function (angular, $) {
+define(['angular', 'jquery', 'underscore', 'pnotify'], function (angular, $, _) {
     'use strict';
 
     angular.module('dataGlue.services', [])
@@ -41,12 +41,17 @@ define(['angular', 'jquery', 'pnotify'], function (angular, $) {
                 description: undefined,
                 inserted_on: undefined,
                 last_updated: undefined,
-                dbReferences: {}
+                dbReferences: []
             };
             service.selectedConnection = undefined;
             service.selectedSchema = undefined;
             service.selectedTable = undefined;
             service.fields = undefined;
+            service.getAllDbInfo = function(callback) {
+                $http.get('/db/infos')
+                    .success(function(data) { callback(data); })
+                    .error(onError)
+            };
             service.getConnections = function(ref, callback) {
                 $http.get(ref)
                     .success(function(data) { callback(data); })
@@ -77,7 +82,21 @@ define(['angular', 'jquery', 'pnotify'], function (angular, $) {
             service.queryDataSet = function(callback) {
                 // Fields contains additional options set like exclude/groupOn
                 $http.post('/dataset/query/', {doc: JSON.stringify(service.dataSet)})
-                    .success(function(data) { callback(data); })
+                    .success(function(data) {
+                        // Process any warnings
+                        _.each(data, function (resultsHash) {
+                            _.each(resultsHash, function(theHash, dbRefKey) {
+                                if(_.has(theHash, 'warning')) {
+                                    notificationService.notify({
+                                        title: 'Warning...',
+                                        text: theHash.warning,
+                                        icon: false
+                                    });
+                                }
+                            });
+                        });
+                        callback(data);
+                    })
                     .error(onError)
             };
             service.cacheUpsert = function(callback) {

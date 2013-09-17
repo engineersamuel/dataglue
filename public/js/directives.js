@@ -46,7 +46,7 @@
           val: "="
         },
         link: function(scope, element, attrs) {
-          var chart, exampleData, handleChart, stream_index, stream_layers;
+          var chart, exampleData, handleChart, setAxisFormatting, stream_index, stream_layers;
 
           stream_index = 
         function (d, i) {
@@ -80,6 +80,38 @@
             });
           };
           chart = void 0;
+          setAxisFormatting = function(dataSet, chart) {
+            var xAxisDataType, xAxisGroupBy, yAxisDataType, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
+
+            xAxisDataType = (_ref = dataSet[0]) != null ? (_ref1 = _ref[0]) != null ? _ref1.xType : void 0 : void 0;
+            xAxisGroupBy = (_ref2 = dataSet[0]) != null ? (_ref3 = _ref2[0]) != null ? _ref3.xGroupBy : void 0 : void 0;
+            yAxisDataType = (_ref4 = dataSet[0]) != null ? (_ref5 = _ref4[0]) != null ? _ref5.yType : void 0 : void 0;
+            if (yAxisDataType === 'int') {
+              chart.yAxis.tickFormat(function(d) {
+                return d3.format("d")(d);
+              });
+            } else if (yAxisDataType === 'float') {
+              chart.yAxis.tickFormat(d3.format(',.1f'));
+            }
+            if (xAxisDataType === 'datatime') {
+              if ((xAxisGroupBy != null) === 'day') {
+                chart.xAxis.tickFormat(function(d) {
+                  return moment(d).format('YYYY-MM-DD');
+                });
+              } else if ((xAxisGroupBy != null) === 'month') {
+                chart.xAxis.tickFormat(function(d) {
+                  return moment(d).format('YYYY-MM');
+                });
+              } else {
+                chart.xAxis.tickFormat(function(d) {
+                  return moment(d).format('YYYY-MM-DD');
+                });
+              }
+            }
+            return chart.yAxis.tickFormat(function(d) {
+              return d3.format("d")(d);
+            });
+          };
           handleChart = function(dataSet) {
             if (chart == null) {
               console.log("Creating a new d3 Graph");
@@ -98,13 +130,7 @@
                 }).tooltip(function(key, x, y, e, graph) {
                   return "<h3>" + key + "</h3><p>" + y + " on " + x + "</p>";
                 });
-                chart.xAxis.tickFormat(function(d) {
-                  return moment(d).format('YYYY-MM-DD');
-                });
-                chart.yAxis.tickFormat(function(d) {
-                  return d3.format("d")(d);
-                });
-                chart.yAxis.tickFormat(d3.format("d"));
+                setAxisFormatting(dataSet, chart);
                 data = dataSet == null ? exampleData() : dataSet;
                 console.log("data: " + data);
                 d3.select("#graph_container svg").datum(data).transition().duration(500).call(chart);
@@ -113,11 +139,15 @@
               });
             } else {
               console.log("Updating the d3 graph with: " + (JSON.stringify(dataSet)));
-              return d3.select("#graph_container svg").datum(dataSet).transition().duration(500).call(chart);
+              setAxisFormatting(dataSet, chart);
+              d3.select("#graph_container svg").datum(dataSet).transition().duration(500).call(chart);
+              return nv.utils.windowResize(chart.update);
             }
           };
           return scope.$watch("val", function(newVal, oldVal) {
-            return handleChart(newVal);
+            if (newVal != null) {
+              return handleChart(newVal);
+            }
           });
         }
       };

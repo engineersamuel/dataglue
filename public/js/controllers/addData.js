@@ -44,15 +44,13 @@
             dbService.fields = data;
             $scope.fields = data;
             key = [$scope.connection, $scope.schema, $scope.table].join('\u2980');
-            if (!_.has(dbService.dataSet.dbReferences, key)) {
-              dbService.dataSet.dbReferences[key] = {
-                key: key,
-                connection: $scope.connection,
-                schema: $scope.schema,
-                table: $scope.table,
-                fields: $scope.fields
-              };
-            }
+            dbService.dataSet.dbReferences.push({
+              key: key,
+              connection: $scope.connection,
+              schema: $scope.schema,
+              table: $scope.table,
+              fields: $scope.fields
+            });
             return dbService.cacheUpsert(function(data) {
               return $location.path("/Graph/" + data['_id']);
             });

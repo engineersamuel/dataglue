@@ -5,9 +5,12 @@ http          = require('http')
 path          = require('path')
 utils         = require('./src/dataglue/utilitis/utils')
 logger        = require('tracer').colorConsole(utils.logger_config)
-dataSetCache  = require './src/dataglue/db/dataset_cache'
-dbLogic       = require './src/dataglue/db/db_logic'
+dataSetCache  = require './src/dataglue/db/datasetCache'
+dbLogic       = require './src/dataglue/db/dbLogic'
 prettyjson    = require 'prettyjson'
+_             = require 'lodash'
+settings      = require './src/dataglue/utilitis/settings'
+utils         = require './src/dataglue/utilitis/utils'
 
 ##########################################################
 # Handle configuration
@@ -45,29 +48,80 @@ app.get '/', (req, res) ->
 #  res.sendfile(path.join(__dirname, 'public', 'index.html'))
 #  res.send("<h1>Hello World!</h1>")
 
+##########################################################
+# Getting and upserting the dataSet definition
+##########################################################
+app.post '/db/ref', (req, res) ->
+  logger.info "post to /db/ref"
+  doc = if _.isString(req.body.doc) then JSON.parse(req.body.doc) else req.body.doc
+  dataSetCache.refUpsert doc, (err, _id) ->
+    if err
+      logger.error prettyjson.render err
+      res.send 500, err
+    else
+      res.send {_id: _id}
+
 app.get '/db/ref/:_id', (req, res) ->
   logger.debug "Looking up ref with _id: #{req.param('_id')}"
-  dataSetCache.ref_get req.param('_id'), (err, doc) ->
+  dataSetCache.refGet req.param('_id'), (err, doc) ->
     res.send doc
 
+##########################################################
+# Querying the dataset
+##########################################################
 # TODO should also accept a get for somthing like /dataset/query/:_id
 app.post '/dataset/query', (req, res) ->
 #  logger.debug "doc: #{req.body.doc}"
 #  logger.debug "doc, stringify: #{JSON.stringify(req.body.doc)}"
   dbLogic.queryDataSet req.body.doc, (err, results) ->
     if err
-      throw err
+      logger.error prettyjson.render err
+      res.send 500, err
     else
       res.send results
 
 app.get '/dataset/query/:_id', (req, res) ->
   logger.debug "Looking up data set with _id: #{req.param('_id')}"
-  dataSetCache.ref_get req.param('_id'), (err, doc) ->
+  dataSetCache.refGet req.param('_id'), (err, doc) ->
     dbLogic.loadDataSet doc, (err, results) ->
       if err
         logger.error "Error loading dataset: #{prettyjson.render err}"
+        res.send 500, err
       else
       res.send results
+
+########################################################################################################################
+# Informational queries
+########################################################################################################################
+# Get fields
+app.get '/db/info/:ref/:schema/:table', (req, res) ->
+  dbLogic.getFields req.param('ref'), req.param('schema'), req.param('table'), (err, output) ->
+    res.send output
+
+# Get tables
+app.get '/db/info/:ref/:schema', (req, res) ->
+  dbLogic.getTables req.param('ref'), req.param('schema'), (err, output) ->
+    res.send output
+
+# Get schemas
+app.get '/db/info/:ref', (req, res) ->
+  dbLogic.getSchemas req.param('ref'), (err, output) ->
+    res.send output
+
+# Get list of database connection references
+app.get '/db/info', (req, res) ->
+#  output = {
+#    connections: _.keys settings.db_refs
+#    d3TreeData: {
+#      name: 'DB References',
+#      children: _.map settings.db_refs, (db_ref) -> {name: db_ref.name, children: []}
+#    }
+#  }
+#  res.send output
+  res.send _.keys settings.db_refs
+
+
+########################################################################################################################
 
 ##########################################################
 # Handle general HTTP opens/closes/listens

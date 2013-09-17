@@ -30,9 +30,15 @@
     d3Lookup = {
       key: void 0,
       x: void 0,
+      xType: void 0,
       y: void 0,
+      yType: void 0,
       y2: void 0,
-      z: void 0
+      y2Type: void 0,
+      z: void 0,
+      zType: void 0,
+      r: void 0,
+      rType: void 0
     };
     output = {
       sql: void 0,
@@ -60,9 +66,10 @@
               d3Lookup.key = "" + field_name + " sum";
             } else if (field.aggregation === 'avg') {
               sql.field("AVG(" + field_name + ")", field_alias);
-              d3Lookup.key = "" + field_name + " sum";
+              d3Lookup.key = "" + field_name + " avg";
             }
             d3Lookup.y = field_name;
+            d3Lookup.yType = field.DATA_TYPE;
           } else {
             sql.field(field_name);
           }
@@ -75,6 +82,8 @@
           if (_.has(field, 'groupBy')) {
             field_alias = 'x';
             d3Lookup.x = field_alias;
+            d3Lookup.xType = field.DATA_TYPE;
+            d3Lookup.xGroupBy = field.groupBy;
             if (field.groupBy === 'hour') {
               sql.field("DATE_FORMAT(" + field_name + ", '%Y-%m-%d %H')", field_alias);
             } else if (field.groupBy === 'day') {
@@ -204,27 +213,44 @@
       queryHash: void 0
     };
     CachedDataSet.buildSql(dbReference, function(err, queryHash) {
+      var warning;
+
       if (err) {
         logger.error("Error building SQL: " + (prettyjson.render(err)));
         return callback(err);
       } else {
-        return dataSetCache.statementCacheGet(dbReference, queryHash, function(err, results) {
-          if (err) {
-            return callback(err);
-          } else {
-            output[key].queryHash = queryHash;
-            if (results != null) {
-              output[key].results = results;
-              return callback(null, output);
+        if (queryHash.d3Lookup.x !== void 0 && queryHash.d3Lookup.y !== void 0) {
+          return dataSetCache.statementCacheGet(dbReference, queryHash, function(err, results) {
+            if (err) {
+              return callback(err);
             } else {
-              return CachedDataSet.mysqlQuery(dbReference, queryHash, function(err, results) {
-                output[key].queryHash = queryHash;
+              output[key].queryHash = queryHash;
+              if (results != null) {
                 output[key].results = results;
-                return callback(err, output);
-              });
+                return callback(null, output);
+              } else {
+                return CachedDataSet.mysqlQuery(dbReference, queryHash, function(err, results) {
+                  output[key].queryHash = queryHash;
+                  output[key].results = results;
+                  return callback(err, output);
+                });
+              }
             }
+          });
+        } else {
+          if (queryHash.d3Lookup.x === void 0) {
+            warning = "Could not generate data for " + key + ", no x set. Please make sure to group on some field.";
+            output[key].warning = warning;
+            logger.warn(warning);
           }
-        });
+          if (queryHash.d3Lookup.y === void 0) {
+            warning = "Could not generate data for " + key + ", no y set. Please make sure to aggregate a field.";
+            output[key].warning = warning;
+            logger.warn(warning);
+          }
+          output[key].queryHash = queryHash;
+          return callback(err, output);
+        }
       }
     });
     return self;
@@ -235,30 +261,32 @@
 
     self = this;
     doc = _.isString(doc) ? JSON.parse(doc) : doc;
-    async.map(_.values(doc.dbReferences), self.queryDynamic, function(err, arrayOfHashes) {
+    async.map(_.values(doc.dbReferences), self.queryDynamic, function(err, arrayOfDataSetResults) {
       if (err) {
         logger.error("Error querying dbReferences: " + (prettyjson.render(err)));
         return callback(err);
       } else {
-        return _.each(arrayOfHashes, function(resultsHash) {
-          _.each(resultsHash, function(theHash, dbRefKey) {
-            var dbReference, stream;
+        _.each(arrayOfDataSetResults, function(dataSetResult, idx) {
+          var stream;
 
-            dbReference = doc[dbRefKey];
-            stream = {
-              key: theHash.queryHash.d3Lookup.key,
-              values: []
-            };
-            _.each(theHash.results, function(item) {
-              return stream.values.push({
-                x: item.x,
-                y: item.y
-              });
+          dataSetResult = _.values(dataSetResult)[0];
+          stream = {
+            key: dataSetResult.queryHash.d3Lookup.key,
+            values: []
+          };
+          _.each(dataSetResult.results, function(item) {
+            stream.values.push({
+              x: item.x,
+              xType: dataSetResult.queryHash.d3Lookup.xType,
+              xGroupBy: dataSetResult.queryHash.d3Lookup.xGroupBy,
+              y: item.y,
+              yType: dataSetResult.queryHash.d3Lookup.yType
             });
-            return resultsHash[dbRefKey].d3Data = stream;
+            return dataSetResult.d3Data = stream;
           });
-          return callback(null, arrayOfHashes);
+          return delete dataSetResult.results;
         });
+        return callback(null, arrayOfDataSetResults);
       }
     });
     return self;
@@ -275,5 +303,5 @@
 }).call(this);
 
 /*
-//@ sourceMappingURL=db_logic.map
+//@ sourceMappingURL=dbLogic.map
 */
