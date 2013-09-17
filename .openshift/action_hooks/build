@@ -6,6 +6,7 @@
 
 
 #  Source utility functions.
+# /var/lib/openshift/<hash>/app-root/runtime/repo/
 source "$OPENSHIFT_REPO_DIR/.openshift/lib/utils"
 
 #  Setup path to include the custom Node[.js] version.
