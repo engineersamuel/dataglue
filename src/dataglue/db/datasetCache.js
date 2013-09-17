@@ -35,6 +35,35 @@
 
   DataSetCache = {};
 
+  DataSetCache.refDelete = function(_id, callback) {
+    var self;
+
+    self = this;
+    logger.debug("Connecting to mongo on: " + mongo_url);
+    mongodb.connect(mongo_url, function(err, conn) {
+      if (err) {
+        return callback(err);
+      } else {
+        return conn.collection(settings.master_ref.collection, function(err, coll) {
+          if (err) {
+            callback(err);
+            return conn.close();
+          } else {
+            return coll.remove({
+              _id: mongodb.ObjectID(_id)
+            }, {
+              w: 1
+            }, function(err, outcome) {
+              callback(err, outcome);
+              return conn.close();
+            });
+          }
+        });
+      }
+    });
+    return self;
+  };
+
   DataSetCache.refGet = function(_id, callback) {
     var self;
 

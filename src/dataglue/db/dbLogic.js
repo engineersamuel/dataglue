@@ -92,6 +92,8 @@
               sql.field("DATE_FORMAT(" + field_name + ", '%Y-%m')", field_alias);
             } else if (field.groupBy === 'year') {
               sql.field("DATE_FORMAT(" + field_name + ", '%Y-%m')", field_alias);
+            } else if (field.groupBy === 'field') {
+              sql.field(field_name, field_alias);
             }
             return sql.group(field_alias);
           }

@@ -5,25 +5,29 @@
     <!-- TODO -- Really this Graph button isn't necessary.  I should watch the dataSet for changes and-->
     <!-- Dynamically update the graph based on the selected options and such-->
     <div>
-      <div class="pull-left"><a ng-href="#/AddData/{{_id}}" class="add-data-href"><i class="icon-plus"></i><span>&nbsp;Add more data</span></a></div>
+      <div class="pull-left"><a ng-href="#/AddData/{{_id}}" class="add-data-href"><i class="icon-plus"></i><span>&nbsp;Add more data&nbsp;</span></a></div>
+      <div class="pull-right"><a ng-click="openModalForOptions()" class="add-data-href"><span>&nbsp;Options&nbsp;</span><i class="icon-bar-chart"></i></a></div>
     </div>
     <div class="clearfix"></div>
     <div id="graph_options_accordian" class="panel-group">
       <div ng-repeat="r in dataSet.dbReferences" class="panel panel-default">
         <div class="panel-heading">
-          <h4 class="panel-title"><a data-toggle="collapse" data-parent="#accordian_graph_options" href="#{{ $index }}" class="accordion-toggle text-right">{{ r.table }}
+          <h4 class="panel-title"><a data-toggle="collapse" data-parent="#accordian_graph_options" href="#{{ $index }}" class="accordion-toggle text-right">
+              <div><span class="pull-left">{{ r.table }}</span><span class="pull-right"><i ng-click="removeDbReference($index)" class="icon-remove pointer"></i></span>
+                <div class="clearfix"></div>
+              </div>
               <!--| {{ r.connection }} / {{ r.schema }} / {{ r.table }}--></a></h4>
         </div>
         <!-- If you'd like it to default open, add the additional class in-->
         <div id="{{$index}}" ng-class="{in: $index == 0}" class="panel-collapse collapse">
           <div class="panel-body">
-            <div ng-repeat="f in r.fields" class="db-info-item text-right"><span><span ng-if="optionsSetOnField(f)">*</span>{{f.COLUMN_NAME}}&nbsp;</span>
+            <div ng-repeat="f in r.fields" class="db-info-item text-right"><span ng-class="optionsSetOnField(f) ? 'dataglue-green' : ''">{{f.COLUMN_NAME}}&nbsp;</span>
               <!--i.icon-edit.pointer(data-toggle="modal", href="#graph_field_modal")")--><i ng-click="openModalForField($parent.$index, r, f)" class="icon-edit pointer"></i>
             </div>
           </div>
         </div>
       </div>
-    </div><!--accordion
+    </div><!--Example using the accordion bootstrap angular directive.  I find the above to be more flexible
     <accordion-group ng-repeat="r in dataSet.dbReferences">
       <accordion-heading>{{ r.table }}</accordion-heading>
       <div ng-repeat="f in r.fields" class="db-info-item text-right"><span>{{f.COLUMN_NAME}}</span>
@@ -35,6 +39,39 @@
     <d3-visualization id="graph_container" val="d3DataSet">
       <svg></svg>
     </d3-visualization>
+  </div>
+</div>
+<!--https://github.com/angular/angular.js/wiki/Understanding-Scopes-->
+<div id="graph_options_modal" tabindex="-1" role="dialog" aria-labelledby="graph_options_modal_label" aria-hidden="true" class="modal fade">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" data-dismiss="modal" aria-hidden="true" class="close">&times;</button>
+        <h4 class="modal-title">{{ dataSet.name }}</h4>
+        <div class="clearfix"></div>
+      </div>
+      <div class="modal-body">
+        <form role="form">
+          <div class="form-group">
+            <label for="graph_name">Name</label>
+            <input id="graph_name" type="text" placeholder="Enter graph name" ng-model="dataSet.name" class="form-control"/>
+          </div>
+          <div class="form-group">
+            <label for="graph_description">Description</label>
+            <textarea id="graph_description" rows="3" ng-model="dataSet.description" class="form-control"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <div class="pull-left">
+          <button type="button" data-dismiss="modal" ng-click="deleteDataSet()" class="btn btn-danger">Delete</button>
+        </div>
+        <div class="pull-right">
+          <button type="button" data-dismiss="modal" class="btn btn-default">Close</button>
+          <button type="button" data-dismiss="modal" ng-click="updateMetaData()" class="btn btn-primary">Save changes</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 <div id="graph_field_modal" tabindex="-1" role="dialog" aria-labelledby="graph_field_modal_label" aria-hidden="true" class="modal fade">
@@ -79,7 +116,10 @@
       </div>
       <div class="modal-footer">
         <button type="button" data-dismiss="modal" class="btn btn-default">Close</button>
-        <button type="button" ng-click="updateDataSet()" class="btn btn-primary">Save changes</button>
+        <!-- Save but don't cause the SQL to be re-executed-->
+        <button type="button" ng-click="updateDataSet(false)" class="btn btn-primary">Save</button>
+        <!-- Save and cause the SQL to be re-executed-->
+        <button type="button" ng-click="updateDataSet()" class="btn btn-primary">Save & Graph</button>
       </div>
     </div>
   </div>

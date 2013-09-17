@@ -74,6 +74,21 @@
     });
   });
 
+  app.post('/db/delete/ref/:_id', function(req, res) {
+    logger.debug("Looking up ref with _id: " + (req.param('_id')));
+    return dataSetCache.refDelete(req.param('_id'), function(err, outcome) {
+      if (err) {
+        logger.error(prettyjson.render(err));
+        return res.send(500, err);
+      } else {
+        logger.error(prettyjson.render(outcome));
+        return res.send({
+          success: outcome
+        });
+      }
+    });
+  });
+
   app.post('/dataset/query', function(req, res) {
     return dbLogic.queryDataSet(req.body.doc, function(err, results) {
       if (err) {

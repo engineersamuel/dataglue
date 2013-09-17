@@ -66,6 +66,16 @@ app.get '/db/ref/:_id', (req, res) ->
   dataSetCache.refGet req.param('_id'), (err, doc) ->
     res.send doc
 
+app.post '/db/delete/ref/:_id', (req, res) ->
+  logger.debug "Looking up ref with _id: #{req.param('_id')}"
+  dataSetCache.refDelete req.param('_id'), (err, outcome) ->
+    if err
+      logger.error prettyjson.render err
+      res.send 500, err
+    else
+      logger.error prettyjson.render outcome
+      res.send {success: outcome}
+
 ##########################################################
 # Querying the dataset
 ##########################################################

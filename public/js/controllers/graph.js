@@ -16,10 +16,16 @@
           $scope.dataSet = dbService.dataSet;
           $rootScope.$broadcast('dataSetLoaded');
         }
+        $scope.removeDbReference = function(idx) {
+          $scope.dataSet.dbReferences.splice(idx(1));
+          dbService.dataSet = $scope.dataSet;
+          return dbService.cacheUpsert(function() {
+            return $rootScope.$broadcast('dataSetLoaded');
+          });
+        };
         $scope.optionsSetOnField = function(field) {
           var _ref, _ref1, _ref2, _ref3;
 
-          console.log("" + (JSON.stringify(field)));
           if ((field.groupBy != null) && ((_ref = field.groupBy) !== (void 0) && _ref !== '')) {
             return true;
           }
@@ -37,7 +43,7 @@
         getSelectedFieldIndex = function() {
           var fieldIndex;
 
-          fieldIndex = _.findIndex(dbService.dataSet.dbReferences[$scope.dbRefIndex].fields, function(item) {
+          fieldIndex = _.findIndex($scope.dataSet.dbReferences[$scope.dbRefIndex].fields, function(item) {
             if (item['COLUMN_NAME'] != null) {
               return item['COLUMN_NAME'] === $scope.selectedFieldName;
             } else {
@@ -51,21 +57,21 @@
 
           fieldIndex = getSelectedFieldIndex();
           return _.each(variableNames, function(variableName) {
-            return dbService.dataSet.dbReferences[$scope.dbRefIndex].fields[fieldIndex][variableName] = $scope[variableName];
+            return $scope.dataSet.dbReferences[$scope.dbRefIndex].fields[fieldIndex][variableName] = $scope[variableName];
           });
         };
         $scope.$on('dataSetLoaded', function() {
           return dbService.queryDataSet(function(data) {
-            return dbLogic.processDataSet(dbService.dataSet, data, function(err, d3Data) {
+            return dbLogic.processDataSet($scope.dataSet, data, function(err, d3Data) {
               return $scope.d3DataSet = d3Data;
             });
           });
         });
         $scope.$on('dataSetFieldChange', function() {
-          return dbLogic.processDataSet(dbService.dataSet);
+          return dbLogic.processDataSet($scope.dataSet);
         });
         $scope.$on('dataSetFieldChange', function() {
-          return dbLogic.processDataSet(dbService.dataSet);
+          return dbLogic.processDataSet($scope.dataSet);
         });
         $scope.aggregation = void 0;
         $scope.aggregationOptions = [
@@ -107,10 +113,6 @@
             label: 'Year'
           }, {
             name: 'groupFieldBy',
-            value: 'quarter',
-            label: 'Quarter'
-          }, {
-            name: 'groupFieldBy',
             value: 'month',
             label: 'Month'
           }, {
@@ -137,14 +139,37 @@
           $scope.endDate = f['endDate'];
           return $('#graph_field_modal').modal();
         };
-        $scope.updateDataSet = function() {
+        $scope.openModalForOptions = function() {
+          return $('#graph_options_modal').modal();
+        };
+        $scope.updateDataSet = function(graph) {
           var variablesToUpdate;
 
+          if (graph == null) {
+            graph = true;
+          }
           variablesToUpdate = ['aggregation', 'groupBy', 'beginDate', 'endDate'];
           updateFields(variablesToUpdate);
+          dbService.dataSet = $scope.dataSet;
+          return dbService.cacheUpsert(function() {
+            if (graph) {
+              return $rootScope.$broadcast('dataSetLoaded');
+            }
+          });
+        };
+        $scope.deleteDataSet = function() {
+          $('#graph_options_modal').modal('hide');
+          return $timeout((function() {
+            return dbService.cacheDelete($scope.dataSet._id, function() {
+              return $location.path("/AddData/");
+            });
+          }), 1000);
+        };
+        $scope.updateMetaData = function() {
+          console.log("Updating graph options with graph name: " + $scope.dataSet.name);
+          dbService.dataSet = $scope.dataSet;
           return dbService.cacheUpsert(function() {
             console.log("dataSet upserted, setting the scope to dbService.dataSet");
-            $scope.dataSet = dbService.dataSet;
             return $rootScope.$broadcast('dataSetLoaded');
           });
         };

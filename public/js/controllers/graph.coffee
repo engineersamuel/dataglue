@@ -22,8 +22,16 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
         $rootScope.$broadcast('dataSetLoaded')
 
       # Returns true if there is an aggregation, group by, or where set on the field
+      $scope.removeDbReference = (idx) ->
+        $scope.dataSet.dbReferences.splice idx 1
+        # dbService.dataSet.dbReferences.splice idx, 1
+        dbService.dataSet = $scope.dataSet
+        dbService.cacheUpsert () ->
+          $rootScope.$broadcast('dataSetLoaded')
+
+
+      # Returns true if there is an aggregation, group by, or where set on the field
       $scope.optionsSetOnField = (field) ->
-        console.log "#{JSON.stringify(field)}"
         if field.groupBy? and field.groupBy not in [undefined, ''] then return true
         if field.aggregation? and field.aggregation not in [undefined, ''] then return true
         if field.beginDate? and field.beginDate not in [undefined, ''] then return true
@@ -32,8 +40,7 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
 
       # find the field index of the selected field
       getSelectedFieldIndex = () ->
-        # fieldIndex = _.findIndex dbService.dataSet.dbReferences[$scope.selectedReference.key].fields, (item) ->
-        fieldIndex = _.findIndex dbService.dataSet.dbReferences[$scope.dbRefIndex].fields, (item) ->
+        fieldIndex = _.findIndex $scope.dataSet.dbReferences[$scope.dbRefIndex].fields, (item) ->
           if item['COLUMN_NAME']? then item['COLUMN_NAME'] is $scope.selectedFieldName else item is $scope.selectedFieldName
         return fieldIndex
 
@@ -42,19 +49,19 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
         fieldIndex = getSelectedFieldIndex()
           # Set each designated field name to the scope field name
         _.each variableNames, (variableName) ->
-          dbService.dataSet.dbReferences[$scope.dbRefIndex].fields[fieldIndex][variableName] = $scope[variableName]
+          $scope.dataSet.dbReferences[$scope.dbRefIndex].fields[fieldIndex][variableName] = $scope[variableName]
 
       ##################################################################################################################
       # Handle the conversion of the dataSet to a d3DataSet
       ##################################################################################################################
       $scope.$on 'dataSetLoaded', () ->
         dbService.queryDataSet (data) ->
-          dbLogic.processDataSet dbService.dataSet, data, (err, d3Data) ->
+          dbLogic.processDataSet $scope.dataSet, data, (err, d3Data) ->
             $scope.d3DataSet = d3Data
 
       # TODO, create various events so I only fetch the data when necessary and re-process
-      $scope.$on 'dataSetFieldChange', () -> dbLogic.processDataSet dbService.dataSet
-      $scope.$on 'dataSetFieldChange', () -> dbLogic.processDataSet dbService.dataSet
+      $scope.$on 'dataSetFieldChange', () -> dbLogic.processDataSet $scope.dataSet
+      $scope.$on 'dataSetFieldChange', () -> dbLogic.processDataSet $scope.dataSet
 
       ##################################################################################################################
       # Aggregation radio options
@@ -76,7 +83,7 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
         {name: 'groupFieldBy', value: undefined, label: 'No Selection'},
         {name: 'groupFieldBy', value: 'field', label: 'Field Itself'},
         {name: 'groupFieldBy', value: 'year', label: 'Year'},
-        {name: 'groupFieldBy', value: 'quarter', label: 'Quarter'},
+#        {name: 'groupFieldBy', value: 'quarter', label: 'Quarter'},
         {name: 'groupFieldBy', value: 'month', label: 'Month'},
         {name: 'groupFieldBy', value: 'day', label: 'Day'},
         {name: 'groupFieldBy', value: 'hour', label: 'Hour'},
@@ -102,13 +109,30 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
 
         $('#graph_field_modal').modal()
 
-      # This assumes that the dbService.dataSet is the latest one and the local scope is kept updated
-      $scope.updateDataSet = () ->
+      # Modal for the graph options
+      $scope.openModalForOptions = () ->
+        $('#graph_options_modal').modal()
+
+      # Update the dataset and by default re-graph the data
+      $scope.updateDataSet = (graph=true) ->
         variablesToUpdate = ['aggregation', 'groupBy', 'beginDate', 'endDate']
         updateFields(variablesToUpdate)
+        dbService.dataSet = $scope.dataSet
+        dbService.cacheUpsert () ->
+          if graph then $rootScope.$broadcast('dataSetLoaded')
+
+      $scope.deleteDataSet = () ->
+        $('#graph_options_modal').modal('hide')
+        $timeout ( ->
+          dbService.cacheDelete $scope.dataSet._id, () -> $location.path "/AddData/"
+        ), 1000
+
+      # Initialize the meta data to a hash of undefined vars
+      $scope.updateMetaData = () ->
+        console.log "Updating graph options with graph name: #{$scope.dataSet.name}"
+        dbService.dataSet = $scope.dataSet
         dbService.cacheUpsert () ->
           console.log "dataSet upserted, setting the scope to dbService.dataSet"
-          $scope.dataSet = dbService.dataSet
           $rootScope.$broadcast('dataSetLoaded')
       ##################################################################################################################
 

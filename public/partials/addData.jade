@@ -28,3 +28,25 @@ div.container
             h4.text-center Fields
             div.db-info-item(ng-repeat="f in fields")
                 span {{f.COLUMN_NAME}}
+
+//https://github.com/angular/angular.js/wiki/Understanding-Scopes
+div#graph_options_modal.modal.fade(tabindex="-1",role="dialog",aria-labelledby="graph_options_modal_label",aria-hidden="true")
+    div.modal-dialog
+        div.modal-content
+            div.modal-header
+                button.close(type="button", data-dismiss="modal", aria-hidden="true") &times;
+                h4.modal-title {{ dataSetName }}
+                div.clearfix
+            div.modal-body
+                form(role="form")
+                    div.form-group
+                        label(for="dataSetName") Name
+                        input#dataSetName.form-control(type="text", placeholder="Enter Graph name", ng-model="dataSetName")
+                    div.form-group
+                        label(for="dataSetDescription") Description
+                        textarea#dataSetDescription.form-control(rows="3", ng-model="dataSetDescription", placeholder="Describe the Graph")
+
+            div.modal-footer
+                div.pull-right
+                    //button.btn.btn-default(type="button", data-dismiss="modal") Close
+                    button.btn.btn-primary(type="button", data-dismiss="modal", ng-click="addDataSet()") Continue

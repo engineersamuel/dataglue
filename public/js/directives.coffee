@@ -303,7 +303,7 @@ define ["angular", "services", "d3", "nv", "moment"], (angular, services, d3, nv
               .datum(data)
               .transition().duration(500).call(chart)
 
-            nv.utils.windowResize(chart.update)
+            nv.utils.windowResize chart.update
 
             return chart
         # Otherwise just update the data and redraw
@@ -316,12 +316,12 @@ define ["angular", "services", "d3", "nv", "moment"], (angular, services, d3, nv
             .datum(dataSet)
             .transition().duration(500).call(chart)
 
-          nv.utils.windowResize(chart.update)
+          nv.utils.windowResize chart.update
 
       scope.$watch "val", (newVal, oldVal) ->
         # console.log "handleChart: #{JSON.stringify(newVal)}"
         if newVal?
-          handleChart(newVal)
+          handleChart newVal
 
 
 

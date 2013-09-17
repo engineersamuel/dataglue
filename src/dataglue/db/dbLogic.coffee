@@ -92,6 +92,8 @@ CachedDataSet.buildSql = (dbReference, callback) ->
             sql.field("DATE_FORMAT(#{field_name}, '%Y-%m')", field_alias)
           else if field.groupBy is 'year'
             sql.field("DATE_FORMAT(#{field_name}, '%Y-%m')", field_alias)
+          else if field.groupBy is 'field'
+            sql.field(field_name, field_alias)
           sql.group(field_alias)
 
     output.sql = sql.toString()

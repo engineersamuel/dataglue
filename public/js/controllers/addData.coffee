@@ -1,4 +1,4 @@
-define ['underscore'], (_) ->
+define ['jquery', 'underscore'], ($, _) ->
   [
     '$scope',
     '$location',
@@ -12,10 +12,21 @@ define ['underscore'], (_) ->
       # You can access the scope of the controller from here
       $scope.welcomeMessage = 'Add Data'
 
+      # Sometimes the modal background doesn't remove when Deleting a dataSet
+      #$('body').removeClass('modal-open')
+      #$('.modal-backdrop').remove()
+
       # If the _id param exists in the url go ahead and load the cached data
       if $routeParams['_id']?
         dbService.cacheGet $routeParams['_id'], (data) ->
           console.log "Read cached dataSet: #{JSON.stringify(data._id)}"
+      # Otherwise reset the dataSet
+      else
+        dbService.resetDataSet()
+
+      # When no dataSet defined allow at least setting the name and description
+      $scope.dataSetName = undefined
+      $scope.dataSetDescription = undefined
 
       # Hold the paths here
       $scope.connection = undefined
@@ -45,8 +56,12 @@ define ['underscore'], (_) ->
         #$scope.fields = []
         dbService.getTables $scope.connection, $scope.schema, (data) -> $scope.tables = data
 
-      $scope.select_table = (table) ->
-        $scope.table = table
+      $scope.addDataSet = () ->
+
+        # Set the name and description
+        if $scope.dataSetName then dbService.dataSet.name = $scope.dataSetName
+        if $scope.dataSetDescription then dbService.dataSet.description = $scope.dataSetDescription
+
         $scope.fields = []
         dbService.getFields $scope.connection, $scope.schema, $scope.table, (data) ->
           dbService.fields = data
@@ -67,8 +82,17 @@ define ['underscore'], (_) ->
           dbService.cacheUpsert (data) ->
             $location.path "/Graph/#{data['_id']}"
 
+      $scope.select_table = (table) ->
+        $scope.table = table
+        # If an _id already exists, we are adding to the dataset, so just do so
+        if dbService.dataSet._id?
+          $scope.addDataSet()
+        # Otherwise this is a new dataset so popup a modal to at least set the Name/Description
+        else
+          $('#graph_options_modal').modal()
+
       # because this has happened asynchroneusly we've missed
       # Angular's initial call to $apply after the controller has been loaded
       # hence we need to explicityly call it at the end of our Controller constructor
-      $scope.$apply();
+      $scope.$apply()
   ]

@@ -24,7 +24,24 @@ mongo_url = generate_mongo_url(settings.master_ref)
 #DataSetCache = new EventEmitter()
 DataSetCache = {}
 
-# TODO potentially make the events emitted specific to connection/collection/ect... instead of just 'failure'
+# https://github.com/mongodb/node-mongodb-native/blob/master/lib/mongodb/collection.js
+DataSetCache.refDelete = (_id, callback) ->
+  self = @
+  logger.debug "Connecting to mongo on: #{mongo_url}"
+  mongodb.connect mongo_url, (err, conn) ->
+    if err
+      callback err
+    else
+      conn.collection settings.master_ref.collection, (err, coll) ->
+        if err
+          callback err
+          conn.close()
+        else
+          coll.remove {_id: mongodb.ObjectID(_id)}, {w:1}, (err, outcome) ->
+            callback err, outcome
+            conn.close()
+  return self
+
 DataSetCache.refGet = (_id, callback) ->
   self = @
   logger.debug "Connecting to mongo on: #{mongo_url}"
@@ -50,6 +67,8 @@ DataSetCache.refGet = (_id, callback) ->
   return self
 
 DataSetCache.refUpsert = (doc, callback) ->
+#  logger.debug prettyjson.render doc
+
   # First sanitize the doc from angular to remove any $$hashKey elements
   _.each doc.dbReferences, (value, key) ->
     _.each value.fields, (field) ->

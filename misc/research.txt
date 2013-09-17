@@ -36,3 +36,6 @@ http://www.bennadel.com/blog/2420-Mapping-AngularJS-Routes-Onto-URL-Parameters-A
 
 Angular bootstrap directives:
 http://angular-ui.github.io/bootstrap/#/modal
+
+Building SOQL queries:
+http://apex-commons.github.io/query/soql-builder/

@@ -35,14 +35,21 @@ define(['angular', 'jquery', 'underscore', 'pnotify'], function (angular, $, _) 
             };
             var service = {};
             // Dataset represents the set of data that comprises the graph
-            service.dataSet = {
-                _id: undefined,
-                name: undefined,
-                description: undefined,
-                inserted_on: undefined,
-                last_updated: undefined,
-                dbReferences: []
+            service.dataSet = {};
+            service.resetDataSet = function() {
+                service.dataSet = {
+                    _id: undefined,
+                    name: undefined,
+                    description: undefined,
+                    inserted_on: undefined,
+                    last_updated: undefined,
+                    dbReferences: []
+                };
             };
+
+            // Go ahead and init the dataSet
+            service.resetDataSet();
+
             service.selectedConnection = undefined;
             service.selectedSchema = undefined;
             service.selectedTable = undefined;
@@ -120,6 +127,15 @@ define(['angular', 'jquery', 'underscore', 'pnotify'], function (angular, $, _) 
                 $http.get('/db/ref/' + _id, {})
                     .success(function(data) {
                         service.dataSet = data;
+                        callback(data);
+                    })
+                    .error(onError)
+            };
+            service.cacheDelete = function(_id, callback) {
+                // Fields contains additional options set like exclude/groupOn
+                $http.post('/db/delete/ref/' + _id, {})
+                    .success(function(data) {
+                        service.resetDataSet();
                         callback(data);
                     })
                     .error(onError)

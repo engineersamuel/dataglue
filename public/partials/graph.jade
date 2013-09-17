@@ -9,7 +9,11 @@ div.row
             div.pull-left
                 a.add-data-href(ng-href="#/AddData/{{_id}}")
                     i.icon-plus
-                    span &nbsp;Add more data
+                    span &nbsp;Add more data&nbsp;
+            div.pull-right
+                a.add-data-href(ng-click="openModalForOptions()")
+                    span &nbsp;Options&nbsp;
+                    i.icon-bar-chart
 
         div.clearfix
 
@@ -19,20 +23,25 @@ div.row
             div.panel-heading
               h4.panel-title
                 a.accordion-toggle.text-right(data-toggle="collapse", data-parent="#accordian_graph_options", href='\#{{ $index }}')
-                    | {{ r.table }}
+                    div
+                        span.pull-left
+                            | {{ r.table }}
+                        span.pull-right
+                            i.icon-remove.pointer(ng-click="removeDbReference($index)")
+                        .clearfix
+
                     //| {{ r.connection }} / {{ r.schema }} / {{ r.table }}
 
             // If you'd like it to default open, add the additional class in
-            div#collapseOne.panel-collapse.collapse(id="{{$index}}", ng-class="{in: $index == 0}")
+            div.panel-collapse.collapse(id="{{$index}}", ng-class="{in: $index == 0}")
               div.panel-body
                 div.db-info-item.text-right(ng-repeat="f in r.fields")
-                    span
-                        span(ng-if="optionsSetOnField(f)") *
+                    span(ng-class="optionsSetOnField(f) ? 'dataglue-green' : ''")
                         | {{f.COLUMN_NAME}}&nbsp;
                     //i.icon-edit.pointer(data-toggle="modal", href="#graph_field_modal")")
                     i.icon-edit.pointer(ng-click="openModalForField($parent.$index, r, f)")
 
-        //accordion
+        //Example using the accordion bootstrap angular directive.  I find the above to be more flexible
             accordion-group(ng-repeat="r in dataSet.dbReferences")
                 accordion-heading {{ r.table }}
                 div.db-info-item.text-right(ng-repeat="f in r.fields")
@@ -42,6 +51,30 @@ div.row
     div.col-lg-9
         d3-visualization#graph_container(val="d3DataSet")
             svg
+
+//https://github.com/angular/angular.js/wiki/Understanding-Scopes
+div#graph_options_modal.modal.fade(tabindex="-1",role="dialog",aria-labelledby="graph_options_modal_label",aria-hidden="true")
+    div.modal-dialog
+        div.modal-content
+            div.modal-header
+                button.close(type="button", data-dismiss="modal", aria-hidden="true") &times;
+                h4.modal-title {{ dataSet.name }}
+                div.clearfix
+            div.modal-body
+                form(role="form")
+                    div.form-group
+                        label(for="graph_name") Name
+                        input#graph_name.form-control(type="text", placeholder="Enter graph name", ng-model="dataSet.name")
+                    div.form-group
+                        label(for="graph_description") Description
+                        textarea#graph_description.form-control(rows="3", ng-model="dataSet.description")
+
+            div.modal-footer
+                div.pull-left
+                    button.btn.btn-danger(type="button", data-dismiss="modal", ng-click="deleteDataSet()") Delete
+                div.pull-right
+                    button.btn.btn-default(type="button", data-dismiss="modal") Close
+                    button.btn.btn-primary(type="button", data-dismiss="modal", ng-click="updateMetaData()") Save changes
 
 div#graph_field_modal.modal.fade(tabindex="-1",role="dialog",aria-labelledby="graph_field_modal_label",aria-hidden="true")
     div.modal-dialog
@@ -83,4 +116,7 @@ div#graph_field_modal.modal.fade(tabindex="-1",role="dialog",aria-labelledby="gr
 
             div.modal-footer
                 button.btn.btn-default(type="button", data-dismiss="modal") Close
-                button.btn.btn-primary(type="button", ng-click="updateDataSet()") Save changes
+                // Save but don't cause the SQL to be re-executed
+                button.btn.btn-primary(type="button", ng-click="updateDataSet(false)") Save
+                // Save and cause the SQL to be re-executed
+                button.btn.btn-primary(type="button", ng-click="updateDataSet()") Save & Graph

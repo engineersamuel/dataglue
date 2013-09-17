@@ -27,3 +27,33 @@
     <div ng-repeat="f in fields" class="db-info-item"><span>{{f.COLUMN_NAME}}</span></div>-->
   </div>
 </div>
+<!--https://github.com/angular/angular.js/wiki/Understanding-Scopes-->
+<div id="graph_options_modal" tabindex="-1" role="dialog" aria-labelledby="graph_options_modal_label" aria-hidden="true" class="modal fade">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" data-dismiss="modal" aria-hidden="true" class="close">&times;</button>
+        <h4 class="modal-title">{{ dataSetName }}</h4>
+        <div class="clearfix"></div>
+      </div>
+      <div class="modal-body">
+        <form role="form">
+          <div class="form-group">
+            <label for="dataSetName">Name</label>
+            <input id="dataSetName" type="text" placeholder="Enter Graph name" ng-model="dataSetName" class="form-control"/>
+          </div>
+          <div class="form-group">
+            <label for="dataSetDescription">Description</label>
+            <textarea id="dataSetDescription" rows="3" ng-model="dataSetDescription" placeholder="Describe the Graph" class="form-control"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <div class="pull-right">
+          <!--button.btn.btn-default(type="button", data-dismiss="modal") Close-->
+          <button type="button" data-dismiss="modal" ng-click="addDataSet()" class="btn btn-primary">Continue</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
