@@ -36,7 +36,7 @@
     </accordion-group>-->
   </div>
   <div class="col-lg-9">
-    <d3-visualization id="graph_container" val="d3DataSet">
+    <d3-visualization id="graph_container" val="d3DataSet" type="dataSet.graphType">
       <svg></svg>
     </d3-visualization>
   </div>
@@ -53,12 +53,16 @@
       <div class="modal-body">
         <form role="form">
           <div class="form-group">
-            <label for="graph_name">Name</label>
-            <input id="graph_name" type="text" placeholder="Enter graph name" ng-model="dataSet.name" class="form-control"/>
+            <label for="graphName">Name</label>
+            <input id="graphName" type="text" placeholder="Enter graph name" ng-model="dataSet.name" class="form-control"/>
           </div>
           <div class="form-group">
-            <label for="graph_description">Description</label>
-            <textarea id="graph_description" rows="3" ng-model="dataSet.description" class="form-control"></textarea>
+            <label for="graphDescription">Description</label>
+            <textarea id="graphDescription" rows="3" ng-model="dataSet.description" class="form-control"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="graphType">Graph Type</label>
+            <select ng-model="dataSet.graphType" ng-options="x.value as x.label for x in graphTypes"></select>
           </div>
         </form>
       </div>
@@ -95,6 +99,7 @@
                   <input type="radio" name="{{o.name}}" value="{{o.value}}" ng-model="$parent.aggregation"/>{{o.label}}
                 </label>
               </div>
+              <p class="muted">* Determines the Y axis</p>
             </div>
             <div id="fieldGroupBy" class="tab-pane">
               <div ng-repeat="o in groupByOptions" class="radio">
@@ -102,6 +107,7 @@
                   <input type="radio" name="{{o.name}}" value="{{o.value}}" ng-model="$parent.groupBy"/>{{o.label}}
                 </label>
               </div>
+              <p class="muted">* Determines the X axis</p>
             </div>
             <div id="where" class="tab-pane">
               <div class="form-horizontal">

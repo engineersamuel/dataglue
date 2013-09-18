@@ -23,6 +23,7 @@
             return $rootScope.$broadcast('dataSetLoaded');
           });
         };
+        $scope.graphTypes = dbService.graphTypes;
         $scope.optionsSetOnField = function(field) {
           var _ref, _ref1, _ref2, _ref3;
 

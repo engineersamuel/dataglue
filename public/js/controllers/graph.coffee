@@ -29,6 +29,8 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
         dbService.cacheUpsert () ->
           $rootScope.$broadcast('dataSetLoaded')
 
+      # Sync in the graphTypes from the service
+      $scope.graphTypes = dbService.graphTypes
 
       # Returns true if there is an aggregation, group by, or where set on the field
       $scope.optionsSetOnField = (field) ->

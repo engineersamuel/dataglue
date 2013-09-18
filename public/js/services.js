@@ -34,6 +34,12 @@ define(['angular', 'jquery', 'underscore', 'pnotify'], function (angular, $, _) 
                 });
             };
             var service = {};
+            // Graph types
+            service.graphTypes = [
+                {value: 'multiBarChart', label: 'MultiBar Chart (Default)'},
+                {value: 'bubble', label: 'Bubble'}
+            ];
+
             // Dataset represents the set of data that comprises the graph
             service.dataSet = {};
             service.resetDataSet = function() {
@@ -41,6 +47,7 @@ define(['angular', 'jquery', 'underscore', 'pnotify'], function (angular, $, _) 
                     _id: undefined,
                     name: undefined,
                     description: undefined,
+                    graphType: 'multiBarChart',
                     inserted_on: undefined,
                     last_updated: undefined,
                     dbReferences: []

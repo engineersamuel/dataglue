@@ -17,7 +17,9 @@ require.config({
         pnotify: 'bower_components/pines-notify/jquery.pnotify', // https://github.com/sciactive/pnotify
         d3: 'bower_components/d3/d3',
         nv: 'bower_components/nvd3/nv.d3',
-        dbLogic: 'db/dbLogic'
+        dbLogic: 'lib/db/dbLogic',
+        bubble: 'lib/graph/bubble',
+        customToolTip: 'lib/graph/customToolTip'
 
         //pnotify: 'https://raw.github.com/sciactive/pnotify/master/jquery.pnotify.min'
 
@@ -46,7 +48,9 @@ require.config({
         bootstrap: ['jquery'],
         pnotify: ['jquery'],
         d3: { exports: 'd3' },
-        nv: { deps:['d3'], exports: 'nv'}
+        nv: { deps:['d3'], exports: 'nv'},
+        bubble: ['d3']
+
 
 //        masonry: ['jquery']
 //        'angular-masonry': ['angular', 'masonry']

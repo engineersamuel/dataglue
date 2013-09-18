@@ -49,7 +49,7 @@ div.row
                     select(ng-model="f.selectedOptions", ng-options="x.value as x.label for x in fieldOptions")
 
     div.col-lg-9
-        d3-visualization#graph_container(val="d3DataSet")
+        d3-visualization#graph_container(val="d3DataSet", type="dataSet.graphType")
             svg
 
 //https://github.com/angular/angular.js/wiki/Understanding-Scopes
@@ -63,11 +63,14 @@ div#graph_options_modal.modal.fade(tabindex="-1",role="dialog",aria-labelledby="
             div.modal-body
                 form(role="form")
                     div.form-group
-                        label(for="graph_name") Name
-                        input#graph_name.form-control(type="text", placeholder="Enter graph name", ng-model="dataSet.name")
+                        label(for="graphName") Name
+                        input#graphName.form-control(type="text", placeholder="Enter graph name", ng-model="dataSet.name")
                     div.form-group
-                        label(for="graph_description") Description
-                        textarea#graph_description.form-control(rows="3", ng-model="dataSet.description")
+                        label(for="graphDescription") Description
+                        textarea#graphDescription.form-control(rows="3", ng-model="dataSet.description")
+                    div.form-group
+                        label(for="graphType") Graph Type
+                        select(ng-model="dataSet.graphType", ng-options="x.value as x.label for x in graphTypes")
 
             div.modal-footer
                 div.pull-left
@@ -97,11 +100,13 @@ div#graph_field_modal.modal.fade(tabindex="-1",role="dialog",aria-labelledby="gr
                                 label
                                     input(type="radio", name="{{o.name}}", value="{{o.value}}", ng-model="$parent.aggregation")
                                     | {{o.label}}
+                            p.muted * Determines the Y axis
                         div#fieldGroupBy.tab-pane
                             div.radio(ng-repeat="o in groupByOptions")
                                 label
                                     input(type="radio", name="{{o.name}}", value="{{o.value}}", ng-model="$parent.groupBy")
                                     | {{o.label}}
+                            p.muted * Determines the X axis
                         div#where.tab-pane
                             div.form-horizontal
                                 input(type="text", datepicker-popup="MM-dd-yyyy", ng-model="beginDate", open="beginDateOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")

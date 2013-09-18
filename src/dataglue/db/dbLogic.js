@@ -48,54 +48,62 @@
       sql = squel.select();
       sql.from("" + dbReference.schema + "." + dbReference.table);
       _.each(dbReference.fields, function(field) {
-        var field_alias, field_name;
+        var addGroupByDate, addX, fieldAlias, fieldName;
 
         if (field['excluded'] == null) {
-          field_name = field.COLUMN_NAME;
-          field_alias = void 0;
+          fieldName = field.COLUMN_NAME;
+          fieldAlias = void 0;
           if (_.has(field, 'aggregation')) {
-            field_alias = 'y';
+            fieldAlias = 'y';
             if (field.aggregation === 'count') {
-              sql.field("COUNT(" + field_name + ")", field_alias);
-              d3Lookup.key = "" + field_name + " count";
+              sql.field("COUNT(" + fieldName + ")", fieldAlias);
+              d3Lookup.key = "" + fieldName + " count";
             } else if (field.aggregation === 'distinctCount') {
-              sql.field("COUNT(DISTINCT " + field_name + ")", field_alias);
-              d3Lookup.key = "" + field_name + " distinct count";
+              sql.field("COUNT(DISTINCT " + fieldName + ")", fieldAlias);
+              d3Lookup.key = "" + fieldName + " distinct count";
             } else if (field.aggregation === 'sum') {
-              sql.field("SUM(" + field_name + ")", field_alias);
-              d3Lookup.key = "" + field_name + " sum";
+              sql.field("SUM(" + fieldName + ")", fieldAlias);
+              d3Lookup.key = "" + fieldName + " sum";
             } else if (field.aggregation === 'avg') {
-              sql.field("AVG(" + field_name + ")", field_alias);
-              d3Lookup.key = "" + field_name + " avg";
+              sql.field("AVG(" + fieldName + ")", fieldAlias);
+              d3Lookup.key = "" + fieldName + " avg";
             }
-            d3Lookup.y = field_name;
+            d3Lookup.y = fieldName;
             d3Lookup.yType = field.DATA_TYPE;
           } else {
-            sql.field(field_name);
+            sql.field(fieldName);
           }
           if (_.has(field, 'beginDate')) {
-            sql.where("" + field_name + " >= TIMESTAMP('" + field.beginDate + "')");
+            sql.where("" + fieldName + " >= TIMESTAMP('" + field.beginDate + "')");
           }
           if (_.has(field, 'endDate')) {
-            sql.where("" + field_name + " < TIMESTAMP('" + field.endDate + "')");
+            sql.where("" + fieldName + " < TIMESTAMP('" + field.endDate + "')");
           }
-          if (_.has(field, 'groupBy')) {
-            field_alias = 'x';
-            d3Lookup.x = field_alias;
+          addX = function(field, fieldAlias) {
+            d3Lookup.x = fieldAlias;
             d3Lookup.xType = field.DATA_TYPE;
-            d3Lookup.xGroupBy = field.groupBy;
+            return d3Lookup.xGroupBy = field.groupBy;
+          };
+          addGroupByDate = function(sql, field, fieldAlias, dateFormat) {
+            addX(field, fieldAlias);
+            sql.field("DATE_FORMAT(" + field.COLUMN_NAME + ", '" + dateFormat + "')", fieldAlias);
+            return sql.group(fieldAlias);
+          };
+          if (_.has(field, 'groupBy')) {
+            fieldAlias = 'x';
             if (field.groupBy === 'hour') {
-              sql.field("DATE_FORMAT(" + field_name + ", '%Y-%m-%d %H')", field_alias);
-            } else if (field.groupBy === 'day') {
-              sql.field("DATE_FORMAT(" + field_name + ", '%Y-%m-%d')", field_alias);
-            } else if (field.groupBy === 'month') {
-              sql.field("DATE_FORMAT(" + field_name + ", '%Y-%m')", field_alias);
-            } else if (field.groupBy === 'year') {
-              sql.field("DATE_FORMAT(" + field_name + ", '%Y-%m')", field_alias);
+              return addGroupByDate(sql, field, fieldAlias, "%Y-%m-%d %H");
+            } else if (field.groupBy === "day") {
+              return addGroupByDate(sql, field, fieldAlias, "%Y-%m-%d");
+            } else if (field.groupBy === "month") {
+              return addGroupByDate(sql, field, fieldAlias, "%Y-%m");
+            } else if (field.groupBy === "year") {
+              return addGroupByDate(sql, field, fieldAlias, "%Y");
             } else if (field.groupBy === 'field') {
-              sql.field(field_name, field_alias);
+              sql.field(field.COLUMN_NAME, fieldAlias);
+              sql.group(fieldAlias);
+              return addX(field, fieldAlias);
             }
-            return sql.group(field_alias);
           }
         }
       });

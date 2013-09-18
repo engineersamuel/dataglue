@@ -41,60 +41,75 @@ CachedDataSet.buildSql = (dbReference, callback) ->
     sql.from("#{dbReference.schema}.#{dbReference.table}")
     _.each dbReference.fields, (field) ->
       if not field['excluded']?
-        field_name = field.COLUMN_NAME
-        field_alias = undefined
+
+        fieldName = field.COLUMN_NAME
+        fieldAlias = undefined
         ################################################################################################################
         # Aggregations require the field be wrapped in something like COUNT
         ################################################################################################################
         if _.has field, 'aggregation'
-          field_alias = 'y'
+          fieldAlias = 'y'
           if field.aggregation is 'count'
-            sql.field("COUNT(#{field_name})", field_alias)
-            d3Lookup.key = "#{field_name} count"
+            sql.field("COUNT(#{fieldName})", fieldAlias)
+            d3Lookup.key = "#{fieldName} count"
           else if field.aggregation is 'distinctCount'
-            sql.field("COUNT(DISTINCT #{field_name})", field_alias)
-            d3Lookup.key = "#{field_name} distinct count"
+            sql.field("COUNT(DISTINCT #{fieldName})", fieldAlias)
+            d3Lookup.key = "#{fieldName} distinct count"
           else if field.aggregation is 'sum'
-            sql.field("SUM(#{field_name})", field_alias)
-            d3Lookup.key = "#{field_name} sum"
+            sql.field("SUM(#{fieldName})", fieldAlias)
+            d3Lookup.key = "#{fieldName} sum"
           else if field.aggregation is 'avg'
-            sql.field("AVG(#{field_name})", field_alias)
-            d3Lookup.key = "#{field_name} avg"
+            sql.field("AVG(#{fieldName})", fieldAlias)
+            d3Lookup.key = "#{fieldName} avg"
 
-          d3Lookup.y = field_name
+          d3Lookup.y = fieldName
           d3Lookup.yType = field.DATA_TYPE
 
         ################################################################################################################
         # Otherwise it is just the plain field
         ################################################################################################################
         else
-          sql.field(field_name)
+          sql.field(fieldName)
 
         if _.has field, 'beginDate'
-          sql.where("#{field_name} >= TIMESTAMP('#{field.beginDate}')")
+          sql.where("#{fieldName} >= TIMESTAMP('#{field.beginDate}')")
 
         if _.has field, 'endDate'
-          sql.where("#{field_name} < TIMESTAMP('#{field.endDate}')")
+          sql.where("#{fieldName} < TIMESTAMP('#{field.endDate}')")
 
         ################################################################################################################
         # Group By's require the group and the field
         ################################################################################################################
-        if _.has field, 'groupBy'
-          field_alias = 'x'
-          d3Lookup.x = field_alias
+        addX = (field, fieldAlias) ->
+          d3Lookup.x = fieldAlias
           d3Lookup.xType = field.DATA_TYPE
           d3Lookup.xGroupBy = field.groupBy
+
+        addGroupByDate = (sql, field, fieldAlias, dateFormat) ->
+          addX field, fieldAlias
+          sql.field("DATE_FORMAT(#{field.COLUMN_NAME}, '#{dateFormat}')", fieldAlias)
+          sql.group(fieldAlias)
+
+        if _.has field, 'groupBy'
+          fieldAlias = 'x'
           if field.groupBy is 'hour'
-            sql.field("DATE_FORMAT(#{field_name}, '%Y-%m-%d %H')", field_alias)
-          else if field.groupBy is 'day'
-            sql.field("DATE_FORMAT(#{field_name}, '%Y-%m-%d')", field_alias)
-          else if field.groupBy is 'month'
-            sql.field("DATE_FORMAT(#{field_name}, '%Y-%m')", field_alias)
-          else if field.groupBy is 'year'
-            sql.field("DATE_FORMAT(#{field_name}, '%Y-%m')", field_alias)
+            addGroupByDate sql, field, fieldAlias, "%Y-%m-%d %H"
+            #sql.field("DATE_FORMAT(#{fieldName}, "%Y-%m-%d %H")", fieldAlias)
+          else if field.groupBy is "day"
+            addGroupByDate sql, field, fieldAlias, "%Y-%m-%d"
+            #sql.field("DATE_FORMAT(#{fieldName}, "%Y-%m-%d")", fieldAlias)
+          else if field.groupBy is "month"
+            addGroupByDate sql, field, fieldAlias, "%Y-%m"
+            #sql.field("DATE_FORMAT(#{fieldName}, "%Y-%m")", fieldAlias)
+          else if field.groupBy is "year"
+            addGroupByDate sql, field, fieldAlias, "%Y"
+            #sql.field("DATE_FORMAT(#{fieldName}, '%Y-%m')", fieldAlias)
           else if field.groupBy is 'field'
-            sql.field(field_name, field_alias)
-          sql.group(field_alias)
+            sql.field(field.COLUMN_NAME, fieldAlias)
+            sql.group(fieldAlias)
+            addX field, fieldAlias
+
+
 
     output.sql = sql.toString()
     output.d3Lookup = d3Lookup
