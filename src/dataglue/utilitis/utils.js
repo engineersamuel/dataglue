@@ -11,7 +11,7 @@
       return void 0;
     }
     if (/^\$/i.test(envVar)) {
-      return process.env[envVar];
+      return process.env[envVar.slice(1, envVar.length)];
     }
     return envVar;
   };

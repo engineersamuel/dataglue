@@ -8,6 +8,6 @@ exports.resolveEnvVar = (envVar) ->
   if envVar is undefined then return undefined
   # See if th starting starts with a $, ie an environment variable
   if /^\$/i.test(envVar)
-    return process.env[envVar]
+    return process.env[envVar.slice 1, envVar.length]
 
   return envVar
