@@ -14,10 +14,10 @@
 
   _ = require('lodash');
 
-  config_file = "" + process.env['HOME'] + "/.unified-node-settings.yaml";
+  config_file = "" + process.env['HOME'] + "/.dataglue-settings.yml";
 
   if (process.env['OPENSHIFT_DATA_DIR'] != null) {
-    config_file = "" + process.env['OPENSHIFT_DATA_DIR'] + "/.unified-node-settings.yaml";
+    config_file = "" + process.env['OPENSHIFT_DATA_DIR'] + "/.dataglue-settings.yml";
   } else {
     config_file = "" + process.env['HOME'] + "/.dataglue-settings.yml";
   }

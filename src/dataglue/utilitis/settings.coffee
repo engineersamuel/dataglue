@@ -7,9 +7,9 @@ prettyjson  = require 'prettyjson'
 _           = require 'lodash'
 
 # Load the config file either locally or in openshift if the OPENSHIFT_DATA_DIR variable exists
-config_file = "#{process.env['HOME']}/.unified-node-settings.yaml"
+config_file = "#{process.env['HOME']}/.dataglue-settings.yml"
 if process.env['OPENSHIFT_DATA_DIR']?
-  config_file = "#{process.env['OPENSHIFT_DATA_DIR']}/.unified-node-settings.yaml"
+  config_file = "#{process.env['OPENSHIFT_DATA_DIR']}/.dataglue-settings.yml"
 else
   config_file = "#{process.env['HOME']}/.dataglue-settings.yml"
 
