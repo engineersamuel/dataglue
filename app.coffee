@@ -16,8 +16,10 @@ utils         = require './src/dataglue/utilitis/utils'
 # Handle configuration
 ##########################################################
 port = process.env['OPENSHIFT_INTERNAL_PORT'] || process.env['OPENSHIFT_NODEJS_PORT'] || 3000
+ipAddress = process.env['OPENSHIFT_NODEJS_IP'] || '127.0.0.1'
 app = express()
 app.configure () ->
+  app.set('ipAddress', ipAddress)
   app.set('port', port)
   app.set('views', __dirname + '/public')
   app.set('view engine', 'jade')
@@ -132,7 +134,7 @@ process.on 'exit', () ->
   logger.info("process exiting.")
   app.close()
 
-http.createServer(app).listen app.get('port'), () ->
-  logger.info("Data glue server listening on port " + app.get('port'))
+http.createServer(app).listen app.get('port'), app.get('ipAddress'), () ->
+  logger.info "Data glue server listening on #{app.get('ipAddress')}:#{app.get('port')}"
 ##########################################################
 
