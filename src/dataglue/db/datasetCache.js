@@ -34,6 +34,8 @@
     return mongourl;
   };
 
+  logger.info("master ref: " + (prettyjson.render(settings.master_ref)));
+
   mongo_url = generate_mongo_url(settings.master_ref);
 
   DataSetCache = {};
