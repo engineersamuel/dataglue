@@ -7,16 +7,12 @@
   };
 
   exports.resolveEnvVar = function(envVar) {
-    console.log(JSON.stringify(envVar));
     if (envVar === void 0) {
       return void 0;
     }
     if (/^\$/i.test(envVar)) {
-      console.log("Returning sliced envar: " + (envVar.slice(1, envVar.length)));
-      console.log("Returning env var : " + process.env[envVar.slice(1, envVar.length)]);
       return process.env[envVar.slice(1, envVar.length)];
     }
-    console.log("No conditions matched hitting default return of " + envVar);
     return envVar;
   };
 
