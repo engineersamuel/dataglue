@@ -38,9 +38,9 @@ div.row
             div.panel-collapse.collapse(id="{{$index}}", ng-class="{in: $index == 0}")
               div.panel-body
                 div.db-info-item.text-right(ng-repeat="f in r.fields")
-                    span(ng-class="optionsSetOnField(f) ? 'dataglue-green' : ''")
+                    span(ng-class="optionsSetOnField($parent.$index, $index) ? 'dataglue-green' : ''")
                         | {{f.COLUMN_NAME}}&nbsp;
-                    i.icon-edit.pointer(ng-click="openModalForField($parent.$index, r, f)")
+                    i.icon-edit.pointer(ng-click="openModalForField($parent.$index, r, $index, f)")
 
         //Example using the accordion bootstrap angular directive.  I find the above to be more flexible
             accordion-group(ng-repeat="r in dataSet.dbReferences")
@@ -127,23 +127,26 @@ div#graph_field_modal.modal.fade(tabindex="-1",role="dialog",aria-labelledby="gr
                         div#aggregation.tab-pane.active
                             div.radio(ng-repeat="o in aggregationOptions")
                                 label
-                                    input(type="radio", name="{{o.name}}", value="{{o.value}}", ng-model="$parent.aggregation")
+                                    //input(type="radio", name="{{o.name}}", value="{{o.value}}", ng-model="$parent.aggregation")
+                                    input(type="radio", name="{{o.name}}", value="{{o.value}}", ng-model="$parent.dataSet.dbReferences[$parent.dbRefIndex].fields[$parent.fieldIndex].aggregation")
                                     | {{o.label}}
                             p.muted * Determines the Y axis
                         div#fieldGroupBy.tab-pane
                             div.radio(ng-repeat="o in groupByOptions")
                                 label
-                                    input(type="radio", name="{{o.name}}", value="{{o.value}}", ng-model="$parent.groupBy")
+                                    input(type="radio", name="{{o.name}}", value="{{o.value}}", ng-model="$parent.dataSet.dbReferences[$parent.dbRefIndex].fields[$parent.fieldIndex].groupBy")
                                     | {{o.label}}
                             p.muted * Determines the X axis
                         div#where.tab-pane
                             div.form-horizontal
-                                input(type="text", datepicker-popup="MM-dd-yyyy", ng-model="beginDate", open="beginDateOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")
+                                //input(type="text", datepicker-popup="MM-dd-yyyy", ng-model="beginDate", open="beginDateOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")
+                                input(type="text", datepicker-popup="MM-dd-yyyy", ng-model="$parent.dataSet.dbReferences[$parent.dbRefIndex].fields[$parent.fieldIndex].beginDate", open="beginDateOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")
                                 span
                                     | &nbsp;
                                     i.icon-calendar(ng-click="openBeginDate()")
                             div.form-horizontal
-                                input(type="text", datepicker-popup="MM-dd-yyyy", ng-model="endDate", open="endDateOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")
+                                //input(type="text", datepicker-popup="MM-dd-yyyy", ng-model="endDate", open="endDateOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")
+                                input(type="text", datepicker-popup="MM-dd-yyyy", ng-model="$parent.dataSet.dbReferences[$parent.dbRefIndex].fields[$parent.fieldIndex].endDate", open="endDateOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")
                                 span
                                     | &nbsp;
                                     i.icon-calendar(ng-click="openEndDate()")

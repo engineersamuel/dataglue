@@ -27,7 +27,7 @@
         <!-- If you'd like it to default open, add the additional class in-->
         <div id="{{$index}}" ng-class="{in: $index == 0}" class="panel-collapse collapse">
           <div class="panel-body">
-            <div ng-repeat="f in r.fields" class="db-info-item text-right"><span ng-class="optionsSetOnField(f) ? 'dataglue-green' : ''">{{f.COLUMN_NAME}}&nbsp;</span><i ng-click="openModalForField($parent.$index, r, f)" class="icon-edit pointer"></i></div>
+            <div ng-repeat="f in r.fields" class="db-info-item text-right"><span ng-class="optionsSetOnField($parent.$index, $index) ? 'dataglue-green' : ''">{{f.COLUMN_NAME}}&nbsp;</span><i ng-click="openModalForField($parent.$index, r, $index, f)" class="icon-edit pointer"></i></div>
           </div>
         </div>
       </div>
@@ -131,7 +131,8 @@
             <div id="aggregation" class="tab-pane active">
               <div ng-repeat="o in aggregationOptions" class="radio">
                 <label>
-                  <input type="radio" name="{{o.name}}" value="{{o.value}}" ng-model="$parent.aggregation"/>{{o.label}}
+                  <!--input(type="radio", name="{{o.name}}", value="{{o.value}}", ng-model="$parent.aggregation")-->
+                  <input type="radio" name="{{o.name}}" value="{{o.value}}" ng-model="$parent.dataSet.dbReferences[$parent.dbRefIndex].fields[$parent.fieldIndex].aggregation"/>{{o.label}}
                 </label>
               </div>
               <p class="muted">* Determines the Y axis</p>
@@ -139,17 +140,19 @@
             <div id="fieldGroupBy" class="tab-pane">
               <div ng-repeat="o in groupByOptions" class="radio">
                 <label>
-                  <input type="radio" name="{{o.name}}" value="{{o.value}}" ng-model="$parent.groupBy"/>{{o.label}}
+                  <input type="radio" name="{{o.name}}" value="{{o.value}}" ng-model="$parent.dataSet.dbReferences[$parent.dbRefIndex].fields[$parent.fieldIndex].groupBy"/>{{o.label}}
                 </label>
               </div>
               <p class="muted">* Determines the X axis</p>
             </div>
             <div id="where" class="tab-pane">
               <div class="form-horizontal">
-                <input type="text" datepicker-popup="MM-dd-yyyy" ng-model="beginDate" open="beginDateOpened" min="minDate" max="'2016-06-22'" datepicker-options="dateOptions" show-weeks="false" ng-required="true"/><span>&nbsp;<i ng-click="openBeginDate()" class="icon-calendar"></i></span>
+                <!--input(type="text", datepicker-popup="MM-dd-yyyy", ng-model="beginDate", open="beginDateOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")-->
+                <input type="text" datepicker-popup="MM-dd-yyyy" ng-model="$parent.dataSet.dbReferences[$parent.dbRefIndex].fields[$parent.fieldIndex].beginDate" open="beginDateOpened" min="minDate" max="'2016-06-22'" datepicker-options="dateOptions" show-weeks="false" ng-required="true"/><span>&nbsp;<i ng-click="openBeginDate()" class="icon-calendar"></i></span>
               </div>
               <div class="form-horizontal">
-                <input type="text" datepicker-popup="MM-dd-yyyy" ng-model="endDate" open="endDateOpened" min="minDate" max="'2016-06-22'" datepicker-options="dateOptions" show-weeks="false" ng-required="true"/><span>&nbsp;<i ng-click="openEndDate()" class="icon-calendar"></i></span>
+                <!--input(type="text", datepicker-popup="MM-dd-yyyy", ng-model="endDate", open="endDateOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")-->
+                <input type="text" datepicker-popup="MM-dd-yyyy" ng-model="$parent.dataSet.dbReferences[$parent.dbRefIndex].fields[$parent.fieldIndex].endDate" open="endDateOpened" min="minDate" max="'2016-06-22'" datepicker-options="dateOptions" show-weeks="false" ng-required="true"/><span>&nbsp;<i ng-click="openEndDate()" class="icon-calendar"></i></span>
               </div>
             </div>
             <div id="info" class="tab-pane">

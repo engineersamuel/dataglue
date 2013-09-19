@@ -3,8 +3,6 @@
   define(['jquery', 'underscore', 'moment', 'dbLogic'], function($, _, moment, dbLogic) {
     return [
       '$scope', '$rootScope', '$location', '$routeParams', '$timeout', 'dbService', function($scope, $rootScope, $location, $routeParams, $timeout, dbService) {
-        var getSelectedFieldIndex, updateFields;
-
         $scope._id = $routeParams['_id'];
         if ($routeParams['_id'] != null) {
           dbService.cacheGet($routeParams['_id'], function(data) {
@@ -35,9 +33,10 @@
           });
         };
         $scope.graphTypes = dbService.graphTypes;
-        $scope.optionsSetOnField = function(field) {
-          var _ref, _ref1, _ref2, _ref3;
+        $scope.optionsSetOnField = function(dbRefIdx, fieldIdx) {
+          var field, _ref, _ref1, _ref2, _ref3;
 
+          field = $scope.dataSet.dbReferences[dbRefIdx].fields[fieldIdx];
           if ((field.groupBy != null) && ((_ref = field.groupBy) !== (void 0) && _ref !== '')) {
             return true;
           }
@@ -52,28 +51,6 @@
           }
           return false;
         };
-        getSelectedFieldIndex = function() {
-          var fieldIndex;
-
-          fieldIndex = _.findIndex($scope.dataSet.dbReferences[$scope.dbRefIndex].fields, function(item) {
-            if (item['COLUMN_NAME'] != null) {
-              return item['COLUMN_NAME'] === $scope.selectedFieldName;
-            } else {
-              return item === $scope.selectedFieldName;
-            }
-          });
-          return fieldIndex;
-        };
-        updateFields = function(variableNames) {
-          var fieldIndex;
-
-          console.debug("Updating fields for dbRefIndex: " + $scope.dbRefIndex);
-          fieldIndex = getSelectedFieldIndex();
-          return _.each(variableNames, function(variableName) {
-            console.debug("Updating variable: " + variableName + " on field " + $scope.dataSet.dbReferences[$scope.dbRefIndex].fields[fieldIndex].COLUMN_NAME + " for dbRefIndex: " + $scope.dbRefIndex);
-            return $scope.dataSet.dbReferences[$scope.dbRefIndex].fields[fieldIndex][variableName] = $scope[variableName];
-          });
-        };
         $scope.$on('dataSetLoaded', function() {
           return dbService.queryDataSet(function(data) {
             return dbLogic.processDataSet($scope.dataSet, data, function(err, d3Data) {
@@ -81,13 +58,6 @@
             });
           });
         });
-        $scope.$on('dataSetFieldChange', function() {
-          return dbLogic.processDataSet($scope.dataSet);
-        });
-        $scope.$on('dataSetFieldChange', function() {
-          return dbLogic.processDataSet($scope.dataSet);
-        });
-        $scope.aggregation = void 0;
         $scope.aggregationOptions = [
           {
             name: 'aggregation',
@@ -111,7 +81,6 @@
             label: 'Avg'
           }
         ];
-        $scope.groupBy = void 0;
         $scope.groupByOptions = [
           {
             name: 'groupFieldBy',
@@ -143,34 +112,28 @@
         $scope.selectedField = void 0;
         $scope.selectedFieldName = void 0;
         $scope.dbRefIndex = void 0;
+        $scope.fieldIndex = void 0;
         $scope.openModalForReference = function(dbRefIndex, r) {
           $scope.dbRefIndex = dbRefIndex;
           $scope.selectedReference = r;
           return $('#dbReferenceModal').modal();
         };
-        $scope.openModalForField = function(dbRefIndex, r, f) {
+        $scope.openModalForField = function(dbRefIndex, r, fieldIndex, f) {
           $scope.dbRefIndex = dbRefIndex;
+          $scope.fieldIndex = fieldIndex;
           $scope.selectedReference = r;
           $scope.selectedField = f;
           $scope.selectedFieldName = f['COLUMN_NAME'] != null ? f['COLUMN_NAME'] : f;
-          $scope.aggregation = f['aggregation'];
-          $scope.groupBy = f['groupBy'];
-          $scope.beginDate = f['beginDate'];
-          $scope.endDate = f['endDate'];
           return $('#graph_field_modal').modal();
         };
         $scope.openModalForOptions = function() {
           return $('#graph_options_modal').modal();
         };
         $scope.updateDataSet = function(graph) {
-          var variablesToUpdate;
-
           if (graph == null) {
             graph = true;
           }
           $('#graph_field_modal').modal('hide');
-          variablesToUpdate = ['aggregation', 'groupBy', 'beginDate', 'endDate'];
-          updateFields(variablesToUpdate);
           dbService.dataSet = $scope.dataSet;
           return dbService.cacheUpsert(function() {
             if (graph) {
@@ -198,8 +161,6 @@
             }
           });
         };
-        $scope.beginDate = void 0;
-        $scope.endDate = void 0;
         $scope.beginDateOpened = false;
         $scope.endDateOpened = false;
         $scope.dateOptions = {

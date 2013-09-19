@@ -53,36 +53,38 @@ http://blog.dewmap.com/post/50ff83c23f9c1f0200000001
 ################################
 # Working with Openshift
 ################################
-cd /tmp
+# This works excellently -- https://github.com/wshearn/openshift-origin-cartridge-nodejs
+rhc create-app -g int_dev_medium dataglue "http://cartreflect-claytondev.rhcloud.com/reflect?github=wshearn/openshift-origin-cartridge-nodejs"
+rhc cartridge-add mongodb-2.2 -a dataglue
 
-# Pull down a snapshot
-rhc snapshot save dataglue
+Make sure to add the following to .git/config
 
-rhc app create dataglue diy-0.1
-# $ rhc app delete dataglue --confirm
+[remote "all"]
+    url = git@github.com:engineersamuel/dataglue.git
+    url = <ssh url of the openshift repo>
+[remote "origin"]
+    fetch = +refs/heads/*:refs/remotes/origin/*
+    url = git@github.com:engineersamuel/dataglue.git
+[remote "openshift"]
+    fetch = +refs/heads/*:refs/remotes/origin/*
+    url = <ssh url of the openshift repo>
+[branch "master"]
+    remote = origin
+    merge = refs/heads/master
 
-# dataglue-subeng.itos.redhat.com
+# From this point simply you need to do a force push since adding the nodejs cartridge already populated your git repo
+git push -f openshift
 
-rhc cartridge add mongodb-2.2 -a dataglue
-
-
-mongodb-2.2 (MongoDB NoSQL Database 2.2)
-============================================================================================
-----------------------------------------
-  Gears:          Located with diy-0.1
-  Connection URL: mongodb://$OPENSHIFT_MONGODB_DB_HOST:$OPENSHIFT_MONGODB_DB_PORT/
-  Database Name:  dataglue
-  Password:       Yl-Ly2ZZunlY
-  Username:       admin
-
-Added mongodb-2.2 to application dataglue
-MongoDB 2.2 database added.  Please make note of these credentials:
-   Root User:     admin
-   Root Password: Yl-Ly2ZZunlY
-   Database Name: dataglue
-Connection URL: mongodb://$OPENSHIFT_MONGODB_DB_HOST:$OPENSHIFT_MONGODB_DB_PORT/
-============================================================================================
+# Now you can git push all
 
 
+# Common commands
+rhc tail dataglue
+rhc app force-stop -a dataglue
+rhc app-show dataglue
+rhc app-start dataglue
 
+rhc delete-app dataglue
 
+rhc port-forward -a dataglue
+./coffee --eval "console.log process.env['OPENSHIFT_MONGODB_DB_PASSWORD']" -p

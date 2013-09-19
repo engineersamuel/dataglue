@@ -30,11 +30,9 @@
     } else {
       mongourl = "mongodb://" + (utils.resolveEnvVar(obj.host) || '127.0.0.1') + ":" + (utils.resolveEnvVar(obj.port) || '27017') + "/" + (utils.resolveEnvVar(obj.db) || 'dataglue') + "?auto_reconnect=true";
     }
-    logger.info("Finished generating mongo url: " + mongourl);
+    logger.debug("Finished generating mongo url: " + mongourl);
     return mongourl;
   };
-
-  logger.info("master ref: " + (prettyjson.render(settings.master_ref)));
 
   mongo_url = generate_mongo_url(settings.master_ref);
 
