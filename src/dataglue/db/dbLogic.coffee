@@ -1,6 +1,6 @@
 settings      = require '../utilitis/settings'
 utils         = require '../utilitis/utils'
-dataSetCache  = require '../db/dataset_cache'
+dataSetCache  = require '../db/datasetCache'
 squel         = require 'squel'
 _             = require 'lodash'
 async         = require 'async'
