@@ -75,6 +75,10 @@ sandbox.test_openshift_mongo = (user, pass, host, port, db) ->
             logger.debug prettyjson.render results
             conn.close()
 
+sandbox.test_string_slice = () ->
+  s = '$SOME_ENV_VAR'
+  logger.info s.slice 1, s.length
+
 
 #sandbox.hashEach()
 #sandbox.test_compress('Hello World!')
@@ -85,4 +89,5 @@ sandbox.test_openshift_mongo = (user, pass, host, port, db) ->
 #sandbox.test_parse_string()
 #sandbox.test_converting_streams_to_bubble()
 #sandbox.test_openshift_mongo('admin', 'YPZf1dXxwiFR', '127.13.123.2', '27017', 'dataglue')
-sandbox.test_openshift_mongo('', '', '127.0.0.1', '27018', 'dataglue')
+#sandbox.test_openshift_mongo('', '', '127.0.0.1', '27018', 'dataglue')
+sandbox.test_string_slice()

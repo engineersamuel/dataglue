@@ -233,7 +233,14 @@
     });
   };
 
-  sandbox.test_openshift_mongo('', '', '127.0.0.1', '27018', 'dataglue');
+  sandbox.test_string_slice = function() {
+    var s;
+
+    s = '$SOME_ENV_VAR';
+    return logger.info(s.slice(1, s.length));
+  };
+
+  sandbox.test_string_slice();
 
 }).call(this);
 
