@@ -2,7 +2,6 @@ settings      = require '../utilitis/settings'
 utils         = require '../utilitis/utils'
 logger        = require('tracer').colorConsole(utils.logger_config)
 mongodb       = require 'mongodb'
-snappy        = require 'snappy'
 zlib          = require 'zlib'
 md5           = require 'MD5'
 _             = require 'lodash'

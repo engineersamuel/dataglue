@@ -4,7 +4,6 @@ logger        = require('tracer').colorConsole(utils.logger_config)
 pj            = require 'prettyjson'
 dataSetCache  = require '../db/datasetCache'
 dbLogic       = require '../db/dbLogic'
-snappy        = require 'snappy'
 zlib          = require 'zlib'
 prettyjson    = require 'prettyjson'
 _             = require 'lodash'
@@ -20,9 +19,6 @@ sandbox.test_query_dataset = () ->
   p.on 'dataset', (dataset) ->
     console.log dataset
 
-sandbox.test_snappy = (stuff) ->
-  data = snappy.compress stuff, (err, data) ->
-    logger.info "Compressed text: #{data}"
 
 sandbox.test_compress = (input) ->
   zlib.deflate input, (err, buffer) ->
@@ -82,7 +78,6 @@ sandbox.test_converting_streams_to_bubble = () ->
 
 
 #sandbox.hashEach()
-#sandbox.test_snappy(settings.db_refs)
 #sandbox.test_compress('Hello World!')
 #sandbox.test_decompress('eJzzSM3JyVcIzy/KSVEEABxJBD4=')
 #sandbox.test_query_dataset()
