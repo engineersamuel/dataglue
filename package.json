@@ -33,7 +33,7 @@
   "devDependencies": {},
   "private": true,
   "scripts": {
-    "start": "coffee app.coffee"
+    "start": "node app.js"
   },
-  "main": "app.coffee"
+  "main": "app.js"
 }
