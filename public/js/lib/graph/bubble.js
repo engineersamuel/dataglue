@@ -2,7 +2,7 @@
 (function() {
   var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
-  define(['underscore', 'd3', 'customToolTip'], function(_, d3, CustomToolTip) {
+  define(['underscore', 'd3', 'customTooltip'], function(_, d3, CustomTooltip) {
     var DataGlueBubbleChart;
 
     return DataGlueBubbleChart = (function() {
@@ -12,40 +12,40 @@
         this.hide_groups = __bind(this.hide_groups, this);
         this.move_towards_center = __bind(this.move_towards_center, this);
         this.display_group_all = __bind(this.display_group_all, this);
-        this.start = __bind(this.start, this);        console.log("SolutionsLinkedBubbleChart created!");
+        this.start = __bind(this.start, this);        console.log("D3 Bubble Chart Created!");
         this.container_selector = "#" + container_id;
         this.svg_selector = "#" + container_id + " svg";
-        this.width = $(this.container).width();
-        this.height = 800;
+        this.width = $(this.container_selector).parent().width();
+        this.height = $(this.container_selector).parent().height();
         console.log("Height: " + this.height + ", width: " + this.width);
         this.display_type = "all";
-        this.tooltip = CustomToolTip("gates_tooltip", 240);
+        this.tooltip = CustomTooltip("gates_tooltip", 240);
         this.center = {
           x: this.width / 2,
           y: this.height / 2
         };
         this.layout_gravity = -0.01;
         this.damper = 0.1;
-        this.fill_color_linking_mechanism = d3.scale.ordinal().domain(["Suggestion", "Search", "Quick Search", "Probably Search", "GET", "From Case"]).range(["#609376", "#1F3662", "#DF95D4", "#AF67BF", "#66573D", "#332911"]);
       }
 
-      DataGlueBubbleChart.prototype.initialize_data = function(data) {
+      DataGlueBubbleChart.prototype.initialize_data = function(streams) {
         var max_amount, uniqueXs;
 
+        console.log("bubble:initialize_data");
         this.vis = null;
         this.nodes = [];
         this.force = null;
         this.circles = null;
-        this.data = _.map(data, function(stream) {
+        this.data = _.flatten(_.map(streams, function(stream) {
           return _.map(stream.values, function(item) {
             return item;
           });
-        });
-        uniqueXs = _.unique(_.map(data, function(item) {
+        }));
+        uniqueXs = _.unique(_.map(this.data, function(item) {
           return item.x;
         }));
         console.log("Discovered unique x values: " + uniqueXs);
-        this.fill_color_x = d3.scale.ordinal().domain(uniqueXs).category20c();
+        this.fill_color_x = d3.scale.ordinal().domain(uniqueXs).range(d3.range(uniqueXs.length).map(d3.scale.linear().domain([0, uniqueXs.length - 1]).range(["yellow", "green"]).interpolate(d3.interpolateLab)));
         max_amount = d3.max(this.data, function(d) {
           return parseInt(d.y);
         });
@@ -61,9 +61,11 @@
           var node;
 
           node = {
-            radius: _this.radius_scale(parseInt(d.y)),
+            radius: _this.radius_scale(parseInt(d.y || 0)),
             y: d.y,
-            x: d.x
+            x: d.x,
+            name: d.x,
+            value: d.y
           };
           return _this.nodes.push(node);
         });
@@ -82,8 +84,10 @@
           return d.x;
         });
         that = this;
-        this.circles.enter().append("circle").attr("r", 0).attr("stroke-width", 2).attr("stroke", function(d) {
-          return d3.rgb(_this.fill_color_origin(d.x)).darker();
+        this.circles.enter().append("circle").attr("r", 0).attr("fill", function(d) {
+          return _this.fill_color_x(d.x);
+        }).attr("stroke-width", 1).attr("stroke", function(d) {
+          return d3.rgb(_this.fill_color_x(d.x)).darker();
         }).attr("id", function(d) {
           return "bubble_" + d.x;
         }).on("mouseover", function(d, i) {
@@ -139,8 +143,8 @@
         var content;
 
         d3.select(element).attr("stroke", "black");
-        content = "<span class=\"name\">Name: </span><span class=\"value\">" + data.x + "</span><br/>";
-        content += "<span class=\"name\">Value: </span><span class=\"value\">" + data.y + "</span><br/>";
+        content = "<span class=\"name\">Name: </span><span class=\"value\">" + data.name + "</span><br/>";
+        content += "<span class=\"name\">Value: </span><span class=\"value\">" + data.value + "</span><br/>";
         return this.tooltip.showTooltip(content, d3.event);
       };
 

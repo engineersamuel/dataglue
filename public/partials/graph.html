@@ -12,18 +12,22 @@
     <div id="graph_options_accordian" class="panel-group">
       <div ng-repeat="r in dataSet.dbReferences" class="panel panel-default">
         <div class="panel-heading">
-          <h4 class="panel-title"><a data-toggle="collapse" data-parent="#accordian_graph_options" href="#{{ $index }}" class="accordion-toggle text-right">
-              <div><span class="pull-left">{{ r.table }}</span><span class="pull-right"><i ng-click="removeDbReference($index)" class="icon-remove pointer"></i></span>
-                <div class="clearfix"></div>
+          <h4 class="panel-title">
+            <div data-toggle="collapse" data-parent="#accordian_graph_options" href="#{{ $index }}" class="accordion-toggle pointer">
+              <div class="pull-left">{{ r.table }}</div>
+              <div class="pull-right"><i ng-click="openModalForReference($index, r); $event.preventDefault(); $event.stopPropagation();" class="icon-cog pointer"></i>
+                <!--i.btn.icon-copy(tooltip="Duplicate this Table", ng-click="copyDbReference($index); $event.preventDefault();")-->
+                <!--i.btn.icon-remove(tooltip="Remove this Table", ng-click="removeDbReference($index); $event.preventDefault();")-->
               </div>
-              <!--| {{ r.connection }} / {{ r.schema }} / {{ r.table }}--></a></h4>
+              <div class="clearfix"></div>
+              <!--| {{ r.connection }} / {{ r.schema }} / {{ r.table }}-->
+            </div>
+          </h4>
         </div>
         <!-- If you'd like it to default open, add the additional class in-->
         <div id="{{$index}}" ng-class="{in: $index == 0}" class="panel-collapse collapse">
           <div class="panel-body">
-            <div ng-repeat="f in r.fields" class="db-info-item text-right"><span ng-class="optionsSetOnField(f) ? 'dataglue-green' : ''">{{f.COLUMN_NAME}}&nbsp;</span>
-              <!--i.icon-edit.pointer(data-toggle="modal", href="#graph_field_modal")")--><i ng-click="openModalForField($parent.$index, r, f)" class="icon-edit pointer"></i>
-            </div>
+            <div ng-repeat="f in r.fields" class="db-info-item text-right"><span ng-class="optionsSetOnField(f) ? 'dataglue-green' : ''">{{f.COLUMN_NAME}}&nbsp;</span><i ng-click="openModalForField($parent.$index, r, f)" class="icon-edit pointer"></i></div>
           </div>
         </div>
       </div>
@@ -39,6 +43,27 @@
     <d3-visualization id="graph_container" val="d3DataSet" type="dataSet.graphType">
       <svg></svg>
     </d3-visualization>
+  </div>
+</div>
+<div id="dbReferenceModal" tabindex="-1" role="dialog" aria-labelledby="dbReferenceModalLabel" aria-hidden="true" class="modal fade">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" data-dismiss="modal" aria-hidden="true" class="close">&times;</button>
+        <h4 class="modal-title">{{ dataSet.name }}</h4>
+        <div class="clearfix"></div>
+      </div>
+      <div class="modal-body">TBD</div>
+      <div class="modal-footer">
+        <div class="pull-left">
+          <button type="button" data-dismiss="modal" ng-click="copyDbReference(dbRefIndex)" class="btn btn-primary">Duplicate</button>&nbsp;
+          <button type="button" data-dismiss="modal" ng-click="removeDbReference(dbRefIndex)" class="btn btn-danger">Delete</button>
+        </div>
+        <div class="pull-right">
+          <button type="button" data-dismiss="modal" class="btn btn-default">Close</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 <!--https://github.com/angular/angular.js/wiki/Understanding-Scopes-->
@@ -62,7 +87,12 @@
           </div>
           <div class="form-group">
             <label for="graphType">Graph Type</label>
-            <select ng-model="dataSet.graphType" ng-options="x.value as x.label for x in graphTypes"></select>
+            <!--select(ng-model="dataSet.graphType", ng-options="x.value as x.label for x in graphTypes")-->
+            <div ng-repeat="o in graphTypes" class="radio">
+              <label>
+                <input type="radio" name="{{o.name}}" value="{{o.value}}" ng-model="dataSet.graphType"/>{{o.label}}
+              </label>
+            </div>
           </div>
         </form>
       </div>
@@ -72,7 +102,11 @@
         </div>
         <div class="pull-right">
           <button type="button" data-dismiss="modal" class="btn btn-default">Close</button>
-          <button type="button" data-dismiss="modal" ng-click="updateMetaData()" class="btn btn-primary">Save changes</button>
+          <!-- Save but don't cause the SQL to be re-executed-->
+          <!-- button.btn.btn-primary(type="button", ng-click="updateMetaData(false)") Save-->
+          <!-- Save and cause the SQL to be re-executed-->
+          <!-- Remember the graphType is read by the directive and not cause a graph update-->
+          <button type="button" ng-click="updateMetaData()" class="btn btn-primary">Save</button>
         </div>
       </div>
     </div>
@@ -91,6 +125,7 @@
             <li class="active"><a href="#aggregation" data-toggle="tab">Aggregation</a></li>
             <li><a href="#fieldGroupBy" data-toggle="tab">Group by</a></li>
             <li><a href="#where" data-toggle="tab">Where</a></li>
+            <li><a href="#info" data-toggle="tab">Info</a></li>
           </ul>
           <div class="tab-content">
             <div id="aggregation" class="tab-pane active">
@@ -116,6 +151,26 @@
               <div class="form-horizontal">
                 <input type="text" datepicker-popup="MM-dd-yyyy" ng-model="endDate" open="endDateOpened" min="minDate" max="'2016-06-22'" datepicker-options="dateOptions" show-weeks="false" ng-required="true"/><span>&nbsp;<i ng-click="openEndDate()" class="icon-calendar"></i></span>
               </div>
+            </div>
+            <div id="info" class="tab-pane">
+              <table class="table table-condensed">
+                <tr>
+                  <td>Field Name</td>
+                  <td>{{ selectedField.COLUMN_NAME }}</td>
+                </tr>
+                <tr>
+                  <td>Data Type</td>
+                  <td>{{ selectedField.DATA_TYPE }}</td>
+                </tr>
+                <tr>
+                  <td>Column Type</td>
+                  <td>{{ selectedField.COLUMN_TYPE }}</td>
+                </tr>
+                <tr>
+                  <td>Index</td>
+                  <td>{{ selectedField.INDEX }}</td>
+                </tr>
+              </table>{{ selectedField.COLUMN_NAME}}
             </div>
           </div>
         </div>

@@ -19,7 +19,7 @@ require.config({
         nv: 'bower_components/nvd3/nv.d3',
         dbLogic: 'lib/db/dbLogic',
         bubble: 'lib/graph/bubble',
-        customToolTip: 'lib/graph/customToolTip'
+        customTooltip: 'lib/graph/customTooltip'
 
         //pnotify: 'https://raw.github.com/sciactive/pnotify/master/jquery.pnotify.min'
 

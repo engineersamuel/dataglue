@@ -23,8 +23,17 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
 
       # Returns true if there is an aggregation, group by, or where set on the field
       $scope.removeDbReference = (idx) ->
-        $scope.dataSet.dbReferences.splice idx 1
-        # dbService.dataSet.dbReferences.splice idx, 1
+        $scope.dataSet.dbReferences.splice idx, 1
+        dbService.dataSet = $scope.dataSet
+        dbService.cacheUpsert () ->
+          $rootScope.$broadcast('dataSetLoaded')
+
+      # Copy/duplicate the database reference
+      $scope.copyDbReference = (idx) ->
+        console.debug "Copying dbReference at idx: #{idx}"
+        dbRefToCopy = $scope.dataSet.dbReferences[idx]
+        # This says to insert at index idx, 0 means don't remove anything, and dbRefToCopy is what element to add
+        $scope.dataSet.dbReferences.splice idx, 0, dbRefToCopy
         dbService.dataSet = $scope.dataSet
         dbService.cacheUpsert () ->
           $rootScope.$broadcast('dataSetLoaded')
@@ -48,9 +57,11 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
 
       # Set the field name assuming the model variable name == the scope variable name
       updateFields = (variableNames) ->
+        console.debug "Updating fields for dbRefIndex: #{$scope.dbRefIndex}"
         fieldIndex = getSelectedFieldIndex()
           # Set each designated field name to the scope field name
         _.each variableNames, (variableName) ->
+          console.debug "Updating variable: #{variableName} on field #{$scope.dataSet.dbReferences[$scope.dbRefIndex].fields[fieldIndex].COLUMN_NAME} for dbRefIndex: #{$scope.dbRefIndex}"
           $scope.dataSet.dbReferences[$scope.dbRefIndex].fields[fieldIndex][variableName] = $scope[variableName]
 
       ##################################################################################################################
@@ -97,6 +108,12 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
       $scope.selectedReference = undefined
       $scope.selectedField = undefined
       $scope.selectedFieldName = undefined
+      $scope.dbRefIndex = undefined
+      $scope.openModalForReference = (dbRefIndex, r) ->
+        $scope.dbRefIndex = dbRefIndex
+        $scope.selectedReference = r
+        $('#dbReferenceModal').modal()
+
       $scope.openModalForField = (dbRefIndex, r, f) ->
         $scope.dbRefIndex = dbRefIndex
         $scope.selectedReference = r
@@ -117,7 +134,9 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
 
       # Update the dataset and by default re-graph the data
       $scope.updateDataSet = (graph=true) ->
+        $('#graph_field_modal').modal('hide')
         variablesToUpdate = ['aggregation', 'groupBy', 'beginDate', 'endDate']
+        # TODO this part is updating all dbReferences!!
         updateFields(variablesToUpdate)
         dbService.dataSet = $scope.dataSet
         dbService.cacheUpsert () ->
@@ -130,12 +149,11 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
         ), 1000
 
       # Initialize the meta data to a hash of undefined vars
-      $scope.updateMetaData = () ->
+      $scope.updateMetaData = (graph=true) ->
         console.log "Updating graph options with graph name: #{$scope.dataSet.name}"
         dbService.dataSet = $scope.dataSet
         dbService.cacheUpsert () ->
-          console.log "dataSet upserted, setting the scope to dbService.dataSet"
-          $rootScope.$broadcast('dataSetLoaded')
+          if graph then $rootScope.$broadcast('dataSetLoaded')
       ##################################################################################################################
 
       ##################################################################################################################

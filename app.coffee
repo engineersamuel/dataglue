@@ -120,14 +120,6 @@ app.get '/db/info/:ref', (req, res) ->
 
 # Get list of database connection references
 app.get '/db/info', (req, res) ->
-#  output = {
-#    connections: _.keys settings.db_refs
-#    d3TreeData: {
-#      name: 'DB References',
-#      children: _.map settings.db_refs, (db_ref) -> {name: db_ref.name, children: []}
-#    }
-#  }
-#  res.send output
   res.send _.keys settings.db_refs
 
 

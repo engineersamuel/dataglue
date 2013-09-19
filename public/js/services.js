@@ -26,6 +26,13 @@ define(['angular', 'jquery', 'underscore', 'pnotify'], function (angular, $, _) 
         }])
         .factory('dbService', ['$http', 'notificationService', function($http, notificationService) {
             var onError = function(data, status, headers, config) {
+                var theHtml = 'There was a ' + status + ' accessing ' + config.url;
+                if(_.has(data, 'sqlState')) {
+                    theHtml  = '<p><b>code:</b> ' + data.code + '</p>'
+                    theHtml += '<p><b>errno:</b> ' + data.errno + '</p>'
+                    theHtml += '<p><b>sqlState:</b> ' + data.sqlState + '</p>'
+                    theHtml += '<p><b>index:</b> ' + data.index + '</p>'
+                }
                 notificationService.notify({
                     title: 'Request Error',
                     text: 'There was a ' + status + ' accessing ' + config.url,
@@ -36,8 +43,9 @@ define(['angular', 'jquery', 'underscore', 'pnotify'], function (angular, $, _) 
             var service = {};
             // Graph types
             service.graphTypes = [
-                {value: 'multiBarChart', label: 'MultiBar Chart (Default)'},
-                {value: 'bubble', label: 'Bubble'}
+                {name: 'graphType', value: 'multiBarChart', label: 'MultiBar Chart (Default)'},
+                {name: 'graphType', value: 'bubble', label: 'Bubble'},
+                {name: 'graphType', value: 'pie', label: 'Pie'}
             ];
 
             // Dataset represents the set of data that comprises the graph

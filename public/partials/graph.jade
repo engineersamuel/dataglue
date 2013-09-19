@@ -22,13 +22,15 @@ div.row
           div.panel.panel-default(ng-repeat="r in dataSet.dbReferences")
             div.panel-heading
               h4.panel-title
-                a.accordion-toggle.text-right(data-toggle="collapse", data-parent="#accordian_graph_options", href='\#{{ $index }}')
-                    div
-                        span.pull-left
-                            | {{ r.table }}
-                        span.pull-right
-                            i.icon-remove.pointer(ng-click="removeDbReference($index)")
-                        .clearfix
+                div.accordion-toggle.pointer(data-toggle="collapse", data-parent="#accordian_graph_options", href='\#{{ $index }}')
+                    div.pull-left
+                        | {{ r.table }}
+                    div.pull-right
+                        i.icon-cog.pointer(ng-click="openModalForReference($index, r); $event.preventDefault(); $event.stopPropagation();")
+
+                        //i.btn.icon-copy(tooltip="Duplicate this Table", ng-click="copyDbReference($index); $event.preventDefault();")
+                        //i.btn.icon-remove(tooltip="Remove this Table", ng-click="removeDbReference($index); $event.preventDefault();")
+                    div.clearfix
 
                     //| {{ r.connection }} / {{ r.schema }} / {{ r.table }}
 
@@ -38,7 +40,6 @@ div.row
                 div.db-info-item.text-right(ng-repeat="f in r.fields")
                     span(ng-class="optionsSetOnField(f) ? 'dataglue-green' : ''")
                         | {{f.COLUMN_NAME}}&nbsp;
-                    //i.icon-edit.pointer(data-toggle="modal", href="#graph_field_modal")")
                     i.icon-edit.pointer(ng-click="openModalForField($parent.$index, r, f)")
 
         //Example using the accordion bootstrap angular directive.  I find the above to be more flexible
@@ -51,6 +52,24 @@ div.row
     div.col-lg-9
         d3-visualization#graph_container(val="d3DataSet", type="dataSet.graphType")
             svg
+
+div#dbReferenceModal.modal.fade(tabindex="-1",role="dialog",aria-labelledby="dbReferenceModalLabel",aria-hidden="true")
+    div.modal-dialog
+        div.modal-content
+            div.modal-header
+                button.close(type="button", data-dismiss="modal", aria-hidden="true") &times;
+                h4.modal-title {{ dataSet.name }}
+                div.clearfix
+            div.modal-body
+                | TBD
+
+            div.modal-footer
+                div.pull-left
+                    button.btn.btn-primary(type="button", data-dismiss="modal", ng-click="copyDbReference(dbRefIndex)") Duplicate
+                    | &nbsp;
+                    button.btn.btn-danger(type="button", data-dismiss="modal", ng-click="removeDbReference(dbRefIndex)") Delete
+                div.pull-right
+                    button.btn.btn-default(type="button", data-dismiss="modal") Close
 
 //https://github.com/angular/angular.js/wiki/Understanding-Scopes
 div#graph_options_modal.modal.fade(tabindex="-1",role="dialog",aria-labelledby="graph_options_modal_label",aria-hidden="true")
@@ -70,14 +89,22 @@ div#graph_options_modal.modal.fade(tabindex="-1",role="dialog",aria-labelledby="
                         textarea#graphDescription.form-control(rows="3", ng-model="dataSet.description")
                     div.form-group
                         label(for="graphType") Graph Type
-                        select(ng-model="dataSet.graphType", ng-options="x.value as x.label for x in graphTypes")
+                        //select(ng-model="dataSet.graphType", ng-options="x.value as x.label for x in graphTypes")
+                        div.radio(ng-repeat="o in graphTypes")
+                            label
+                                input(type="radio", name="{{o.name}}", value="{{o.value}}", ng-model="dataSet.graphType")
+                                | {{o.label}}
 
             div.modal-footer
                 div.pull-left
                     button.btn.btn-danger(type="button", data-dismiss="modal", ng-click="deleteDataSet()") Delete
                 div.pull-right
                     button.btn.btn-default(type="button", data-dismiss="modal") Close
-                    button.btn.btn-primary(type="button", data-dismiss="modal", ng-click="updateMetaData()") Save changes
+                    // Save but don't cause the SQL to be re-executed
+                    // button.btn.btn-primary(type="button", ng-click="updateMetaData(false)") Save
+                    // Save and cause the SQL to be re-executed
+                    // Remember the graphType is read by the directive and not cause a graph update
+                    button.btn.btn-primary(type="button", ng-click="updateMetaData()") Save
 
 div#graph_field_modal.modal.fade(tabindex="-1",role="dialog",aria-labelledby="graph_field_modal_label",aria-hidden="true")
     div.modal-dialog
@@ -94,6 +121,8 @@ div#graph_field_modal.modal.fade(tabindex="-1",role="dialog",aria-labelledby="gr
                             a(href='#fieldGroupBy', data-toggle='tab') Group by
                         li
                             a(href='#where', data-toggle='tab') Where
+                        li
+                            a(href='#info', data-toggle='tab') Info
                     div.tab-content
                         div#aggregation.tab-pane.active
                             div.radio(ng-repeat="o in aggregationOptions")
@@ -118,6 +147,23 @@ div#graph_field_modal.modal.fade(tabindex="-1",role="dialog",aria-labelledby="gr
                                 span
                                     | &nbsp;
                                     i.icon-calendar(ng-click="openEndDate()")
+                        div#info.tab-pane
+                            table.table.table-condensed
+                                tr
+                                    td Field Name
+                                    td {{ selectedField.COLUMN_NAME }}
+                                tr
+                                    td Data Type
+                                    td {{ selectedField.DATA_TYPE }}
+                                tr
+                                    td Column Type
+                                    td {{ selectedField.COLUMN_TYPE }}
+                                tr
+                                    td Index
+                                    td {{ selectedField.INDEX }}
+
+
+                            | {{ selectedField.COLUMN_NAME}}
 
             div.modal-footer
                 button.btn.btn-default(type="button", data-dismiss="modal") Close

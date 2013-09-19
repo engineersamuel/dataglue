@@ -39,3 +39,50 @@ http://angular-ui.github.io/bootstrap/#/modal
 
 Building SOQL queries:
 http://apex-commons.github.io/query/soql-builder/
+
+# Radial Menus
+https://github.com/agylardi/radial-responsive-menu
+http://codepen.io/aardrian/full/HjwLr
+http://blog.dewmap.com/post/50ff83c23f9c1f0200000001
+
+
+
+
+
+
+################################
+# Working with Openshift
+################################
+cd /tmp
+
+# Pull down a snapshot
+rhc snapshot save dataglue
+
+rhc app create dataglue diy-0.1
+# $ rhc app delete dataglue --confirm
+
+# dataglue-subeng.itos.redhat.com
+
+rhc cartridge add mongodb-2.2 -a dataglue
+
+
+mongodb-2.2 (MongoDB NoSQL Database 2.2)
+============================================================================================
+----------------------------------------
+  Gears:          Located with diy-0.1
+  Connection URL: mongodb://$OPENSHIFT_MONGODB_DB_HOST:$OPENSHIFT_MONGODB_DB_PORT/
+  Database Name:  dataglue
+  Password:       Yl-Ly2ZZunlY
+  Username:       admin
+
+Added mongodb-2.2 to application dataglue
+MongoDB 2.2 database added.  Please make note of these credentials:
+   Root User:     admin
+   Root Password: Yl-Ly2ZZunlY
+   Database Name: dataglue
+Connection URL: mongodb://$OPENSHIFT_MONGODB_DB_HOST:$OPENSHIFT_MONGODB_DB_PORT/
+============================================================================================
+
+
+
+

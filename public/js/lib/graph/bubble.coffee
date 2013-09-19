@@ -1,17 +1,18 @@
-define ['underscore', 'd3', 'customToolTip'], (_, d3, CustomToolTip) ->
+define ['underscore', 'd3', 'customTooltip'], (_, d3, CustomTooltip) ->
   class DataGlueBubbleChart
 
     constructor: (container_id) ->
-      console.log "SolutionsLinkedBubbleChart created!"
+      console.log "D3 Bubble Chart Created!"
 
       @container_selector = "##{container_id}"
       @svg_selector = "##{container_id} svg"
-      @width = $(@container).width()
-      @height = 800
+      @width = $(@container_selector).parent().width()
+      @height = $(@container_selector).parent().height()
+      #@height = 800
       console.log "Height: #{@height}, width: #{@width}"
       @display_type = "all"
 
-      @tooltip = CustomToolTip("gates_tooltip", 240)
+      @tooltip = CustomTooltip("gates_tooltip", 240)
       @center = {x: @width / 2, y: @height / 2}
       @layout_gravity = -0.01
       @damper = 0.1
@@ -33,9 +34,9 @@ define ['underscore', 'd3', 'customToolTip'], (_, d3, CustomToolTip) ->
 #        "GET": {x: (@width / 7) * 2, y: @height / 2},
 #        "From Case": {x: @width / 7, y: @height / 2},
 #      }
-      @fill_color_linking_mechanism = d3.scale.ordinal()
-        .domain(["Suggestion", "Search", "Quick Search", "Probably Search", "GET", "From Case"])
-        .range(["#609376", "#1F3662", "#DF95D4", "#AF67BF", "#66573D", "#332911"])
+#      @fill_color_linking_mechanism = d3.scale.ordinal()
+#        .domain(["Suggestion", "Search", "Quick Search", "Probably Search", "GET", "From Case"])
+#        .range(["#609376", "#1F3662", "#DF95D4", "#AF67BF", "#66573D", "#332911"])
 
 
     # Data is in the form of streams
@@ -57,7 +58,8 @@ define ['underscore', 'd3', 'customToolTip'], (_, d3, CustomToolTip) ->
     #        ]
     #      },
     #    ]
-    initialize_data: (data) ->
+    initialize_data: (streams) ->
+      console.log "bubble:initialize_data"
       # these will be set in create_nodes and create_vis
       @vis = null
       @nodes = []
@@ -67,17 +69,31 @@ define ['underscore', 'd3', 'customToolTip'], (_, d3, CustomToolTip) ->
       # Since there could be multiple streams though this is recommended against, but the common format is in a stream
       # Go ahead and reformat the data to smash it all together
       #@data = data
-      @data = _.map data, (stream) -> _.map stream.values, (item) -> item
+      @data = _.flatten _.map streams, (stream) -> _.map stream.values, (item) -> item
+      #console.log "Streams converted to bubble data: #{JSON.stringify(@data)}"
 
       # Grab the unique x's as the domain
       #uniqueXs = _.unique _.map data, (stream) -> _.map stream.values, (item) -> item.x
-      uniqueXs = _.unique _.map data, (item) -> item.x
+      uniqueXs = _.unique _.map @data, (item) -> item.x
       console.log "Discovered unique x values: #{uniqueXs}"
 
       # The fill color will be the unique groups of x's
+      #@fill_color_x = d3.scale.linear()
+      #  .domain(uniqueXs)
+      #  .range(["yellow", "green"])
+
+      # http://stackoverflow.com/questions/12217121/continuous-color-scale-from-discrete-domain-of-strings?rq=1
       @fill_color_x = d3.scale.ordinal()
-      .domain(uniqueXs)
-      .category20c()
+        .domain(uniqueXs)
+        .range(d3.range(uniqueXs.length)
+          .map(d3.scale.linear()
+            .domain([0, uniqueXs.length - 1])
+            .range(["yellow", "green"])
+            .interpolate(d3.interpolateLab)))
+
+      #@fill_color_x = d3.scale.ordinal()
+      #  .domain(uniqueXs)
+      #  .range(["red", "blue"])
       #.range(["#BFBFBF", "#FFA200", "#02F0EC", "#F00202", "#00BD00"])
 
       # use the max total_amount in the data as the max in the scale's domain
@@ -90,9 +106,11 @@ define ['underscore', 'd3', 'customToolTip'], (_, d3, CustomToolTip) ->
     create_nodes: () ->
       @data.forEach (d) =>
         node =
-          radius: @radius_scale(parseInt(d.y))
+          radius: @radius_scale(parseInt(d.y || 0))
           y: d.y
           x: d.x
+          name: d.x
+          value: d.y
 #          x: Math.random() * 900
 #          y: Math.random() * 800
 
@@ -108,15 +126,14 @@ define ['underscore', 'd3', 'customToolTip'], (_, d3, CustomToolTip) ->
         #.attr("id", "svg_vis")
 
       @circles = @vis.selectAll("circle").data(@nodes, (d) -> d.x)
-#      @circles = @vis.selectAll("circle").data(@nodes)
 
       # used because we need 'this' in the mouse callbacks
       that = this
       @circles.enter().append("circle")
         .attr("r", 0)
-        #.attr("fill", (d) => @fill_color_origin(d.origin))
-        .attr("stroke-width", 2)
-        .attr("stroke", (d) => d3.rgb(@fill_color_origin(d.x)).darker())
+        .attr("fill", (d) => @fill_color_x(d.x))
+        .attr("stroke-width", 1)
+        .attr("stroke", (d) => d3.rgb(@fill_color_x(d.x)).darker())
         .attr("id", (d) -> "bubble_#{d.x}")
         .on("mouseover", (d,i) -> that.show_details(d,i,this))
         .on("mouseout", (d,i) -> that.hide_details(d,i,this))
@@ -148,107 +165,20 @@ define ['underscore', 'd3', 'customToolTip'], (_, d3, CustomToolTip) ->
         d.x = d.x + (@center.x - d.x) * (@damper + 0.02) * alpha
         d.y = d.y + (@center.y - d.y) * (@damper + 0.02) * alpha
 
-    # move all circles to their associated @group_centers
-#    move_towards_origin: (alpha) =>
-#      (d) =>
-#        target = @origins[d.origin]
-#        d.x = d.x + (target.x - d.x) * (@damper + 0.02) * alpha * 1.1
-#        d.y = d.y + (target.y - d.y) * (@damper + 0.02) * alpha * 1.1
-
-#    move_towards_linking_mechanism: (alpha) =>
-#      (d) =>
-#        target = @linking_mechanisms[d.linking_mechanism]
-#        d.x = d.x + (target.x - d.x) * (@damper + 0.02) * alpha * 2.0
-#        d.y = d.y + (target.y - d.y) * (@damper + 0.02) * alpha * 2.0
-
-    # sets the display of bubbles to be separated
-    # into each year. Does this by calling move_towards_year
-#    display_by_origin: () =>
-#
-#      @display_type = "origin"
-#
-#      @force.gravity(@layout_gravity)
-#      .charge(this.charge)
-#      .friction(0.9)
-#      .on "tick", (e) =>
-#          @circles.each(@move_towards_origin(e.alpha))
-#          .attr("cx", (d) -> d.x)
-#          .attr("cy", (d) -> d.y)
-#      @force.start()
-#
-#      @display_origins()
-#      @circles.transition().duration(2000)
-#      .attr("fill", (d) => @fill_color_origin(d.origin))
-#      .attr("stroke", (d) => d3.rgb(@fill_color_origin(d.origin)).darker())
-#
-#    display_by_linking_mechanism: () =>
-#
-#      @display_type = "linking_mechanism"
-#
-#      @force.gravity(@layout_gravity)
-#      .charge(@charge)
-#      .friction(0.9)
-#      .on "tick", (e) =>
-#          @circles.each(@move_towards_linking_mechanism(e.alpha))
-#          .attr("cx", (d) -> d.x)
-#          .attr("cy", (d) -> d.y)
-#      @force.start()
-#
-#      @display_linking_mechanisms()
-#      @circles.transition().duration(2000)
-#      .attr("fill", (d) => @fill_color_linking_mechanism(d.linking_mechanism))
-#      .attr("stroke", (d) => d3.rgb(@fill_color_linking_mechanism(d.linking_mechanism)).darker())
-#
-#    display_linking_mechanisms: () =>
-#      groups = @vis.selectAll(".groups").remove()
-#      groups_x = {
-#        "From Case": @linking_mechanisms["From Case"].x
-#        "GET": @linking_mechanisms["GET"].x
-#        "Probably Search": @linking_mechanisms["Probably Search"].x
-#        "Quick Search": @linking_mechanisms["Quick Search"].x
-#        "Search": @linking_mechanisms["Search"].x
-#        "Suggestion": @linking_mechanisms["Suggestion"].x
-#      }
-#      groups_data = d3.keys(groups_x)
-#      groups = @vis.selectAll(".groups").data(groups_data)
-#
-#      groups.enter().append("text")
-#      .attr("class", "groups")
-#      .attr("x", (d) => groups_x[d] )
-#      .attr("y", 40)
-#      .attr("text-anchor", "middle")
-#      .text((d) -> d)
-#
-#    display_origins: () =>
-#      groups = @vis.selectAll(".groups").remove()
-#      groups_x = {
-#        "Suggestion;From Case": @origins["Suggestion;From Case"].x
-#        "From Case": @origins["From Case"].x
-#        "Suggestion": @origins["Suggestion"].x
-#        "Search;Suggestion": @origins["Search;Suggestion"].x
-#        "Search": @origins["Search"].x
-#      }
-#      groups_data = d3.keys(groups_x)
-#      groups = @vis.selectAll(".groups").data(groups_data)
-#
-#      groups.enter().append("text")
-#      .attr("class", "groups")
-#      .attr("x", (d) => groups_x[d] )
-#      .attr("y", 40)
-#      .attr("text-anchor", "middle")
-#      .text((d) -> d)
-
     hide_groups: () =>
       groups = @vis.selectAll(".groups").remove()
 
     show_details: (data, i, element) =>
+#      console.log "Show details of data: #{JSON.stringify(data)}"
+#      console.log "element: #{JSON.stringify(element)}"
       d3.select(element).attr("stroke", "black")
-      content = "<span class=\"name\">Name: </span><span class=\"value\">#{data.x}</span><br/>"
-      content +="<span class=\"name\">Value: </span><span class=\"value\">#{data.y}</span><br/>"
-      @tooltip.showTooltip(content,d3.event)
+      content = "<span class=\"name\">Name: </span><span class=\"value\">#{data.name}</span><br/>"
+      content +="<span class=\"name\">Value: </span><span class=\"value\">#{data.value}</span><br/>"
+      @tooltip.showTooltip(content, d3.event)
 
 
     hide_details: (data, i, element) =>
       d3.select(element).attr("stroke", (d) => d3.rgb(@fill_color_x(d.x)).darker())
+#      d3.select(element).attr("stroke", (d) => d3.rgb(@fill_color_x(d.x)))
       @tooltip.hideTooltip()
 

@@ -53,6 +53,14 @@ sandbox.test_parse_string = () ->
   s = "52277447f95fb65818000001"
   logger.info JSON.parse s
 
+sandbox.test_converting_streams_to_bubble = () ->
+  streams = [{"key":"id count","values":[{"x":"ANZ","xType":"varchar","xGroupBy":"field","y":104,"yType":"varchar"},{"x":"ASEAN","xType":"varchar","xGroupBy":"field","y":21,"yType":"varchar"},{"x":"Brazil","xType":"varchar","xGroupBy":"field","y":52,"yType":"varchar"},{"x":"Canada","xType":"varchar","xGroupBy":"field","y":41,"yType":"varchar"},{"x":"CE","xType":"varchar","xGroupBy":"field","y":61,"yType":"varchar"},{"x":"GCG","xType":"varchar","xGroupBy":"field","y":69,"yType":"varchar"},{"x":"India","xType":"varchar","xGroupBy":"field","y":207,"yType":"varchar"},{"x":"Japan","xType":"varchar","xGroupBy":"field","y":65,"yType":"varchar"},{"x":"Korea","xType":"varchar","xGroupBy":"field","y":11,"yType":"varchar"},{"x":"Mexico","xType":"varchar","xGroupBy":"field","y":3,"yType":"varchar"},{"x":"NEE","xType":"varchar","xGroupBy":"field","y":246,"yType":"varchar"},{"x":"SOLA","xType":"varchar","xGroupBy":"field","y":31,"yType":"varchar"},{"x":"SWE","xType":"varchar","xGroupBy":"field","y":114,"yType":"varchar"},{"x":"UKI","xType":"varchar","xGroupBy":"field","y":144,"yType":"varchar"},{"x":"UNKNOWN","xType":"varchar","xGroupBy":"field","y":882,"yType":"varchar"},{"x":"US","xType":"varchar","xGroupBy":"field","y":1064,"yType":"varchar"}]}]
+  bubbleData = _.flatten _.map streams, (stream) -> _.map stream.values, (item) -> item
+  uniqueXs = _.unique _.map bubbleData, (item) -> item.x
+  logger.info prettyjson.render bubbleData
+  logger.info prettyjson.render uniqueXs
+#  logger.info prettyjson.render _.map bubbleData, (item) -> item.x
+
 #  buffer = new Buffer('eJzT0yMAAGTvBe8=', 'base64')
 #  zlib.unzip buffer, (err, buffer) ->
 #    if !err
@@ -81,6 +89,4 @@ sandbox.test_parse_string = () ->
 #sandbox.refGet '52277447f95fb65818000001'
 #sandbox.dataset_get '52277447f95fb65818000001'
 #sandbox.test_parse_string()
-
-a = {a: 'b'}
-logger.info _.values(a)[0]
+sandbox.test_converting_streams_to_bubble()

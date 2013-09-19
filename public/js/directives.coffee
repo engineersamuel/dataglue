@@ -1,47 +1,48 @@
-define ["angular", "services", "d3", "nv", "moment", "bubble"], (angular, services, d3, nv, moment, Bubble) ->
+define ["angular", "services", "nv", "moment", "bubble"], (angular, services, nv, moment, Bubble) ->
   "use strict"
   angular.module("dataGlue.directives", ["dataGlue.services"])
   .directive("appVersion", ["version", (version) ->
     (scope, elm, attrs) ->
       elm.text version
   ])
-  .directive "dirTableVis", ->
-    restrict: "E"
-    scope:
-      val: "="
-      grouped: "="
-
-    # http://knowledgestockpile.blogspot.com/2012/01/understanding-selectall-data-enter.html
-    link: (scope, element, attrs) ->
-
-      tables = (data) ->
-        console.log "tables:data: #{JSON.stringify(data)}"
-        vis = d3.select(element[0])
-        divs = vis.selectAll("div").data(data, (d) -> d['TABLE_NAME'])
-        divs.enter().append('div').attr('class', 'db-info-item').text((d) -> d['TABLE_NAME'])
-
-        # Transition the element being removed
-        divs.exit()
-          .transition()
-          .duration(300)
-          .ease("exp")
-          .style("opacity", 0)
-          .remove()
-
-        # Transition the element coming into existence
-        divs
-          .attr("opacity", 1)
-          .transition()
-          .duration(500)
-          .ease("exp")
-
-      # Setup with the initial data
-      scope.$watch 'val', (newVal, oldVal) ->
-
-        if newVal is undefined
-          return
-
-        tables newVal
+#  .directive "dirTableVis", ->
+#    restrict: "E"
+#    scope:
+#      val: "="
+#      grouped: "="
+#
+#    # http://knowledgestockpile.blogspot.com/2012/01/understanding-selectall-data-enter.html
+#    link: (scope, element, attrs) ->
+#
+#
+#      tables = (data) ->
+#        console.log "tables:data: #{JSON.stringify(data)}"
+#        vis = d3.select(element[0])
+#        divs = vis.selectAll("div").data(data, (d) -> d['TABLE_NAME'])
+#        divs.enter().append('div').attr('class', 'db-info-item').text((d) -> d['TABLE_NAME'])
+#
+#        # Transition the element being removed
+#        divs.exit()
+#          .transition()
+#          .duration(300)
+#          .ease("exp")
+#          .style("opacity", 0)
+#          .remove()
+#
+#        # Transition the element coming into existence
+#        divs
+#          .attr("opacity", 1)
+#          .transition()
+#          .duration(500)
+#          .ease("exp")
+#
+#      # Setup with the initial data
+#      scope.$watch 'val', (newVal, oldVal) ->
+#
+#        if newVal is undefined
+#          return
+#
+#        tables newVal
 
   .directive "d3Visualization", () ->
     restrict: "E"
@@ -51,10 +52,13 @@ define ["angular", "services", "d3", "nv", "moment", "bubble"], (angular, servic
     }
     link: (scope, element, attrs) ->
 
-      data = undefined
+      elementId = element.attr('id')
+      containerSelector = "##{elementId}"
+      svgSelector = "##{elementId} svg"
+
+      dataSet = undefined
       graphType = undefined
       chart = undefined
-      bubbleGraph = undefined
 
       setAxisFormatting = (dataSet, chart) ->
         xAxisDataType = dataSet[0]?[0]?.xType
@@ -66,7 +70,7 @@ define ["angular", "services", "d3", "nv", "moment", "bubble"], (angular, servic
         else if yAxisDataType in ['float']
           chart.yAxis.tickFormat(d3.format(',.1f'))
 
-        if xAxisDataType in ['datatime']
+        if xAxisDataType in ['datetime']
           if xAxisGroupBy? is 'day'
             chart.xAxis
               .tickFormat((d) -> return moment(d).format('YYYY-MM-DD'))
@@ -81,9 +85,9 @@ define ["angular", "services", "d3", "nv", "moment", "bubble"], (angular, servic
         chart.yAxis.tickFormat((d) -> d3.format("d")(d))
 
 
-      handleChart = (dataSet) ->
+      handleChart = () ->
         # If no chart create the chart and add it to nv
-        if not chart?
+        if chart is undefined
           console.log "Creating a new d3 Graph"
           nv.addGraph () ->
             chart = nv.models.multiBarChart()
@@ -96,12 +100,8 @@ define ["angular", "services", "d3", "nv", "moment", "bubble"], (angular, servic
               )
             setAxisFormatting dataSet, chart
 
-            data = if not dataSet? then exampleData() else dataSet
-            console.log "data: #{data}"
-
-            #d3.select(element[0])
-            d3.select("#graph_container svg")
-              .datum(data)
+            d3.select(svgSelector)
+              .datum(dataSet)
               .transition().duration(500).call(chart)
 
             nv.utils.windowResize chart.update
@@ -113,38 +113,77 @@ define ["angular", "services", "d3", "nv", "moment", "bubble"], (angular, servic
 
           setAxisFormatting dataSet, chart
 
-          d3.select("#graph_container svg")
+          d3.select(svgSelector)
             .datum(dataSet)
             .transition().duration(500).call(chart)
 
           chart.update()
 
-      handleBubble = () ->
-        bubbleGraph = new Bubble()
-        bubbleGraph.initialize_data(data)
-        bubbleGraph.start()
-        bubbleGraph.display_group_all()
+      handlePie = () ->
+        # There is a major discrepency with the pieChart
+        pieData = _.flatten _.map dataSet, (stream) -> _.map stream.values, (item) -> item
 
+        # If no chart create the chart and add it to nv
+        if chart is undefined
+          console.log "Creating a new Pie Graph with dataSet: #{JSON.stringify(dataSet)}"
+          nv.addGraph () ->
+            chart = nv.models.pieChart()
+              .x((d) -> d.x )
+              .y((d) -> d.y )
+              .showLabels(true)
+
+            d3.select(svgSelector)
+              .datum(pieData)
+              .transition().duration(500).call(chart)
+
+            nv.utils.windowResize chart.update
+
+            return chart
+          # Otherwise just update the data and redraw
+        else
+          console.log "Updating the Pie graph with: #{JSON.stringify(dataSet)}"
+
+          d3.select(svgSelector)
+            .datum(pieData)
+            .transition().duration(500).call(chart)
+
+          chart.update()
+
+      handleBubble = () ->
+        chart = new Bubble "graph_container"
+        chart.initialize_data dataSet
+        chart.start()
+        chart.display_group_all()
 
       handleOptionsChanges = () ->
-        if data?
+        if dataSet?.length > 0
           if graphType is 'multiBarChart'
             handleChart()
           else if graphType is 'bubble'
             handleBubble()
+          else if graphType is 'pie'
+            handlePie()
           else
             console.warn "Data to graph but no type of Graph selected!"
         else
           console.warn "No data given to graph!"
 
+      resetSvg = () ->
+        chart = undefined
+        console.debug "Resetting SVG"
+        d3.selectAll(svgSelector).remove()
+        d3.select(containerSelector).append("svg")
 
       scope.$watch "val", (newVal, oldVal) ->
-        console.log "$watch val: #{JSON.stringify(newVal)}"
-        data = newVal
+        dataSet = newVal
         handleOptionsChanges()
       scope.$watch "type", (newVal, oldVal) ->
-        console.log "$watch type: #{newVal}"
         graphType = newVal
+
+        # If the type of the graph has changed, remove the current element
+        if (newVal isnt oldVal and newVal isnt undefined) then resetSvg()
+
+        # Now handle the options changes
         handleOptionsChanges()
 
 

@@ -17,7 +17,18 @@
           $rootScope.$broadcast('dataSetLoaded');
         }
         $scope.removeDbReference = function(idx) {
-          $scope.dataSet.dbReferences.splice(idx(1));
+          $scope.dataSet.dbReferences.splice(idx, 1);
+          dbService.dataSet = $scope.dataSet;
+          return dbService.cacheUpsert(function() {
+            return $rootScope.$broadcast('dataSetLoaded');
+          });
+        };
+        $scope.copyDbReference = function(idx) {
+          var dbRefToCopy;
+
+          console.debug("Copying dbReference at idx: " + idx);
+          dbRefToCopy = $scope.dataSet.dbReferences[idx];
+          $scope.dataSet.dbReferences.splice(idx, 0, dbRefToCopy);
           dbService.dataSet = $scope.dataSet;
           return dbService.cacheUpsert(function() {
             return $rootScope.$broadcast('dataSetLoaded');
@@ -56,8 +67,10 @@
         updateFields = function(variableNames) {
           var fieldIndex;
 
+          console.debug("Updating fields for dbRefIndex: " + $scope.dbRefIndex);
           fieldIndex = getSelectedFieldIndex();
           return _.each(variableNames, function(variableName) {
+            console.debug("Updating variable: " + variableName + " on field " + $scope.dataSet.dbReferences[$scope.dbRefIndex].fields[fieldIndex].COLUMN_NAME + " for dbRefIndex: " + $scope.dbRefIndex);
             return $scope.dataSet.dbReferences[$scope.dbRefIndex].fields[fieldIndex][variableName] = $scope[variableName];
           });
         };
@@ -129,6 +142,12 @@
         $scope.selectedReference = void 0;
         $scope.selectedField = void 0;
         $scope.selectedFieldName = void 0;
+        $scope.dbRefIndex = void 0;
+        $scope.openModalForReference = function(dbRefIndex, r) {
+          $scope.dbRefIndex = dbRefIndex;
+          $scope.selectedReference = r;
+          return $('#dbReferenceModal').modal();
+        };
         $scope.openModalForField = function(dbRefIndex, r, f) {
           $scope.dbRefIndex = dbRefIndex;
           $scope.selectedReference = r;
@@ -149,6 +168,7 @@
           if (graph == null) {
             graph = true;
           }
+          $('#graph_field_modal').modal('hide');
           variablesToUpdate = ['aggregation', 'groupBy', 'beginDate', 'endDate'];
           updateFields(variablesToUpdate);
           dbService.dataSet = $scope.dataSet;
@@ -166,12 +186,16 @@
             });
           }), 1000);
         };
-        $scope.updateMetaData = function() {
+        $scope.updateMetaData = function(graph) {
+          if (graph == null) {
+            graph = true;
+          }
           console.log("Updating graph options with graph name: " + $scope.dataSet.name);
           dbService.dataSet = $scope.dataSet;
           return dbService.cacheUpsert(function() {
-            console.log("dataSet upserted, setting the scope to dbService.dataSet");
-            return $rootScope.$broadcast('dataSetLoaded');
+            if (graph) {
+              return $rootScope.$broadcast('dataSetLoaded');
+            }
           });
         };
         $scope.beginDate = void 0;
