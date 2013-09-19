@@ -6,6 +6,16 @@
     dateformat: "yyyy-mm-dd hh:MM:ss"
   };
 
+  exports.resolveEnvVar = function(envVar) {
+    if (envVar === void 0) {
+      return void 0;
+    }
+    if (/^\$/i.test(envVar)) {
+      return process.env[envVar];
+    }
+    return envVar;
+  };
+
 }).call(this);
 
 /*

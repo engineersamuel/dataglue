@@ -6,6 +6,7 @@ dataSetCache  = require '../db/datasetCache'
 dbLogic       = require '../db/dbLogic'
 zlib          = require 'zlib'
 prettyjson    = require 'prettyjson'
+mongodb       = require 'mongodb'
 _             = require 'lodash'
 
 sandbox = {}
@@ -57,24 +58,22 @@ sandbox.test_converting_streams_to_bubble = () ->
   logger.info prettyjson.render uniqueXs
 #  logger.info prettyjson.render _.map bubbleData, (item) -> item.x
 
-#  buffer = new Buffer('eJzT0yMAAGTvBe8=', 'base64')
-#  zlib.unzip buffer, (err, buffer) ->
-#    if !err
-#      logger.info buffer.toString()
-
-#logger.debug "db_refs:"
-#logger.debug settings.db_refs
-#
-#logger.debug "mysql_refs:"
-#logger.debug settings.mysql_refs
-#
-#logger.debug "master database: "
-#logger.debug settings.master_ref
-
-#p = dataset_cache.refGet('52277447f95fb65818000001')
-#p.on 'success', (doc) -> logger.debug pj.render doc
-
-#p = dbLogic.queryDataset '52277447f95fb65818000001'
+sandbox.test_openshift_mongo = (user, pass, host, port, db) ->
+  mongourl = "mongodb://#{user}:#{pass}@#{host}:#{port}/#{db}?auto_reconnect=true"
+  logger.info "Attempting to connect to: #{mongourl}"
+  mongodb.connect mongourl, (err, conn) ->
+    if err
+      logger.error err
+    else
+      logger.info "Attempting to connect to collection: #{settings.master_ref.cache}"
+      conn.collection settings.master_ref.cache, (err, coll) ->
+        if err
+          logger.error err
+          conn.close()
+        else
+          coll.find {}, (err, results) ->
+            logger.debug prettyjson.render results
+            conn.close()
 
 
 #sandbox.hashEach()
@@ -84,4 +83,6 @@ sandbox.test_converting_streams_to_bubble = () ->
 #sandbox.refGet '52277447f95fb65818000001'
 #sandbox.dataset_get '52277447f95fb65818000001'
 #sandbox.test_parse_string()
-sandbox.test_converting_streams_to_bubble()
+#sandbox.test_converting_streams_to_bubble()
+#sandbox.test_openshift_mongo('admin', 'YPZf1dXxwiFR', '127.13.123.2', '27017', 'dataglue')
+sandbox.test_openshift_mongo('', '', '127.0.0.1', '27018', 'dataglue')

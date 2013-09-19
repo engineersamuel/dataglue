@@ -8,15 +8,20 @@ _             = require 'lodash'
 prettyjson    = require 'prettyjson'
 #EventEmitter  = require("events").EventEmitter
 
-generate_mongo_url = (obj) ->
-  obj.host = (obj.host || '127.0.0.1')
-  obj.port = (obj.port || 27017)
-  obj.db = (obj.db || 'test')
 
-  if obj.user and obj.pass
-    return "mongodb://" + obj.user + ":" + obj.pass + "@" + obj.host + ":" + obj.port + "/" + obj.db + "?auto_reconnect=true"
+generate_mongo_url = (obj) ->
+  obj.host = (utils.resolveEnvVar(obj.host) || '127.0.0.1')
+  obj.port = (utils.resolveEnvVar(obj.port) || 27017)
+  obj.db = (utils.resolveEnvVar(obj.db) || 'test')
+
+  mongourl = undefined
+  if (obj.user and obj.user isnt '') and (obj.pass and obj.pass isnt '')
+    mongourl = "mongodb://#{utils.resolveEnvVar(obj.user)}:#{utils.resolveEnvVar(obj.pass)}@#{utils.resolveEnvVar(obj.host) || '127.0.0.1'}:#{utils.resolveEnvVar(obj.port) || '27017'}/#{utils.resolveEnvVar(obj.db)}?auto_reconnect=true"
   else
-    return "mongodb://" + obj.host + ":" + obj.port + "/" + obj.db
+    mongourl = "mongodb://#{utils.resolveEnvVar(obj.host) || '127.0.0.1'}:#{utils.resolveEnvVar(obj.port) || '27017'}/#{utils.resolveEnvVar(obj.db) || 'dataglue'}?auto_reconnect=true"
+
+  logger.info "Finished generating mongo url: #{mongourl}"
+  return mongourl
 
 mongo_url = generate_mongo_url(settings.master_ref)
 
@@ -26,7 +31,6 @@ DataSetCache = {}
 # https://github.com/mongodb/node-mongodb-native/blob/master/lib/mongodb/collection.js
 DataSetCache.refDelete = (_id, callback) ->
   self = @
-  logger.debug "Connecting to mongo on: #{mongo_url}"
   mongodb.connect mongo_url, (err, conn) ->
     if err
       callback err
