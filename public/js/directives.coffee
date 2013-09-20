@@ -59,30 +59,38 @@ define ["angular", "services", "nv", "moment", "bubble"], (angular, services, nv
       dataSet = undefined
       graphType = undefined
       chart = undefined
+      chartXType = undefined
 
       setAxisFormatting = (dataSet, chart) ->
-        xAxisDataType = dataSet[0]?[0]?.xType
-        xAxisGroupBy = dataSet[0]?[0]?.xGroupBy
-        yAxisDataType = dataSet[0]?[0]?.yType
+        xAxisDataType = dataSet[0]?['values']?[0]?.xType
+        chartXType = xAxisDataType
+        xAxisGroupBy = dataSet[0]?['values']?[0]?.xGroupBy
+        yAxisDataType = dataSet[0]?['values']?[0]?.yType
+        console.debug "xAxisDataType: #{xAxisDataType}"
+        console.debug "xAxisGroupBy: #{xAxisGroupBy}"
+        console.debug "yAxisDataType: #{yAxisDataType}"
 
-        if yAxisDataType in ['int']
-          chart.yAxis.tickFormat((d) -> d3.format("d")(d))
-        else if yAxisDataType in ['float']
-          chart.yAxis.tickFormat(d3.format(',.1f'))
+        # I may do some better logic in the future but for now float is the safe case
+        if yAxisDataType in ['int', 'float']
+          chart.yAxis.tickFormat(d3.format(',.2f'))
+        #if yAxisDataType in ['int']
+        #  chart.yAxis.tickFormat((d) -> d3.format("d")(d))
+        #else if yAxisDataType in ['float']
+        #  chart.yAxis.tickFormat(d3.format(',.1f'))
+        #chart.yAxis.tickFormat((d) -> d3.format("d")(d))
 
         if xAxisDataType in ['datetime']
-          if xAxisGroupBy? is 'day'
-            chart.xAxis
-              .tickFormat((d) -> return moment(d).format('YYYY-MM-DD'))
+          if xAxisGroupBy? is 'hour'
+            chart.xAxis.tickFormat((d) -> return moment(d).format('YYYY-MM-DD HH'))
+          else if xAxisGroupBy? is 'day'
+            chart.xAxis.tickFormat((d) -> return moment(d).format('YYYY-MM-DD'))
           else if xAxisGroupBy? is 'month'
-            chart.xAxis
-              .tickFormat((d) -> return moment(d).format('YYYY-MM'))
+            chart.xAxis.tickFormat((d) -> return moment(d).format('YYYY-MM'))
+          else if xAxisGroupBy? is 'year'
+            chart.xAxis.tickFormat((d) -> return moment(d).format('YYYY'))
           # Default
           else
-            chart.xAxis
-              .tickFormat((d) -> return moment(d).format('YYYY-MM-DD'))
-
-        chart.yAxis.tickFormat((d) -> d3.format("d")(d))
+            chart.xAxis.tickFormat((d) -> return moment(d).format('YYYY-MM-DD'))
 
 
       handleChart = () ->
@@ -176,6 +184,9 @@ define ["angular", "services", "nv", "moment", "bubble"], (angular, services, nv
 
       scope.$watch "val", (newVal, oldVal) ->
         dataSet = newVal
+
+        console.debug "Dataset changed to: #{JSON.stringify(dataSet)}"
+
         handleOptionsChanges()
       scope.$watch "type", (newVal, oldVal) ->
         graphType = newVal

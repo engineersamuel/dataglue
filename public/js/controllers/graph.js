@@ -51,6 +51,34 @@
           }
           return false;
         };
+        $scope.resetOtherFields = function(dbRefIdx, fieldIdx, varName) {
+          var field, groupByValue;
+
+          console.debug("Clearing " + varName + " from dbRef: " + dbRefIdx + ", except field: " + fieldIdx);
+          field = $scope.dataSet.dbReferences[dbRefIdx].fields[fieldIdx];
+          if (varName === 'groupBy') {
+            groupByValue = field['groupBy'];
+            if (groupByValue === 'multiplex') {
+              return _.each($scope.dataSet.dbReferences[dbRefIdx].fields, function(field, idx) {
+                if (fieldIdx !== idx && field['groupBy'] === 'multiplex') {
+                  return field[varName] = void 0;
+                }
+              });
+            } else {
+              return _.each($scope.dataSet.dbReferences[dbRefIdx].fields, function(field, idx) {
+                if (fieldIdx !== idx && field['groupBy'] !== 'multiplex') {
+                  return field[varName] = void 0;
+                }
+              });
+            }
+          } else {
+            return _.each($scope.dataSet.dbReferences[dbRefIdx].fields, function(field, idx) {
+              if (fieldIdx !== idx) {
+                return field[varName] = void 0;
+              }
+            });
+          }
+        };
         $scope.$on('dataSetLoaded', function() {
           return dbService.queryDataSet(function(data) {
             return dbLogic.processDataSet($scope.dataSet, data, function(err, d3Data) {
@@ -66,46 +94,60 @@
           }, {
             name: 'aggregation',
             value: 'count',
-            label: 'Count'
+            label: 'Count',
+            tooltip: "COUNT(field)"
           }, {
             name: 'aggregation',
             value: 'distinctCount',
-            label: 'Distinct Count'
+            label: 'Distinct Count',
+            tooltip: "COUNT(DISTINCT field)"
           }, {
             name: 'aggregation',
             value: 'sum',
-            label: 'Sum'
+            label: 'Sum',
+            tooltip: "SUM(field)"
           }, {
             name: 'aggregation',
             value: 'avg',
-            label: 'Avg'
+            label: 'Avg',
+            tooltip: "AVG(field)"
           }
         ];
         $scope.groupByOptions = [
           {
-            name: 'groupFieldBy',
+            name: 'groupBy',
             value: void 0,
             label: 'No Selection'
           }, {
-            name: 'groupFieldBy',
+            name: 'groupBy',
+            value: 'multiplex',
+            label: 'Multiplex',
+            tooltip: 'Multiplexes the x-axis over this field.'
+          }, {
+            name: 'groupBy',
             value: 'field',
-            label: 'Field Itself'
+            label: 'Field Itself',
+            tooltip: 'Adds this field as the primary x axis group'
           }, {
-            name: 'groupFieldBy',
+            name: 'groupBy',
             value: 'year',
-            label: 'Year'
+            label: 'Year',
+            tooltip: "Groups on DATE_FORMAT(field, '%Y')"
           }, {
-            name: 'groupFieldBy',
+            name: 'groupBy',
             value: 'month',
-            label: 'Month'
+            label: 'Month',
+            tooltip: "Groups on DATE_FORMAT(field, '%Y-%m')"
           }, {
-            name: 'groupFieldBy',
+            name: 'groupBy',
             value: 'day',
-            label: 'Day'
+            label: 'Day',
+            tooltip: "Groups on DATE_FORMAT(field, '%Y-%m-%d')"
           }, {
-            name: 'groupFieldBy',
+            name: 'groupBy',
             value: 'hour',
-            label: 'Hour'
+            label: 'Hour',
+            tooltip: "Groups on DATE_FORMAT(field, '%Y-%m-%d %H')"
           }
         ];
         $scope.selectedReference = void 0;

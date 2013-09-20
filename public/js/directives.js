@@ -15,7 +15,7 @@
           type: "="
         },
         link: function(scope, element, attrs) {
-          var chart, containerSelector, dataSet, elementId, graphType, handleBubble, handleChart, handleOptionsChanges, handlePie, resetSvg, setAxisFormatting, svgSelector;
+          var chart, chartXType, containerSelector, dataSet, elementId, graphType, handleBubble, handleChart, handleOptionsChanges, handlePie, resetSvg, setAxisFormatting, svgSelector;
 
           elementId = element.attr('id');
           containerSelector = "#" + elementId;
@@ -23,37 +23,43 @@
           dataSet = void 0;
           graphType = void 0;
           chart = void 0;
+          chartXType = void 0;
           setAxisFormatting = function(dataSet, chart) {
-            var xAxisDataType, xAxisGroupBy, yAxisDataType, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
+            var xAxisDataType, xAxisGroupBy, yAxisDataType, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8;
 
-            xAxisDataType = (_ref = dataSet[0]) != null ? (_ref1 = _ref[0]) != null ? _ref1.xType : void 0 : void 0;
-            xAxisGroupBy = (_ref2 = dataSet[0]) != null ? (_ref3 = _ref2[0]) != null ? _ref3.xGroupBy : void 0 : void 0;
-            yAxisDataType = (_ref4 = dataSet[0]) != null ? (_ref5 = _ref4[0]) != null ? _ref5.yType : void 0 : void 0;
-            if (yAxisDataType === 'int') {
-              chart.yAxis.tickFormat(function(d) {
-                return d3.format("d")(d);
-              });
-            } else if (yAxisDataType === 'float') {
-              chart.yAxis.tickFormat(d3.format(',.1f'));
+            xAxisDataType = (_ref = dataSet[0]) != null ? (_ref1 = _ref['values']) != null ? (_ref2 = _ref1[0]) != null ? _ref2.xType : void 0 : void 0 : void 0;
+            chartXType = xAxisDataType;
+            xAxisGroupBy = (_ref3 = dataSet[0]) != null ? (_ref4 = _ref3['values']) != null ? (_ref5 = _ref4[0]) != null ? _ref5.xGroupBy : void 0 : void 0 : void 0;
+            yAxisDataType = (_ref6 = dataSet[0]) != null ? (_ref7 = _ref6['values']) != null ? (_ref8 = _ref7[0]) != null ? _ref8.yType : void 0 : void 0 : void 0;
+            console.debug("xAxisDataType: " + xAxisDataType);
+            console.debug("xAxisGroupBy: " + xAxisGroupBy);
+            console.debug("yAxisDataType: " + yAxisDataType);
+            if (yAxisDataType === 'int' || yAxisDataType === 'float') {
+              chart.yAxis.tickFormat(d3.format(',.2f'));
             }
             if (xAxisDataType === 'datetime') {
-              if ((xAxisGroupBy != null) === 'day') {
-                chart.xAxis.tickFormat(function(d) {
+              if ((xAxisGroupBy != null) === 'hour') {
+                return chart.xAxis.tickFormat(function(d) {
+                  return moment(d).format('YYYY-MM-DD HH');
+                });
+              } else if ((xAxisGroupBy != null) === 'day') {
+                return chart.xAxis.tickFormat(function(d) {
                   return moment(d).format('YYYY-MM-DD');
                 });
               } else if ((xAxisGroupBy != null) === 'month') {
-                chart.xAxis.tickFormat(function(d) {
+                return chart.xAxis.tickFormat(function(d) {
                   return moment(d).format('YYYY-MM');
                 });
+              } else if ((xAxisGroupBy != null) === 'year') {
+                return chart.xAxis.tickFormat(function(d) {
+                  return moment(d).format('YYYY');
+                });
               } else {
-                chart.xAxis.tickFormat(function(d) {
+                return chart.xAxis.tickFormat(function(d) {
                   return moment(d).format('YYYY-MM-DD');
                 });
               }
             }
-            return chart.yAxis.tickFormat(function(d) {
-              return d3.format("d")(d);
-            });
           };
           handleChart = function() {
             if (chart === void 0) {
@@ -138,6 +144,7 @@
           };
           scope.$watch("val", function(newVal, oldVal) {
             dataSet = newVal;
+            console.debug("Dataset changed to: " + (JSON.stringify(dataSet)));
             return handleOptionsChanges();
           });
           return scope.$watch("type", function(newVal, oldVal) {

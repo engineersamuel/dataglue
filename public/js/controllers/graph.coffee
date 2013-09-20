@@ -50,6 +50,35 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
         if field.endDate? and field.endDate not in [undefined, ''] then return true
         return false
 
+      # Clear All other fields except the specified field index where the varName is say aggregation or groupBy, ect..
+      $scope.resetOtherFields = (dbRefIdx, fieldIdx, varName) ->
+        console.debug "Clearing #{varName} from dbRef: #{dbRefIdx}, except field: #{fieldIdx}"
+
+        field = $scope.dataSet.dbReferences[dbRefIdx].fields[fieldIdx]
+        if varName is 'groupBy'
+          groupByValue = field['groupBy']
+
+          # If the groupBy field value is mutliplex then clear all other multiplexes
+          if groupByValue is 'multiplex'
+            _.each $scope.dataSet.dbReferences[dbRefIdx].fields, (field, idx) ->
+              # As long as the field index isn't the current index, reset the variable on the field
+              if fieldIdx isnt idx and field['groupBy'] is 'multiplex'
+                field[varName] = undefined
+
+          # If the groupBy field value isn't multiplex then clear all others except multiplex
+          else
+            _.each $scope.dataSet.dbReferences[dbRefIdx].fields, (field, idx) ->
+              # As long as the field index isn't the current index, reset the variable on the field
+              if fieldIdx isnt idx and field['groupBy'] isnt 'multiplex'
+                field[varName] = undefined
+
+        # If not groupBy, where I have to handle multiplex and non-multiplex, just remove all other fields
+        else
+          _.each $scope.dataSet.dbReferences[dbRefIdx].fields, (field, idx) ->
+            # As long as the field index isn't the current index, reset the variable on the field
+            if fieldIdx isnt idx
+              field[varName] = undefined
+
       # find the field index of the selected field
 #      getSelectedFieldIndex = () ->
 #        fieldIndex = _.findIndex $scope.dataSet.dbReferences[$scope.dbRefIndex].fields, (item) ->
@@ -73,20 +102,16 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
           dbLogic.processDataSet $scope.dataSet, data, (err, d3Data) ->
             $scope.d3DataSet = d3Data
 
-      # TODO, create various events so I only fetch the data when necessary and re-process
-      #$scope.$on 'dataSetFieldChange', () -> dbLogic.processDataSet $scope.dataSet
-      #$scope.$on 'dataSetFieldChange', () -> dbLogic.processDataSet $scope.dataSet
-
       ##################################################################################################################
       # Aggregation radio options
       ##################################################################################################################
 #      $scope.aggregation = undefined
       $scope.aggregationOptions = [
         {name: 'aggregation', value: undefined, label: 'No Selection'},
-        {name: 'aggregation', value: 'count', label: 'Count'},
-        {name: 'aggregation', value: 'distinctCount', label: 'Distinct Count'},
-        {name: 'aggregation', value: 'sum', label: 'Sum'},
-        {name: 'aggregation', value: 'avg', label: 'Avg'}
+        {name: 'aggregation', value: 'count', label: 'Count', tooltip: "COUNT(field)"},
+        {name: 'aggregation', value: 'distinctCount', label: 'Distinct Count', tooltip: "COUNT(DISTINCT field)"},
+        {name: 'aggregation', value: 'sum', label: 'Sum', tooltip: "SUM(field)"},
+        {name: 'aggregation', value: 'avg', label: 'Avg', tooltip: "AVG(field)"}
       ]
 
       ##################################################################################################################
@@ -94,13 +119,14 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
       ##################################################################################################################
 #      $scope.groupBy = undefined
       $scope.groupByOptions = [
-        {name: 'groupFieldBy', value: undefined, label: 'No Selection'},
-        {name: 'groupFieldBy', value: 'field', label: 'Field Itself'},
-        {name: 'groupFieldBy', value: 'year', label: 'Year'},
-#        {name: 'groupFieldBy', value: 'quarter', label: 'Quarter'},
-        {name: 'groupFieldBy', value: 'month', label: 'Month'},
-        {name: 'groupFieldBy', value: 'day', label: 'Day'},
-        {name: 'groupFieldBy', value: 'hour', label: 'Hour'},
+        {name: 'groupBy', value: undefined, label: 'No Selection'},
+        {name: 'groupBy', value: 'multiplex', label: 'Multiplex', tooltip: 'Multiplexes the x-axis over this field.'},
+        {name: 'groupBy', value: 'field', label: 'Field Itself', tooltip: 'Adds this field as the primary x axis group'},
+        {name: 'groupBy', value: 'year', label: 'Year', tooltip: "Groups on DATE_FORMAT(field, '%Y')"},
+#        {name: 'groupBy', value: 'quarter', label: 'Quarter'},
+        {name: 'groupBy', value: 'month', label: 'Month', tooltip: "Groups on DATE_FORMAT(field, '%Y-%m')"},
+        {name: 'groupBy', value: 'day', label: 'Day', tooltip: "Groups on DATE_FORMAT(field, '%Y-%m-%d')"},
+        {name: 'groupBy', value: 'hour', label: 'Hour', tooltip: "Groups on DATE_FORMAT(field, '%Y-%m-%d %H')"},
       ]
 
       ##################################################################################################################
@@ -123,12 +149,6 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
         $scope.selectedReference = r
         $scope.selectedField = f
         $scope.selectedFieldName = if f['COLUMN_NAME']? then f['COLUMN_NAME'] else f
-
-        # Set all of the options here for each field.
-        #$scope.aggregation = f['aggregation']
-        #$scope.groupBy = f['groupBy']
-        #$scope.beginDate = f['beginDate']
-        #$scope.endDate = f['endDate']
 
         $('#graph_field_modal').modal()
 
@@ -162,8 +182,6 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
       ##################################################################################################################
       # Where clause begin/end datepicker
       ##################################################################################################################
-#      $scope.beginDate = undefined
-#      $scope.endDate = undefined
       $scope.beginDateOpened = false
       $scope.endDateOpened = false
       $scope.dateOptions =

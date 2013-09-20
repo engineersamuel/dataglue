@@ -5,6 +5,7 @@ squel         = require 'squel'
 _             = require 'lodash'
 async         = require 'async'
 mysql         = require 'mysql'
+moment        = require 'moment'
 logger        = require('tracer').colorConsole(utils.logger_config)
 prettyjson    = require 'prettyjson'
 #EventEmitter  = require("events").EventEmitter
@@ -71,19 +72,23 @@ CachedDataSet.buildSql = (dbReference, callback) ->
         else
           sql.field(fieldName)
 
-        if _.has field, 'beginDate'
+        if _.has field, 'beginDate' and field.beginDate?
           sql.where("#{fieldName} >= TIMESTAMP('#{field.beginDate}')")
 
-        if _.has field, 'endDate'
+        if _.has field, 'endDate' and field.endDate?
           sql.where("#{fieldName} < TIMESTAMP('#{field.endDate}')")
 
         ################################################################################################################
         # Group By's require the group and the field
         ################################################################################################################
-        addX = (field, fieldAlias) ->
-          d3Lookup.x = fieldAlias
-          d3Lookup.xType = field.DATA_TYPE
-          d3Lookup.xGroupBy = field.groupBy
+        addX = (field, fieldAlias, multiplex=false) ->
+          if multiplex
+            d3Lookup.xMultiplex = fieldAlias
+            d3Lookup.xMultiplexType = field.DATA_TYPE
+          else
+            d3Lookup.x = fieldAlias
+            d3Lookup.xType = field.DATA_TYPE
+            d3Lookup.xGroupBy = field.groupBy
 
         addGroupByDate = (sql, field, fieldAlias, dateFormat) ->
           addX field, fieldAlias
@@ -91,25 +96,27 @@ CachedDataSet.buildSql = (dbReference, callback) ->
           sql.group(fieldAlias)
 
         if _.has field, 'groupBy'
-          fieldAlias = 'x'
-          if field.groupBy is 'hour'
-            addGroupByDate sql, field, fieldAlias, "%Y-%m-%d %H"
-            #sql.field("DATE_FORMAT(#{fieldName}, "%Y-%m-%d %H")", fieldAlias)
-          else if field.groupBy is "day"
-            addGroupByDate sql, field, fieldAlias, "%Y-%m-%d"
-            #sql.field("DATE_FORMAT(#{fieldName}, "%Y-%m-%d")", fieldAlias)
-          else if field.groupBy is "month"
-            addGroupByDate sql, field, fieldAlias, "%Y-%m"
-            #sql.field("DATE_FORMAT(#{fieldName}, "%Y-%m")", fieldAlias)
-          else if field.groupBy is "year"
-            addGroupByDate sql, field, fieldAlias, "%Y"
-            #sql.field("DATE_FORMAT(#{fieldName}, '%Y-%m')", fieldAlias)
-          else if field.groupBy is 'field'
+
+          if field.groupBy is 'multiplex'
+            fieldAlias = 'x_multiplex'
             sql.field(field.COLUMN_NAME, fieldAlias)
             sql.group(fieldAlias)
-            addX field, fieldAlias
+            addX field, fieldAlias, true
 
-
+          else
+            fieldAlias = 'x'
+            if field.groupBy is 'hour'
+              addGroupByDate sql, field, fieldAlias, "%Y-%m-%d %H"
+            else if field.groupBy is "day"
+              addGroupByDate sql, field, fieldAlias, "%Y-%m-%d"
+            else if field.groupBy is "month"
+              addGroupByDate sql, field, fieldAlias, "%Y-%m"
+            else if field.groupBy is "year"
+              addGroupByDate sql, field, fieldAlias, "%Y"
+            else if field.groupBy is 'field'
+              sql.field(field.COLUMN_NAME, fieldAlias)
+              sql.group(fieldAlias)
+              addX field, fieldAlias
 
     output.sql = sql.toString()
     output.d3Lookup = d3Lookup
@@ -264,20 +271,73 @@ CachedDataSet.loadDataSet = (doc, callback) ->
         # The dataSetResult is simply a hash
         dataSetResult = _.values(dataSetResult)[0]
         # The d3Data for now will be composed of Streams of unique data sets defined by the dataset reference
-        stream = {key: dataSetResult.queryHash.d3Lookup.key, values: []}
 
-        # Now convert the results to d3
-        _.each dataSetResult.results, (item) ->
-          # logger.debug "item: #{prettyjson.render item}"
-          stream.values.push
-            x: item.x
-            xType: dataSetResult.queryHash.d3Lookup.xType
-            xGroupBy: dataSetResult.queryHash.d3Lookup.xGroupBy
-            y: item.y
-            yType: dataSetResult.queryHash.d3Lookup.yType
+        # If xMultiplex exists iterate over the results
+        if dataSetResult.queryHash.d3Lookup.xMultiplex and dataSetResult.queryHash.d3Lookup.xMultiplex != ''
+          logger.debug "Working with multiplexed data!"
+          streams = []
+          uniqueMutliplexedXs = _.unique _.map dataSetResult.results, (item) -> item[dataSetResult.queryHash.d3Lookup.xMultiplex]
+          # For each of the unique multiplexed results
+          _.each uniqueMutliplexedXs, (uniqueX) ->
 
-           dataSetResult.d3Data = stream
+            stream = {key: "#{dataSetResult.queryHash.d3Lookup.key} (#{uniqueX})", values: []}
+
+            # Filter the results by that multiplexed x
+            stream.values =
+            _(dataSetResult.results)
+            .filter((item) -> item[dataSetResult.queryHash.d3Lookup.xMultiplex] is uniqueX)  # Filter by each unique Mutliplexed x
+            .map((item) ->
+                x: item.x
+                xType: dataSetResult.queryHash.d3Lookup.xType
+                xGroupBy: dataSetResult.queryHash.d3Lookup.xGroupBy
+                xMultiplex: dataSetResult.queryHash.d3Lookup.xMultiplex
+                xMultipleType: dataSetResult.queryHash.d3Lookup.xMultiplexType
+                y: item.y || 0
+                yType: dataSetResult.queryHash.d3Lookup.yType
+            ) # Each result, filtered by the multiplexed x is composed into a single stream
+            .value()  # The value is the array of values filtered by the multiplexed x value
+
+            # Now push this stream onto the streams
+            streams.push stream
+
+          # The data is pure at this point but d3 doesn't work well with mismatching streams.
+          # I.e. [{a:1,b:2,c:3},{a:4,c:5}] so let's do some slicing and dicing to 0 init any missing data
+
+          # Grab the unique x's in all streams
+          # This takes each values in the stream and maps each value to x, flattens that out so a list of objects with x, then gets the unique values of x and removes undefined
+          uniqueXs = _.without(_.unique(_.map(_.flatten(_.map(streams, (stream) -> stream.values), true), (item) -> item.x)), undefined)
+          #console.log "Unique xs: #{uniqueXs}"
+
+          # For each of those unique X values search the streams for arrays that don't contain that x value and push that uniqueX to that stream
+          _.each uniqueXs, (uniqueX) -> _.each streams, (stream) -> if _.findIndex(stream.values, (v) -> v.x is uniqueX) is -1 then stream.values.push({x: uniqueX, y:0})
+
+          # Finally set the d3Data to the streams and delete the results so as not to create too big of a response
+          dataSetResult.d3Data = streams
           delete dataSetResult.results
+
+        # else No mutliplex so just return a 1 stream for the array of results
+        else
+          logger.debug "Working with non-multiplexed data!"
+          stream = {key: dataSetResult.queryHash.d3Lookup.key, values: []}
+          _.each dataSetResult.results, (item) ->
+
+
+            # logger.debug "item: #{prettyjson.render item}"
+            stream.values.push
+              x: item.x
+              xType: dataSetResult.queryHash.d3Lookup.xType
+              xGroupBy: dataSetResult.queryHash.d3Lookup.xGroupBy
+              xMultiplex: dataSetResult.queryHash.d3Lookup.xMultiplex
+              xMultipleType: dataSetResult.queryHash.d3Lookup.xMultiplexType
+              y: item.y
+              yType: dataSetResult.queryHash.d3Lookup.yType
+
+             dataSetResult.d3Data = [stream]
+          delete dataSetResult.results
+
+        # Now that we have a d3Data composed of one or more streams each those streams and sort by x
+        _.each dataSetResult.d3Data, (stream) ->
+          stream.values.sort (a, b) -> moment(a.x).unix() - moment(b.x).unix()
 
       callback null, arrayOfDataSetResults
   return self
@@ -288,52 +348,3 @@ CachedDataSet.queryDataSet = (arg, callback) ->
   @.loadDataSet arg, (err, results) -> callback err, results
 
 module.exports = CachedDataSet
-
-
-#  def self.query_dataset(doc, opts={})
-#  data = {}
-#  tmp = {}
-#  threads = []
-#  doc['dbReferences'].each do |key, dbReference|
-#  threads << Thread.new {
-#  # Db reference is a key => value (hash)
-#  data[key] = self.query_dynamic(dbReference['connection'], dbReference['schema'], dbReference['table'], dbReference['fields'])
-#    ap "Data key: #{key} length: #{data[key].length}"
-#  }
-#  end
-#
-#  # Join each of the threads that fetched the data
-#  threads.each {|t| t.join()}
-#
-#  # TODO just do all cross db joins now in Ruby, not feasible to do this in javascript due to the potential amount
-#  # Of data being gzipped.  Event say 1-2 megs of gzipped content which is 9 megs uncompressed results in the
-#  # Browser malfunctioning on a quad i7 laptop with 8g ram.
-#  doc['dbReferences'].each do |dbReference, value|
-#  tmp[dbReference] = {
-#  :rawValues => nil
-#  }
-#
-#  # Make sure the d3 key is in the hash
-#  if tmp[dbReference].has_key?(:d3).nil?
-#  tmp[dbReference][:d3] = {}
-#  end
-#
-#  value['fields'].each do |field|
-#
-#  # Make sure the field is in the hash
-#  if tmp[dbReference][:field].nil?
-#  tmp[dbReference][:field] = field
-#  end
-#
-#  ################################################
-#  # Grouping by must always come first
-#  ################################################
-#  if field['groupBy'] and field['groupBy'] != ''
-#    groupedRows = {}
-#  end
-#  end
-#  end
-#
-#  ap tmp
-#  return data
-#  end

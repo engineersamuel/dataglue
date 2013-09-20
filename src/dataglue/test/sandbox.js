@@ -233,14 +233,78 @@
     });
   };
 
-  sandbox.test_string_slice = function() {
-    var s;
+  sandbox.test_unique_stream_x = function() {
+    var streams, uniqueXs;
 
-    s = '$SOME_ENV_VAR';
-    return logger.info(s.slice(1, s.length));
+    streams = [
+      {
+        key: 'a',
+        values: [
+          {
+            x: 1,
+            y: 4
+          }
+        ]
+      }, {
+        key: 'b',
+        values: [
+          {
+            x: 2,
+            y: 10
+          }
+        ]
+      }
+    ];
+    uniqueXs = _.without(_.unique(_.map(_.flatten(_.map(streams, function(stream) {
+      return stream.values;
+    }), true), function(item) {
+      return item.x;
+    })), void 0);
+    _.each(uniqueXs, function(uniqueX) {
+      return _.each(streams, function(stream) {
+        if (_.findIndex(stream.values, function(v) {
+          return v.x === uniqueX;
+        }) === -1) {
+          return stream.values.push({
+            x: uniqueX,
+            y: 0
+          });
+        }
+      });
+    });
+    logger.info(uniqueXs);
+    return logger.info(prettyjson.render(streams));
   };
 
-  sandbox.test_string_slice();
+  sandbox.test_sort = function() {
+    var a, streams;
+
+    a = [1, 3, 5, 1, 2, 30, 99, 2];
+    streams = [
+      {
+        key: 'a',
+        values: [
+          {
+            x: 1,
+            y: 4
+          }
+        ]
+      }, {
+        key: 'b',
+        values: [
+          {
+            x: 2,
+            y: 10
+          }
+        ]
+      }
+    ];
+    logger.info(a);
+    a.sort();
+    return logger.info(a);
+  };
+
+  sandbox.test_sort();
 
 }).call(this);
 

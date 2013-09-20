@@ -75,9 +75,28 @@ sandbox.test_openshift_mongo = (user, pass, host, port, db) ->
             logger.debug prettyjson.render results
             conn.close()
 
-sandbox.test_string_slice = () ->
-  s = '$SOME_ENV_VAR'
-  logger.info s.slice 1, s.length
+sandbox.test_unique_stream_x = () ->
+  streams = [
+    {key: 'a', values: [{x:1, y:4}]},
+    {key: 'b', values: [{x:2, y:10}]},
+  ]
+  # This takes each values in the stream and maps each value to x, flattens that out so a list of objects with x, then gets the unique values of x and removes undefined
+  uniqueXs = _.without(_.unique(_.map(_.flatten(_.map(streams, (stream) -> stream.values), true), (item) -> item.x)), undefined)
+
+  _.each uniqueXs, (uniqueX) -> _.each streams, (stream) -> if _.findIndex(stream.values, (v) -> v.x is uniqueX) is -1 then stream.values.push({x: uniqueX, y:0})
+
+  logger.info uniqueXs
+  logger.info prettyjson.render streams
+
+sandbox.test_sort = () ->
+  a = [1, 3, 5, 1, 2, 30, 99, 2]
+  streams = [
+    {key: 'a', values: [{x:1, y:4}]},
+    {key: 'b', values: [{x:2, y:10}]},
+  ]
+  logger.info a
+  a.sort()
+  logger.info a
 
 
 #sandbox.hashEach()
@@ -90,4 +109,5 @@ sandbox.test_string_slice = () ->
 #sandbox.test_converting_streams_to_bubble()
 #sandbox.test_openshift_mongo('admin', 'YPZf1dXxwiFR', '127.13.123.2', '27017', 'dataglue')
 #sandbox.test_openshift_mongo('', '', '127.0.0.1', '27018', 'dataglue')
-sandbox.test_string_slice()
+#sandbox.test_unique_stream_x()
+sandbox.test_sort()

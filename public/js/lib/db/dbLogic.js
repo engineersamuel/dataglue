@@ -12,7 +12,9 @@
       _.each(dataSetData, function(resultsHash) {
         return _.each(resultsHash, function(theHash, dbRefKey) {
           if (_.has(theHash, 'd3Data')) {
-            return streams.push(theHash.d3Data);
+            return _.each(theHash.d3Data, function(d3Data) {
+              return streams.push(d3Data);
+            });
           }
         });
       });

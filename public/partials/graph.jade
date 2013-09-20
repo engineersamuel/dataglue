@@ -128,28 +128,40 @@ div#graph_field_modal.modal.fade(tabindex="-1",role="dialog",aria-labelledby="gr
                             div.radio(ng-repeat="o in aggregationOptions")
                                 label
                                     //input(type="radio", name="{{o.name}}", value="{{o.value}}", ng-model="$parent.aggregation")
-                                    input(type="radio", name="{{o.name}}", value="{{o.value}}", ng-model="$parent.dataSet.dbReferences[$parent.dbRefIndex].fields[$parent.fieldIndex].aggregation")
+                                    input(type="radio", name="{{o.name}}", value="{{o.value}}", ng-change="$parent.resetOtherFields($parent.dbRefIndex, $parent.fieldIndex, o.name)", ng-model="$parent.dataSet.dbReferences[$parent.dbRefIndex].fields[$parent.fieldIndex].aggregation")
                                     | {{o.label}}
+                                    span(ng-if="o.tooltip != undefined")
+                                        | &nbsp;
+                                        i.icon-info-sign(tooltip="{{o.tooltip}}")
                             p.muted * Determines the Y axis
                         div#fieldGroupBy.tab-pane
                             div.radio(ng-repeat="o in groupByOptions")
                                 label
-                                    input(type="radio", name="{{o.name}}", value="{{o.value}}", ng-model="$parent.dataSet.dbReferences[$parent.dbRefIndex].fields[$parent.fieldIndex].groupBy")
+                                    input(type="radio", name="{{o.name}}", value="{{o.value}}", ng-change="$parent.resetOtherFields($parent.dbRefIndex, $parent.fieldIndex, o.name)", ng-model="$parent.dataSet.dbReferences[$parent.dbRefIndex].fields[$parent.fieldIndex].groupBy")
                                     | {{o.label}}
+                                    span(ng-if="o.tooltip != undefined")
+                                        | &nbsp;
+                                        i.icon-info-sign(tooltip="{{o.tooltip}}")
                             p.muted * Determines the X axis
                         div#where.tab-pane
                             div.form-horizontal
                                 //input(type="text", datepicker-popup="MM-dd-yyyy", ng-model="beginDate", open="beginDateOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")
-                                input(type="text", datepicker-popup="MM-dd-yyyy", ng-model="$parent.dataSet.dbReferences[$parent.dbRefIndex].fields[$parent.fieldIndex].beginDate", open="beginDateOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")
+                                input(type="text", datepicker-popup="MM-dd-yyyy", ng-change="resetOtherFields(dbRefIndex, fieldIndex, 'beginDate')", ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].beginDate", open="beginDateOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")
                                 span
                                     | &nbsp;
                                     i.icon-calendar(ng-click="openBeginDate()")
+                                    span(ng-if="o.tooltip != undefined")
+                                        | &nbsp;
+                                        i.icon-info-sign(tooltip="{{o.tooltip}}")
                             div.form-horizontal
                                 //input(type="text", datepicker-popup="MM-dd-yyyy", ng-model="endDate", open="endDateOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")
-                                input(type="text", datepicker-popup="MM-dd-yyyy", ng-model="$parent.dataSet.dbReferences[$parent.dbRefIndex].fields[$parent.fieldIndex].endDate", open="endDateOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")
+                                input(type="text", datepicker-popup="MM-dd-yyyy", ng-change="resetOtherFields(dbRefIndex, fieldIndex, 'beginDate')", ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].endDate", open="endDateOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")
                                 span
                                     | &nbsp;
                                     i.icon-calendar(ng-click="openEndDate()")
+                                    span(ng-if="o.tooltip != undefined")
+                                        | &nbsp;
+                                        i.icon-info-sign(tooltip="{{o.tooltip}}")
                         div#info.tab-pane
                             table.table.table-condensed
                                 tr
@@ -164,11 +176,7 @@ div#graph_field_modal.modal.fade(tabindex="-1",role="dialog",aria-labelledby="gr
                                 tr
                                     td Index
                                     td {{ selectedField.INDEX }}
-
-
-                            | {{ selectedField.COLUMN_NAME}}
-
-            div.modal-footer
+           div.modal-footer
                 button.btn.btn-default(type="button", data-dismiss="modal") Close
                 // Save but don't cause the SQL to be re-executed
                 button.btn.btn-primary(type="button", ng-click="updateDataSet(false)") Save

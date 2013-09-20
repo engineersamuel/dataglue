@@ -30,7 +30,9 @@ define ['underscore'], (_) ->
     _.each dataSetData, (resultsHash) ->
       _.each resultsHash, (theHash, dbRefKey) ->
         if _.has theHash, 'd3Data'
-          streams.push theHash.d3Data
+          # With introduction of mutliplexed data I've made it so all d3Data results are arrays.  Either 1 or more
+          _.each theHash.d3Data, (d3Data) ->
+            streams.push d3Data
 
 
     callback null, streams
