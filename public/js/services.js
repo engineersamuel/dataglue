@@ -43,7 +43,8 @@ define(['angular', 'jquery', 'underscore', 'pnotify'], function (angular, $, _) 
             var service = {};
             // Graph types
             service.graphTypes = [
-                {name: 'graphType', value: 'multiBarChart', label: 'MultiBar Chart (Default)'},
+                {name: 'graphType', value: 'multiBarChart', label: 'MultiBar (Default)'},
+                {name: 'graphType', value: 'stackedAreaChart', label: 'Stacked Area'},
                 {name: 'graphType', value: 'bubble', label: 'Bubble'},
                 {name: 'graphType', value: 'pie', label: 'Pie'}
             ];

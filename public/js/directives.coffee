@@ -57,11 +57,11 @@ define ["angular", "services", "nv", "moment", "bubble"], (angular, services, nv
       svgSelector = "##{elementId} svg"
 
       dataSet = undefined
-      graphType = undefined
+      chartType = undefined
       chart = undefined
       chartXType = undefined
 
-      setAxisFormatting = (dataSet, chart) ->
+      setAxisFormatting = (dataSet) ->
         xAxisDataType = dataSet[0]?['values']?[0]?.xType
         chartXType = xAxisDataType
         xAxisGroupBy = dataSet[0]?['values']?[0]?.xGroupBy
@@ -80,33 +80,61 @@ define ["angular", "services", "nv", "moment", "bubble"], (angular, services, nv
         #chart.yAxis.tickFormat((d) -> d3.format("d")(d))
 
         if xAxisDataType in ['datetime']
-          if xAxisGroupBy? is 'hour'
-            chart.xAxis.tickFormat((d) -> return moment(d).format('YYYY-MM-DD HH'))
-          else if xAxisGroupBy? is 'day'
-            chart.xAxis.tickFormat((d) -> return moment(d).format('YYYY-MM-DD'))
-          else if xAxisGroupBy? is 'month'
-            chart.xAxis.tickFormat((d) -> return moment(d).format('YYYY-MM'))
-          else if xAxisGroupBy? is 'year'
-            chart.xAxis.tickFormat((d) -> return moment(d).format('YYYY'))
+          if xAxisGroupBy is 'hour'
+            chart.xAxis.tickFormat((d) -> moment(d).format('YYYY-MM-DD HH'))
+          else if xAxisGroupBy is 'day'
+            chart.xAxis.tickFormat((d) -> moment(d).format('YYYY-MM-DD'))
+          else if xAxisGroupBy is 'month'
+            chart.xAxis.tickFormat((d) -> moment(d).format('YYYY-MM'))
+          else if xAxisGroupBy is 'year'
+            chart.xAxis.tickFormat((d) -> moment(d).format('YYYY'))
           # Default
           else
-            chart.xAxis.tickFormat((d) -> return moment(d).format('YYYY-MM-DD'))
+            chart.xAxis.tickFormat((d) -> moment(d).format('YYYY-MM-DD'))
 
+      createChartByType = () ->
+        if chartType is 'multiBarChart'
+          chart = nv.models.multiBarChart()
+            .margin({top: 10, right: 30, bottom: 150, left: 30})
+            #.staggerLabels(true)
+            .x((d) -> d.x)
+            .y((d) -> d.y)
+            .tooltip((key, x, y, e, graph) ->
+                return "<h3>#{key}</h3><p>#{y} on #{x}</p>"
+            )
+        else if chartType is 'stackedAreaChart'
+          chart = nv.models.stackedAreaChart()
+            .margin({top: 10, right: 30, bottom: 150, left: 30})
+            #.staggerLabels(true)
+            .x((d) -> d.x)
+            .y((d) -> d.y)
+            .clipEdge(true)
+            .tooltip((key, x, y, e, graph) ->
+                return "<h3>#{key}</h3><p>#{y} on #{x}</p>"
+            )
+        return undefined
+
+      updateChartByType = () ->
+        if chartType in ['multiBarChart', 'stackedAreaChart']
+          console.log "Updating the d3 graph with: #{JSON.stringify(dataSet)}"
+
+          setAxisFormatting(dataSet)
+
+          d3.select(svgSelector)
+            .datum(dataSet)
+            .transition().duration(500).call(chart)
+
+          chart.update()
+
+        return undefined
 
       handleChart = () ->
         # If no chart create the chart and add it to nv
         if chart is undefined
           console.log "Creating a new d3 Graph"
           nv.addGraph () ->
-            chart = nv.models.multiBarChart()
-              .margin({top: 10, right: 30, bottom: 150, left: 30})
-              #.staggerLabels(true)
-              .x((d) -> return d.x)
-              .y((d) -> return d.y)
-              .tooltip((key, x, y, e, graph) ->
-                return "<h3>#{key}</h3><p>#{y} on #{x}</p>"
-              )
-            setAxisFormatting dataSet, chart
+            createChartByType()
+            setAxisFormatting(dataSet)
 
             d3.select(svgSelector)
               .datum(dataSet)
@@ -117,15 +145,7 @@ define ["angular", "services", "nv", "moment", "bubble"], (angular, services, nv
             return chart
         # Otherwise just update the data and redraw
         else
-          console.log "Updating the d3 graph with: #{JSON.stringify(dataSet)}"
-
-          setAxisFormatting dataSet, chart
-
-          d3.select(svgSelector)
-            .datum(dataSet)
-            .transition().duration(500).call(chart)
-
-          chart.update()
+          updateChartByType()
 
       handlePie = () ->
         # There is a major discrepency with the pieChart
@@ -165,11 +185,11 @@ define ["angular", "services", "nv", "moment", "bubble"], (angular, services, nv
 
       handleOptionsChanges = () ->
         if dataSet?.length > 0
-          if graphType is 'multiBarChart'
+          if chartType in ['multiBarChart', 'stackedAreaChart']
             handleChart()
-          else if graphType is 'bubble'
+          else if chartType is 'bubble'
             handleBubble()
-          else if graphType is 'pie'
+          else if chartType is 'pie'
             handlePie()
           else
             console.warn "Data to graph but no type of Graph selected!"
@@ -189,7 +209,8 @@ define ["angular", "services", "nv", "moment", "bubble"], (angular, services, nv
 
         handleOptionsChanges()
       scope.$watch "type", (newVal, oldVal) ->
-        graphType = newVal
+        chartType = newVal
+        console.debug "chartType changed to: #{chartType}"
 
         # If the type of the graph has changed, remove the current element
         if (newVal isnt oldVal and newVal isnt undefined) then resetSvg()

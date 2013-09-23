@@ -294,7 +294,7 @@
         return callback(err);
       } else {
         _.each(arrayOfDataSetResults, function(dataSetResult, idx) {
-          var stream, streams, uniqueMutliplexedXs, uniqueXs;
+          var refItem, stream, streams, uniqueMutliplexedXs, uniqueXs;
 
           dataSetResult = _.values(dataSetResult)[0];
           if (dataSetResult.queryHash.d3Lookup.xMultiplex && dataSetResult.queryHash.d3Lookup.xMultiplex !== '') {
@@ -313,8 +313,12 @@
               stream.values = _(dataSetResult.results).filter(function(item) {
                 return item[dataSetResult.queryHash.d3Lookup.xMultiplex] === uniqueX;
               }).map(function(item) {
+                var _ref;
+
                 return {
                   x: item.x,
+                  xOrig: item.x,
+                  x: (_ref = dataSetResult.queryHash.d3Lookup.xType) === 'date' || _ref === 'datetime' ? +moment(item.x) : item.x,
                   xType: dataSetResult.queryHash.d3Lookup.xType,
                   xGroupBy: dataSetResult.queryHash.d3Lookup.xGroupBy,
                   xMultiplex: dataSetResult.queryHash.d3Lookup.xMultiplex,
@@ -330,17 +334,48 @@
             }), true), function(item) {
               return item.x;
             })), void 0);
+            uniqueXs.sort();
+            logger.debug("Unique xs: " + uniqueXs);
+            refItem = _.first(_.first(streams).values);
             _.each(uniqueXs, function(uniqueX) {
-              return _.each(streams, function(stream) {
-                if (_.findIndex(stream.values, function(v) {
-                  return v.x === uniqueX;
-                }) === -1) {
-                  return stream.values.push({
-                    x: uniqueX,
-                    y: 0
+              logger.debug("\n\nNow computing over uniqueX: " + uniqueX);
+              return _.each(streams, function(stream, streamIdx) {
+                var newItem, streamXs;
+
+                if (stream.key === "professional avg (APAC)" && uniqueX === '2010-09') {
+                  logger.debug("Here!");
+                  streamXs = _.map(streams[streamIdx].values, function(v) {
+                    return v.x;
                   });
+                  streamXs.sort();
+                  logger.debug("Stream: " + streamIdx + " now has values: " + streamXs);
+                }
+                if (_.find(stream.values, function(v) {
+                  return v.x === uniqueX;
+                }) === void 0) {
+                  newItem = {
+                    x: uniqueX,
+                    y: 0,
+                    xType: refItem.xType,
+                    xGroupBy: refItem.xGroupBy,
+                    xMultiplex: refItem.xMultiplex,
+                    xMultipleType: refItem.xMultiplexType,
+                    yType: refItem.yType
+                  };
+                  logger.debug("\tNot Found in stream: " + streamIdx + ", adding: " + (prettyjson.render(newItem)));
+                  logger.debug("Stream " + streamIdx + ".length: before " + streams[streamIdx].values.length);
+                  streams[streamIdx].values.push(newItem);
+                  streamXs = _.map(streams[streamIdx].values, function(v) {
+                    return v.x;
+                  });
+                  streamXs.sort();
+                  logger.debug("Stream: " + streamIdx + " now has values: " + streamXs);
+                  return logger.debug("Stream " + streamIdx + ".length: " + streams[streamIdx].values.length);
                 }
               });
+            });
+            _.each(streams, function(stream, streamIdx) {
+              return logger.debug("Stream: " + stream.key + " , values len: " + stream.values.length);
             });
             dataSetResult.d3Data = streams;
             delete dataSetResult.results;
@@ -351,8 +386,11 @@
               values: []
             };
             _.each(dataSetResult.results, function(item) {
+              var _ref;
+
               stream.values.push({
-                x: item.x,
+                xOrig: item.x,
+                x: (_ref = dataSetResult.queryHash.d3Lookup.xType) === 'date' || _ref === 'datetime' ? moment(item.x).unix() : item.x,
                 xType: dataSetResult.queryHash.d3Lookup.xType,
                 xGroupBy: dataSetResult.queryHash.d3Lookup.xGroupBy,
                 xMultiplex: dataSetResult.queryHash.d3Lookup.xMultiplex,
@@ -366,7 +404,7 @@
           }
           return _.each(dataSetResult.d3Data, function(stream) {
             return stream.values.sort(function(a, b) {
-              return moment(a.x).unix() - moment(b.x).unix();
+              return a.x - b.x;
             });
           });
         });

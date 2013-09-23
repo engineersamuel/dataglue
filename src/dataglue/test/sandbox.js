@@ -304,7 +304,62 @@
     return logger.info(a);
   };
 
-  sandbox.test_sort();
+  sandbox.test_first_stream_value = function() {
+    var firstItem, streams;
+
+    streams = [
+      {
+        key: 'a',
+        values: [
+          {
+            x: 1,
+            y: 4
+          }
+        ]
+      }, {
+        key: 'b',
+        values: [
+          {
+            x: 2,
+            y: 10
+          }
+        ]
+      }
+    ];
+    firstItem = _.first(_.first(streams).values);
+    return logger.info(prettyjson.render(firstItem));
+  };
+
+  sandbox.test_merge = function() {
+    var dest, results, source;
+
+    results = [];
+    source = {
+      x: '2010-10',
+      xType: 'datetime',
+      xGroupBy: 'month',
+      xMultiplex: 'x_multiplex',
+      xMultipleType: 'varchar',
+      y: 3.1585,
+      yType: 'int'
+    };
+    dest = {
+      x: '2012-10',
+      y: 0
+    };
+    results.push(_.merge(source, dest));
+    return logger.info(prettyjson.render(results));
+  };
+
+  sandbox.test_unique_sort = function() {
+    var values;
+
+    values = ["2012-04", "2011-03", "2010-12", "2011-01", "2011-02", "2010-10", "2011-04", "2011-05", "2011-06", "2011-07", "2011-08", "2011-09", "2011-10", "2011-11", "2011-12", "2012-01", "2012-02", "2012-03", "2010-11", "2012-05", "2012-06", "2012-07", "2012-08", "2012-09", "2012-10", "2012-11", "2012-12", "2013-01", "2013-02", "2013-03", "2013-04", "2013-05", "2013-06", "2013-07", "2013-08", "2013-09", "2010-09"];
+    values.sort();
+    return logger.info(values);
+  };
+
+  sandbox.test_unique_sort();
 
 }).call(this);
 

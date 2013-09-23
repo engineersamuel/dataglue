@@ -287,7 +287,10 @@ CachedDataSet.loadDataSet = (doc, callback) ->
             _(dataSetResult.results)
             .filter((item) -> item[dataSetResult.queryHash.d3Lookup.xMultiplex] is uniqueX)  # Filter by each unique Mutliplexed x
             .map((item) ->
-                x: item.x
+                x: item.x,
+                xOrig: item.x
+                # Converts x to a unix offset (ms) if x is a type date
+                x: if dataSetResult.queryHash.d3Lookup.xType in ['date', 'datetime'] then +moment(item.x) else item.x
                 xType: dataSetResult.queryHash.d3Lookup.xType
                 xGroupBy: dataSetResult.queryHash.d3Lookup.xGroupBy
                 xMultiplex: dataSetResult.queryHash.d3Lookup.xMultiplex
@@ -306,10 +309,68 @@ CachedDataSet.loadDataSet = (doc, callback) ->
           # Grab the unique x's in all streams
           # This takes each values in the stream and maps each value to x, flattens that out so a list of objects with x, then gets the unique values of x and removes undefined
           uniqueXs = _.without(_.unique(_.map(_.flatten(_.map(streams, (stream) -> stream.values), true), (item) -> item.x)), undefined)
-          #console.log "Unique xs: #{uniqueXs}"
+          uniqueXs.sort()
+#          blah = _.sortBy uniqueXs,  (a, b) -> return +moment(a.x) - +moment(b.x)
+          logger.debug "Unique xs: #{uniqueXs}"
+#          logger.debug "blah: #{blah.join('"')}"
+#          logger.debug "Unique xs length: #{uniqueXs.length}"
+
+          # Every Unique stream *must* contain a defined set of attributes.  I.e. If x is a datetime it is always a datetime in this unique stream or set of streams
+          # Given that let's extract out a single object of types to apply below when filling in the data
+          refItem = _.first(_.first(streams).values)
 
           # For each of those unique X values search the streams for arrays that don't contain that x value and push that uniqueX to that stream
-          _.each uniqueXs, (uniqueX) -> _.each streams, (stream) -> if _.findIndex(stream.values, (v) -> v.x is uniqueX) is -1 then stream.values.push({x: uniqueX, y:0})
+          # Also make sure to upate the x,y with a template of the data given the first item above, this make sure x/y types are transferred
+#          _.each uniqueXs, (uniqueX) -> _.each streams, (stream) -> if _.findIndex(stream.values, (v) -> v.x is uniqueX) is -1 then stream.values.push(_.merge(refItem, {x: uniqueX, y:0}))
+#          _.each streams, (stream, streamIdx) ->
+#            _.each uniqueXs, (uniqueX) ->
+#              # TODO must print each line to figur eout why 2010-09 is equaling itself
+##              logger.debug "Looking for: #{uniqueX} in stream: #{stream.key}"
+#              if _.findIndex(stream.values, (v) -> v.x is uniqueX) is -1
+#                newItem = _.merge refItem, {x: uniqueX, y: 0}
+##                logger.debug "\tNot Found, adding: #{prettyjson.render newItem}"
+#                stream.values.push(newItem)
+
+          _.each uniqueXs, (uniqueX) ->
+
+            logger.debug "\n\nNow computing over uniqueX: #{uniqueX}"
+            _.each streams, (stream, streamIdx) ->
+              # TODO must print each line to figur eout why 2010-09 is equaling itself
+#              logger.debug "Looking for: #{uniqueX} in stream: #{stream.key}"
+              if stream.key is "professional avg (APAC)" and uniqueX is '2010-09'
+                logger.debug "Here!"
+                streamXs = _.map(streams[streamIdx].values, (v) -> v.x)
+                streamXs.sort()
+                logger.debug  "Stream: #{streamIdx} now has values: #{streamXs}"
+
+              if _.find(stream.values, (v) -> return v.x is uniqueX) is undefined
+                newItem = {
+                  x: uniqueX,
+                  y: 0,
+                  xType: refItem.xType
+                  xGroupBy: refItem.xGroupBy
+                  xMultiplex: refItem.xMultiplex
+                  xMultipleType:  refItem.xMultiplexType
+                  yType: refItem.yType
+
+                }
+                # The _.merge has SERIOUS implications.  Do NOT use that method without understanding that it overrides
+                # past objects in the future
+                #newItem = _.merge {x: uniqueX, y: 0}, _.clone(refItem)
+                logger.debug "\tNot Found in stream: #{streamIdx}, adding: #{prettyjson.render newItem}"
+                logger.debug  "Stream #{streamIdx}.length: before #{streams[streamIdx].values.length}"
+                streams[streamIdx].values.push(newItem)
+
+
+                streamXs = _.map(streams[streamIdx].values, (v) -> v.x)
+                streamXs.sort()
+                logger.debug  "Stream: #{streamIdx} now has values: #{streamXs}"
+                logger.debug  "Stream #{streamIdx}.length: #{streams[streamIdx].values.length}"
+
+#          logger.debug prettyjson.render streams
+          # This allows a sanity check on the above
+          _.each streams, (stream, streamIdx) ->
+            logger.debug "Stream: #{stream.key} , values len: #{stream.values.length}"
 
           # Finally set the d3Data to the streams and delete the results so as not to create too big of a response
           dataSetResult.d3Data = streams
@@ -321,10 +382,11 @@ CachedDataSet.loadDataSet = (doc, callback) ->
           stream = {key: dataSetResult.queryHash.d3Lookup.key, values: []}
           _.each dataSetResult.results, (item) ->
 
-
             # logger.debug "item: #{prettyjson.render item}"
             stream.values.push
-              x: item.x
+#              x: item.x,
+              xOrig: item.x
+              x: if dataSetResult.queryHash.d3Lookup.xType in ['date', 'datetime'] then moment(item.x).unix() else item.x
               xType: dataSetResult.queryHash.d3Lookup.xType
               xGroupBy: dataSetResult.queryHash.d3Lookup.xGroupBy
               xMultiplex: dataSetResult.queryHash.d3Lookup.xMultiplex
@@ -337,7 +399,11 @@ CachedDataSet.loadDataSet = (doc, callback) ->
 
         # Now that we have a d3Data composed of one or more streams each those streams and sort by x
         _.each dataSetResult.d3Data, (stream) ->
-          stream.values.sort (a, b) -> moment(a.x).unix() - moment(b.x).unix()
+          stream.values.sort (a, b) -> a.x - b.x
+#          stream.values.sort (a, b) -> +moment(a.x) - +moment(b.x)
+          # TODO do not renable this unless specifically verifying the moment is not being duplicated resulting in identical values
+          # A clone may be required or a new
+#          stream.values.sort (a, b) -> new moment(a.x).valueOf() - new moment(b.x).valueOf()
 
       callback null, arrayOfDataSetResults
   return self

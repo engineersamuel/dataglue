@@ -15,16 +15,16 @@
           type: "="
         },
         link: function(scope, element, attrs) {
-          var chart, chartXType, containerSelector, dataSet, elementId, graphType, handleBubble, handleChart, handleOptionsChanges, handlePie, resetSvg, setAxisFormatting, svgSelector;
+          var chart, chartType, chartXType, containerSelector, createChartByType, dataSet, elementId, handleBubble, handleChart, handleOptionsChanges, handlePie, resetSvg, setAxisFormatting, svgSelector, updateChartByType;
 
           elementId = element.attr('id');
           containerSelector = "#" + elementId;
           svgSelector = "#" + elementId + " svg";
           dataSet = void 0;
-          graphType = void 0;
+          chartType = void 0;
           chart = void 0;
           chartXType = void 0;
-          setAxisFormatting = function(dataSet, chart) {
+          setAxisFormatting = function(dataSet) {
             var xAxisDataType, xAxisGroupBy, yAxisDataType, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8;
 
             xAxisDataType = (_ref = dataSet[0]) != null ? (_ref1 = _ref['values']) != null ? (_ref2 = _ref1[0]) != null ? _ref2.xType : void 0 : void 0 : void 0;
@@ -38,19 +38,19 @@
               chart.yAxis.tickFormat(d3.format(',.2f'));
             }
             if (xAxisDataType === 'datetime') {
-              if ((xAxisGroupBy != null) === 'hour') {
+              if (xAxisGroupBy === 'hour') {
                 return chart.xAxis.tickFormat(function(d) {
                   return moment(d).format('YYYY-MM-DD HH');
                 });
-              } else if ((xAxisGroupBy != null) === 'day') {
+              } else if (xAxisGroupBy === 'day') {
                 return chart.xAxis.tickFormat(function(d) {
                   return moment(d).format('YYYY-MM-DD');
                 });
-              } else if ((xAxisGroupBy != null) === 'month') {
+              } else if (xAxisGroupBy === 'month') {
                 return chart.xAxis.tickFormat(function(d) {
                   return moment(d).format('YYYY-MM');
                 });
-              } else if ((xAxisGroupBy != null) === 'year') {
+              } else if (xAxisGroupBy === 'year') {
                 return chart.xAxis.tickFormat(function(d) {
                   return moment(d).format('YYYY');
                 });
@@ -61,32 +61,57 @@
               }
             }
           };
+          createChartByType = function() {
+            if (chartType === 'multiBarChart') {
+              chart = nv.models.multiBarChart().margin({
+                top: 10,
+                right: 30,
+                bottom: 150,
+                left: 30
+              }).x(function(d) {
+                return d.x;
+              }).y(function(d) {
+                return d.y;
+              }).tooltip(function(key, x, y, e, graph) {
+                return "<h3>" + key + "</h3><p>" + y + " on " + x + "</p>";
+              });
+            } else if (chartType === 'stackedAreaChart') {
+              chart = nv.models.stackedAreaChart().margin({
+                top: 10,
+                right: 30,
+                bottom: 150,
+                left: 30
+              }).x(function(d) {
+                return d.x;
+              }).y(function(d) {
+                return d.y;
+              }).clipEdge(true).tooltip(function(key, x, y, e, graph) {
+                return "<h3>" + key + "</h3><p>" + y + " on " + x + "</p>";
+              });
+            }
+            return void 0;
+          };
+          updateChartByType = function() {
+            if (chartType === 'multiBarChart' || chartType === 'stackedAreaChart') {
+              console.log("Updating the d3 graph with: " + (JSON.stringify(dataSet)));
+              setAxisFormatting(dataSet);
+              d3.select(svgSelector).datum(dataSet).transition().duration(500).call(chart);
+              chart.update();
+            }
+            return void 0;
+          };
           handleChart = function() {
             if (chart === void 0) {
               console.log("Creating a new d3 Graph");
               return nv.addGraph(function() {
-                chart = nv.models.multiBarChart().margin({
-                  top: 10,
-                  right: 30,
-                  bottom: 150,
-                  left: 30
-                }).x(function(d) {
-                  return d.x;
-                }).y(function(d) {
-                  return d.y;
-                }).tooltip(function(key, x, y, e, graph) {
-                  return "<h3>" + key + "</h3><p>" + y + " on " + x + "</p>";
-                });
-                setAxisFormatting(dataSet, chart);
+                createChartByType();
+                setAxisFormatting(dataSet);
                 d3.select(svgSelector).datum(dataSet).transition().duration(500).call(chart);
                 nv.utils.windowResize(chart.update);
                 return chart;
               });
             } else {
-              console.log("Updating the d3 graph with: " + (JSON.stringify(dataSet)));
-              setAxisFormatting(dataSet, chart);
-              d3.select(svgSelector).datum(dataSet).transition().duration(500).call(chart);
-              return chart.update();
+              return updateChartByType();
             }
           };
           handlePie = function() {
@@ -123,11 +148,11 @@
           };
           handleOptionsChanges = function() {
             if ((dataSet != null ? dataSet.length : void 0) > 0) {
-              if (graphType === 'multiBarChart') {
+              if (chartType === 'multiBarChart' || chartType === 'stackedAreaChart') {
                 return handleChart();
-              } else if (graphType === 'bubble') {
+              } else if (chartType === 'bubble') {
                 return handleBubble();
-              } else if (graphType === 'pie') {
+              } else if (chartType === 'pie') {
                 return handlePie();
               } else {
                 return console.warn("Data to graph but no type of Graph selected!");
@@ -148,7 +173,8 @@
             return handleOptionsChanges();
           });
           return scope.$watch("type", function(newVal, oldVal) {
-            graphType = newVal;
+            chartType = newVal;
+            console.debug("chartType changed to: " + chartType);
             if (newVal !== oldVal && newVal !== void 0) {
               resetSvg();
             }
