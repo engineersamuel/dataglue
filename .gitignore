@@ -8,6 +8,7 @@
 
 # Ignore node_modules which will be rebuilt in openshift
 node_modules/*
+npm-debug.log
 
 # OS generated files #
 # ######################
@@ -22,3 +23,4 @@ Icon
 # # Files that might appear on external disk
 .Spotlight-V100
 .Trashes
+
