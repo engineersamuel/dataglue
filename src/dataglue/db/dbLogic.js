@@ -24,6 +24,14 @@
 
   CachedDataSet = {};
 
+  CachedDataSet.verifyPropertyExists = function(obj, field) {
+    if ((_.has(obj, field)) && (obj[field] !== void 0) && (obj[field] !== '')) {
+      return true;
+    } else {
+      return false;
+    }
+  };
+
   CachedDataSet.buildSql = function(dbReference, callback) {
     var d3Lookup, output, self, sql, type;
 
@@ -55,7 +63,7 @@
         if (field['excluded'] == null) {
           fieldName = field.COLUMN_NAME;
           fieldAlias = void 0;
-          if (_.has(field, 'aggregation')) {
+          if (self.verifyPropertyExists(field, 'aggregation')) {
             fieldAlias = 'y';
             if (field.aggregation === 'count') {
               sql.field("COUNT(" + fieldName + ")", fieldAlias);
@@ -75,10 +83,10 @@
           } else {
             sql.field(fieldName);
           }
-          if (_.has(field, 'beginDate' && (field.beginDate != null))) {
+          if (self.verifyPropertyExists(field, 'beginDate')) {
             sql.where("" + fieldName + " >= TIMESTAMP('" + field.beginDate + "')");
           }
-          if (_.has(field, 'endDate' && (field.endDate != null))) {
+          if (self.verifyPropertyExists(field, 'endDate')) {
             sql.where("" + fieldName + " < TIMESTAMP('" + field.endDate + "')");
           }
           addX = function(field, fieldAlias, multiplex) {
@@ -99,7 +107,7 @@
             sql.field("DATE_FORMAT(" + field.COLUMN_NAME + ", '" + dateFormat + "')", fieldAlias);
             return sql.group(fieldAlias);
           };
-          if (_.has(field, 'groupBy')) {
+          if (self.verifyPropertyExists(field, 'groupBy')) {
             if (field.groupBy === 'multiplex') {
               fieldAlias = 'x_multiplex';
               sql.field(field.COLUMN_NAME, fieldAlias);
@@ -335,20 +343,16 @@
               return item.x;
             })), void 0);
             uniqueXs.sort();
-            logger.debug("Unique xs: " + uniqueXs);
             refItem = _.first(_.first(streams).values);
             _.each(uniqueXs, function(uniqueX) {
-              logger.debug("\n\nNow computing over uniqueX: " + uniqueX);
               return _.each(streams, function(stream, streamIdx) {
                 var newItem, streamXs;
 
                 if (stream.key === "professional avg (APAC)" && uniqueX === '2010-09') {
-                  logger.debug("Here!");
                   streamXs = _.map(streams[streamIdx].values, function(v) {
                     return v.x;
                   });
                   streamXs.sort();
-                  logger.debug("Stream: " + streamIdx + " now has values: " + streamXs);
                 }
                 if (_.find(stream.values, function(v) {
                   return v.x === uniqueX;
@@ -362,20 +366,9 @@
                     xMultipleType: refItem.xMultiplexType,
                     yType: refItem.yType
                   };
-                  logger.debug("\tNot Found in stream: " + streamIdx + ", adding: " + (prettyjson.render(newItem)));
-                  logger.debug("Stream " + streamIdx + ".length: before " + streams[streamIdx].values.length);
-                  streams[streamIdx].values.push(newItem);
-                  streamXs = _.map(streams[streamIdx].values, function(v) {
-                    return v.x;
-                  });
-                  streamXs.sort();
-                  logger.debug("Stream: " + streamIdx + " now has values: " + streamXs);
-                  return logger.debug("Stream " + streamIdx + ".length: " + streams[streamIdx].values.length);
+                  return streams[streamIdx].values.push(newItem);
                 }
               });
-            });
-            _.each(streams, function(stream, streamIdx) {
-              return logger.debug("Stream: " + stream.key + " , values len: " + stream.values.length);
             });
             dataSetResult.d3Data = streams;
             delete dataSetResult.results;

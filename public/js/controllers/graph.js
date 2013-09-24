@@ -61,20 +61,20 @@
             if (groupByValue === 'multiplex') {
               return _.each($scope.dataSet.dbReferences[dbRefIdx].fields, function(field, idx) {
                 if (fieldIdx !== idx && field['groupBy'] === 'multiplex') {
-                  return field[varName] = void 0;
+                  return delete field[varName];
                 }
               });
             } else {
               return _.each($scope.dataSet.dbReferences[dbRefIdx].fields, function(field, idx) {
                 if (fieldIdx !== idx && field['groupBy'] !== 'multiplex') {
-                  return field[varName] = void 0;
+                  return delete field[varName];
                 }
               });
             }
           } else {
             return _.each($scope.dataSet.dbReferences[dbRefIdx].fields, function(field, idx) {
               if (fieldIdx !== idx) {
-                return field[varName] = void 0;
+                return delete field[varName];
               }
             });
           }
