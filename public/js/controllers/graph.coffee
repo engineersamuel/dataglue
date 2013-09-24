@@ -63,21 +63,24 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
             _.each $scope.dataSet.dbReferences[dbRefIdx].fields, (field, idx) ->
               # As long as the field index isn't the current index, reset the variable on the field
               if fieldIdx isnt idx and field['groupBy'] is 'multiplex'
-                field[varName] = undefined
+                #field[varName] = undefined
+                delete field[varName]
 
           # If the groupBy field value isn't multiplex then clear all others except multiplex
           else
             _.each $scope.dataSet.dbReferences[dbRefIdx].fields, (field, idx) ->
               # As long as the field index isn't the current index, reset the variable on the field
               if fieldIdx isnt idx and field['groupBy'] isnt 'multiplex'
-                field[varName] = undefined
+                #field[varName] = undefined
+                delete field[varName]
 
         # If not groupBy, where I have to handle multiplex and non-multiplex, just remove all other fields
         else
           _.each $scope.dataSet.dbReferences[dbRefIdx].fields, (field, idx) ->
             # As long as the field index isn't the current index, reset the variable on the field
             if fieldIdx isnt idx
-              field[varName] = undefined
+              #field[varName] = undefined
+              delete field[varName]
 
       # find the field index of the selected field
 #      getSelectedFieldIndex = () ->
