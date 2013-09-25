@@ -359,7 +359,31 @@
     return logger.info(values);
   };
 
-  sandbox.test_unique_sort();
+  sandbox.test_mongo_bson_types = function() {
+    var mongourl;
+
+    mongourl = "mongodb://127.0.0.1:27017/dataglue?auto_reconnect=true";
+    logger.info("Attempting to connect to: " + mongourl);
+    return mongodb.connect(mongourl, function(err, conn) {
+      if (err) {
+        return logger.error(err);
+      } else {
+        logger.info("Attempting to connect to collection: " + settings.master_ref.collection);
+        return conn.collection(settings.master_ref.collection, function(err, coll) {
+          if (err) {
+            return logger.error(err);
+          } else {
+            return coll.find({}).toArray(function(err, results) {
+              logger.debug(prettyjson.render(results));
+              return conn.close();
+            });
+          }
+        });
+      }
+    });
+  };
+
+  sandbox.test_mongo_bson_types();
 
 }).call(this);
 

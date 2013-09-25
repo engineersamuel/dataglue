@@ -129,6 +129,24 @@ sandbox.test_unique_sort = () ->
   values.sort()
   logger.info values
 
+sandbox.test_mongo_bson_types = () ->
+  mongourl = "mongodb://127.0.0.1:27017/dataglue?auto_reconnect=true"
+  logger.info "Attempting to connect to: #{mongourl}"
+  mongodb.connect mongourl, (err, conn) ->
+    if err
+      logger.error err
+    else
+      logger.info "Attempting to connect to collection: #{settings.master_ref.collection}"
+      conn.collection settings.master_ref.collection, (err, coll) ->
+        if err
+          logger.error err
+        else
+          coll.find({}).toArray (err, results) ->
+            logger.debug prettyjson.render results
+            #_.each results, (r) ->
+            #  logger.debug prettyjson.render r
+            conn.close()
+
 #sandbox.hashEach()
 #sandbox.test_compress('Hello World!')
 #sandbox.test_decompress('eJzzSM3JyVcIzy/KSVEEABxJBD4=')
@@ -143,4 +161,5 @@ sandbox.test_unique_sort = () ->
 #sandbox.test_sort()
 #sandbox.test_first_stream_value()
 #sandbox.test_merge()
-sandbox.test_unique_sort()
+#sandbox.test_unique_sort()
+sandbox.test_mongo_bson_types()

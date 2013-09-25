@@ -44,6 +44,13 @@ CachedDataSet.buildSql = (dbReference, callback) ->
   if type in ['mysql']
     sql = squel.select()
     sql.from("#{dbReference.schema}.#{dbReference.table}")
+
+    ################################################################################################################
+    # Limit the query by default
+    ################################################################################################################
+    if self.verifyPropertyExists dbReference, 'limit'
+      sql.limit(dbReference.limit)
+
     _.each dbReference.fields, (field) ->
       if not field['excluded']?
 

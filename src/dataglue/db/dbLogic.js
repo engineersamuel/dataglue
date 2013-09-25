@@ -57,6 +57,9 @@
     if (type === 'mysql') {
       sql = squel.select();
       sql.from("" + dbReference.schema + "." + dbReference.table);
+      if (self.verifyPropertyExists(dbReference, 'limit')) {
+        sql.limit(dbReference.limit);
+      }
       _.each(dbReference.fields, function(field) {
         var addGroupByDate, addX, fieldAlias, fieldName;
 

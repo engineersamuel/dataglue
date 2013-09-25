@@ -41,6 +41,9 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
       # Sync in the graphTypes from the service
       $scope.graphTypes = dbService.graphTypes
 
+      # Sync in the limits from the service
+      $scope.limits = dbService.limits
+
       # Returns true if there is an aggregation, group by, or where set on the field
       $scope.optionsSetOnField = (dbRefIdx, fieldIdx) ->
         field = $scope.dataSet.dbReferences[dbRefIdx].fields[fieldIdx]
@@ -48,6 +51,17 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
         if field.aggregation? and field.aggregation not in [undefined, ''] then return true
         if field.beginDate? and field.beginDate not in [undefined, ''] then return true
         if field.endDate? and field.endDate not in [undefined, ''] then return true
+        return false
+
+      # Returns the short display of the option set on a field
+      $scope.fieldOptionDisplay = (dbRefIdx, fieldIdx) ->
+#        console.log "fieldOptionDisplay"
+        field = $scope.dataSet.dbReferences[dbRefIdx]?.fields[fieldIdx]
+        if field?.groupBy? and field.groupBy not in [undefined, ''] then return field.groupBy
+        if field?.aggregation? and field.aggregation not in [undefined, ''] then return field.aggregation
+        #if field.beginDate? and field.beginDate not in [undefined, ''] then return field.beginDate
+        #if field.endDate? and field.endDate not in [undefined, ''] then return true
+#        console.log JSON.stringify(field)
         return false
 
       # Clear All other fields except the specified field index where the varName is say aggregation or groupBy, ect..
@@ -63,7 +77,6 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
             _.each $scope.dataSet.dbReferences[dbRefIdx].fields, (field, idx) ->
               # As long as the field index isn't the current index, reset the variable on the field
               if fieldIdx isnt idx and field['groupBy'] is 'multiplex'
-                #field[varName] = undefined
                 delete field[varName]
 
           # If the groupBy field value isn't multiplex then clear all others except multiplex
@@ -71,7 +84,6 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
             _.each $scope.dataSet.dbReferences[dbRefIdx].fields, (field, idx) ->
               # As long as the field index isn't the current index, reset the variable on the field
               if fieldIdx isnt idx and field['groupBy'] isnt 'multiplex'
-                #field[varName] = undefined
                 delete field[varName]
 
         # If not groupBy, where I have to handle multiplex and non-multiplex, just remove all other fields
@@ -79,7 +91,6 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
           _.each $scope.dataSet.dbReferences[dbRefIdx].fields, (field, idx) ->
             # As long as the field index isn't the current index, reset the variable on the field
             if fieldIdx isnt idx
-              #field[varName] = undefined
               delete field[varName]
 
       # find the field index of the selected field

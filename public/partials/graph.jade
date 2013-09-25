@@ -38,8 +38,9 @@ div.row
             div.panel-collapse.collapse(id="{{$index}}", ng-class="{in: $index == 0}")
               div.panel-body
                 div.db-info-item.text-right(ng-repeat="f in r.fields")
+                    i.icon-info-sign(ng-if="optionsSetOnField($parent.$index, $index)", tooltip="{{fieldOptionDisplay($parent.$index, $index)}}")
                     span(ng-class="optionsSetOnField($parent.$index, $index) ? 'dataglue-green' : ''")
-                        | {{f.COLUMN_NAME}}&nbsp;
+                        | &nbsp;{{f.COLUMN_NAME}}&nbsp;
                     i.icon-edit.pointer(ng-click="openModalForField($parent.$index, r, $index, f)")
 
         //Example using the accordion bootstrap angular directive.  I find the above to be more flexible
@@ -61,7 +62,9 @@ div#dbReferenceModal.modal.fade(tabindex="-1",role="dialog",aria-labelledby="dbR
                 h4.modal-title {{ dataSet.name }}
                 div.clearfix
             div.modal-body
-                | TBD
+                div.form-group
+                    label(for="limit") Limit
+                        select(ng-model="dataSet.dbReferences[dbRefIndex].limit", ng-options="x.value as x.label for x in limits")
 
             div.modal-footer
                 div.pull-left
@@ -69,6 +72,8 @@ div#dbReferenceModal.modal.fade(tabindex="-1",role="dialog",aria-labelledby="dbR
                     | &nbsp;
                     button.btn.btn-danger(type="button", data-dismiss="modal", ng-click="removeDbReference(dbRefIndex)") Delete
                 div.pull-right
+                    button.btn.btn-primary(type="button", ng-click="updateDataSet(false)") Save
+                    | &nbsp;
                     button.btn.btn-default(type="button", data-dismiss="modal") Close
 
 //https://github.com/angular/angular.js/wiki/Understanding-Scopes
@@ -174,8 +179,8 @@ div#graph_field_modal.modal.fade(tabindex="-1",role="dialog",aria-labelledby="gr
                                     td Column Type
                                     td {{ selectedField.COLUMN_TYPE }}
                                 tr
-                                    td Index
-                                    td {{ selectedField.INDEX }}
+                                    td Key
+                                    td {{ selectedField.COLUMN_KEY }}
            div.modal-footer
                 button.btn.btn-default(type="button", data-dismiss="modal") Close
                 // Save but don't cause the SQL to be re-executed

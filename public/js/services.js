@@ -42,6 +42,14 @@ define(['angular', 'jquery', 'underscore', 'pnotify'], function (angular, $, _) 
             };
             var service = {};
             // Graph types
+            service.limits = [
+                {name: 'limit', value: null, label: 'No Limit'},
+                {name: 'limit', value: 500, label: '500'},
+                {name: 'limit', value: 1000, label: '1000'},
+                {name: 'limit', value: 2000, label: '2000'}
+            ];
+
+            // Graph types
             service.graphTypes = [
                 {name: 'graphType', value: 'multiBarChart', label: 'MultiBar (Default)'},
                 {name: 'graphType', value: 'stackedAreaChart', label: 'Stacked Area'},

@@ -33,6 +33,7 @@
           });
         };
         $scope.graphTypes = dbService.graphTypes;
+        $scope.limits = dbService.limits;
         $scope.optionsSetOnField = function(dbRefIdx, fieldIdx) {
           var field, _ref, _ref1, _ref2, _ref3;
 
@@ -48,6 +49,18 @@
           }
           if ((field.endDate != null) && ((_ref3 = field.endDate) !== (void 0) && _ref3 !== '')) {
             return true;
+          }
+          return false;
+        };
+        $scope.fieldOptionDisplay = function(dbRefIdx, fieldIdx) {
+          var field, _ref, _ref1, _ref2;
+
+          field = (_ref = $scope.dataSet.dbReferences[dbRefIdx]) != null ? _ref.fields[fieldIdx] : void 0;
+          if (((field != null ? field.groupBy : void 0) != null) && ((_ref1 = field.groupBy) !== (void 0) && _ref1 !== '')) {
+            return field.groupBy;
+          }
+          if (((field != null ? field.aggregation : void 0) != null) && ((_ref2 = field.aggregation) !== (void 0) && _ref2 !== '')) {
+            return field.aggregation;
           }
           return false;
         };

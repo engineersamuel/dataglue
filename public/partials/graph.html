@@ -27,7 +27,7 @@
         <!-- If you'd like it to default open, add the additional class in-->
         <div id="{{$index}}" ng-class="{in: $index == 0}" class="panel-collapse collapse">
           <div class="panel-body">
-            <div ng-repeat="f in r.fields" class="db-info-item text-right"><span ng-class="optionsSetOnField($parent.$index, $index) ? 'dataglue-green' : ''">{{f.COLUMN_NAME}}&nbsp;</span><i ng-click="openModalForField($parent.$index, r, $index, f)" class="icon-edit pointer"></i></div>
+            <div ng-repeat="f in r.fields" class="db-info-item text-right"><i ng-if="optionsSetOnField($parent.$index, $index)" tooltip="{{fieldOptionDisplay($parent.$index, $index)}}" class="icon-info-sign"></i><span ng-class="optionsSetOnField($parent.$index, $index) ? 'dataglue-green' : ''">&nbsp;{{f.COLUMN_NAME}}&nbsp;</span><i ng-click="openModalForField($parent.$index, r, $index, f)" class="icon-edit pointer"></i></div>
           </div>
         </div>
       </div>
@@ -53,13 +53,20 @@
         <h4 class="modal-title">{{ dataSet.name }}</h4>
         <div class="clearfix"></div>
       </div>
-      <div class="modal-body">TBD</div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="limit">Limit
+            <select ng-model="dataSet.dbReferences[dbRefIndex].limit" ng-options="x.value as x.label for x in limits"></select>
+          </label>
+        </div>
+      </div>
       <div class="modal-footer">
         <div class="pull-left">
           <button type="button" data-dismiss="modal" ng-click="copyDbReference(dbRefIndex)" class="btn btn-primary">Duplicate</button>&nbsp;
           <button type="button" data-dismiss="modal" ng-click="removeDbReference(dbRefIndex)" class="btn btn-danger">Delete</button>
         </div>
         <div class="pull-right">
+          <button type="button" ng-click="updateDataSet(false)" class="btn btn-primary">Save</button>&nbsp;
           <button type="button" data-dismiss="modal" class="btn btn-default">Close</button>
         </div>
       </div>
@@ -170,8 +177,8 @@
                   <td>{{ selectedField.COLUMN_TYPE }}</td>
                 </tr>
                 <tr>
-                  <td>Index</td>
-                  <td>{{ selectedField.INDEX }}</td>
+                  <td>Key</td>
+                  <td>{{ selectedField.COLUMN_KEY }}</td>
                 </tr>
               </table>
             </div>

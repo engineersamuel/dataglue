@@ -58,7 +58,8 @@
               connection: $scope.connection,
               schema: $scope.schema,
               table: $scope.table,
-              fields: $scope.fields
+              fields: $scope.fields,
+              limit: 1000
             });
             return dbService.cacheUpsert(function(data) {
               return $location.path("/Graph/" + data['_id']);

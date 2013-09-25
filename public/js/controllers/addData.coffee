@@ -76,7 +76,8 @@ define ['jquery', 'underscore'], ($, _) ->
             connection: $scope.connection,
             schema: $scope.schema,
             table: $scope.table,
-            fields: $scope.fields
+            fields: $scope.fields,
+            limit: 1000
 
           # Now save the cache the dataSet object in the backend mongo instance for bookmarkable datasets
           dbService.cacheUpsert (data) ->
