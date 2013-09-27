@@ -38,7 +38,7 @@ div.row
             div.panel-collapse.collapse(id="{{$index}}", ng-class="{in: $index == 0}")
               div.panel-body
                 div.db-info-item.text-right(ng-repeat="f in r.fields")
-                    i.icon-info-sign(ng-if="optionsSetOnField($parent.$index, $index)", tooltip="{{fieldOptionDisplay($parent.$index, $index)}}")
+                    i.icon-info-sign(ng-if="optionsSetOnField($parent.$index, $index)", tooltip="{{fieldOptionDisplay(r, $index)}}")
                     span(ng-class="optionsSetOnField($parent.$index, $index) ? 'dataglue-green' : ''")
                         | &nbsp;{{f.COLUMN_NAME}}&nbsp;
                     i.icon-edit.pointer(ng-click="openModalForField($parent.$index, r, $index, f)")

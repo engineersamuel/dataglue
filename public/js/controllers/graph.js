@@ -52,17 +52,29 @@
           }
           return false;
         };
-        $scope.fieldOptionDisplay = function(dbRefIdx, fieldIdx) {
-          var field, _ref, _ref1, _ref2;
+        $scope.fieldOptionDisplay = function(selectedDbReference, fieldIdx) {
+          var field, theHtml, _ref, _ref1, _ref2, _ref3;
 
-          field = (_ref = $scope.dataSet.dbReferences[dbRefIdx]) != null ? _ref.fields[fieldIdx] : void 0;
-          if (((field != null ? field.groupBy : void 0) != null) && ((_ref1 = field.groupBy) !== (void 0) && _ref1 !== '')) {
-            return field.groupBy;
+          field = selectedDbReference != null ? selectedDbReference.fields[fieldIdx] : void 0;
+          theHtml = [];
+          if (((field != null ? field.groupBy : void 0) != null) && ((_ref = field.groupBy) !== (void 0) && _ref !== '')) {
+            theHtml.push("Group by " + field.groupBy);
           }
-          if (((field != null ? field.aggregation : void 0) != null) && ((_ref2 = field.aggregation) !== (void 0) && _ref2 !== '')) {
-            return field.aggregation;
+          if (((field != null ? field.aggregation : void 0) != null) && ((_ref1 = field.aggregation) !== (void 0) && _ref1 !== '')) {
+            theHtml.push("Aggregate by " + field.aggregation);
           }
-          return false;
+          if (((field != null ? field.beginDate : void 0) != null) && ((_ref2 = field.beginDate) !== (void 0) && _ref2 !== '')) {
+            theHtml.push("Date > " + field.beginDate);
+          }
+          if (((field != null ? field.endDate : void 0) != null) && ((_ref3 = field.endDate) !== (void 0) && _ref3 !== '')) {
+            theHtml.push("Date <= " + field.endDate);
+          }
+          if (theHtml.length === 0) {
+            return 'Field being used.';
+          } else {
+            console.log("theHtml: " + (theHtml.join(' | ')));
+            return theHtml.join(' | ');
+          }
         };
         $scope.resetOtherFields = function(dbRefIdx, fieldIdx, varName) {
           var field, groupByValue;

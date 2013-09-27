@@ -126,7 +126,8 @@
             return coll.update({
               _id: _id
             }, doc, {
-              upsert: true
+              upsert: true,
+              safe: true
             }, function(err, outcome) {
               if (err) {
                 callback(err);
@@ -172,16 +173,15 @@
         var hash;
 
         if (err) {
-          callback(err);
-          return conn.close();
+          return callback(err);
         } else {
           hash = md5("" + dbReference.key + queryHash.sql);
+          logger.debug("Cache made up of key: " + dbReference.key + " sql: " + queryHash.sql);
           return coll.findOne({
-            md5: hash
+            _id: hash
           }, function(err, doc) {
             if (err) {
               callback(err);
-              conn.close();
             } else if (doc == null) {
               logger.debug("Cache miss for hash: " + hash + ", sql: " + queryHash.sql);
               callback(null, null);
@@ -204,7 +204,7 @@
     return self;
   };
 
-  DataSetCache.statementCachePut = function(dbReference, queryHash, results, callback) {
+  DataSetCache.dataSetResultCachePut = function(dataSetResult, callback) {
     var self;
 
     self = this;
@@ -220,23 +220,26 @@
           if (err) {
             return callback(err);
           } else {
-            hash = md5("" + dbReference.key + queryHash.sql);
-            return zlib.deflate(JSON.stringify(results), function(err, buffer) {
+            hash = md5("" + dataSetResult.dbRefKey + dataSetResult.queryHash.sql);
+            logger.debug("Cache made up of key: " + dataSetResult.dbRefKey + " sql: " + dataSetResult.queryHash.sql);
+            return zlib.deflate(JSON.stringify(dataSetResult.d3Data), function(err, buffer) {
+              var doc;
+
               if (err) {
                 logger.error("Problem compressing data: " + err);
-                callback(err);
-                return conn.close();
+                return callback(err);
               } else {
+                doc = {
+                  _id: hash,
+                  sql: dataSetResult.queryHash.sql,
+                  data: buffer.toString('base64'),
+                  lastTouched: new Date()
+                };
                 return coll.update({
-                  md5: hash
-                }, {
-                  $set: {
-                    sql: queryHash.sql,
-                    data: buffer.toString('base64'),
-                    last_touched: new Date()
-                  }
-                }, {
-                  upsert: true
+                  _id: doc._id
+                }, doc, {
+                  upsert: true,
+                  safe: true
                 }, function(err, outcome) {
                   if (err) {
                     callback(err);

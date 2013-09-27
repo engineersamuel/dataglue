@@ -152,24 +152,14 @@
       user: mysql_ref['user'],
       password: mysql_ref['pass']
     });
-    logger.debug("Querying mysql reference: " + dbReference.connection + " with sql: " + queryHash);
+    logger.debug("Querying mysql reference: " + dbReference.connection + " with sql: " + (prettyjson.render(queryHash.sql)));
     conn.query(queryHash.sql, function(err, results) {
       if (err) {
         logger.debug("Error Querying mysql reference: " + dbReference.connection + " with sql: " + queryHash + ", err: " + (prettyjson.render(err)));
         callback(err);
       } else {
         logger.debug("Found " + results.length + " results.");
-        if (queryHash.cache != null) {
-          dataSetCache.statementCachePut(dbReference, queryHash, results, function(err, outcome) {
-            if (err) {
-              return logger.error("Failed to cache sql due to: " + (prettyjson.render(err)));
-            } else {
-              return callback(null, results);
-            }
-          });
-        } else {
-          callback(null, results);
-        }
+        callback(null, results);
       }
       return conn.end();
     });
@@ -247,7 +237,9 @@
     key = dbReference['key'];
     output = {};
     output[key] = {
+      dbRefKey: dbReference.key,
       results: void 0,
+      d3Data: void 0,
       queryHash: void 0
     };
     CachedDataSet.buildSql(dbReference, function(err, queryHash) {
@@ -258,18 +250,18 @@
         return callback(err);
       } else {
         if (queryHash.d3Lookup.x !== void 0 && queryHash.d3Lookup.y !== void 0) {
-          return dataSetCache.statementCacheGet(dbReference, queryHash, function(err, results) {
+          return dataSetCache.statementCacheGet(dbReference, queryHash, function(err, cachedD3Data) {
             if (err) {
               return callback(err);
             } else {
               output[key].queryHash = queryHash;
-              if (results != null) {
-                output[key].results = results;
+              if (cachedD3Data != null) {
+                output[key].d3Data = cachedD3Data;
                 return callback(null, output);
               } else {
-                return CachedDataSet.mysqlQuery(dbReference, queryHash, function(err, results) {
+                return CachedDataSet.mysqlQuery(dbReference, queryHash, function(err, dbResults) {
                   output[key].queryHash = queryHash;
-                  output[key].results = results;
+                  output[key].results = dbResults;
                   return callback(err, output);
                 });
               }
@@ -308,101 +300,122 @@
           var refItem, stream, streams, uniqueMutliplexedXs, uniqueXs;
 
           dataSetResult = _.values(dataSetResult)[0];
-          if (dataSetResult.queryHash.d3Lookup.xMultiplex && dataSetResult.queryHash.d3Lookup.xMultiplex !== '') {
-            logger.debug("Working with multiplexed data!");
-            streams = [];
-            uniqueMutliplexedXs = _.unique(_.map(dataSetResult.results, function(item) {
-              return item[dataSetResult.queryHash.d3Lookup.xMultiplex];
-            }));
-            _.each(uniqueMutliplexedXs, function(uniqueX) {
-              var stream;
+          if (dataSetResult.d3Data == null) {
+            if (dataSetResult.queryHash.d3Lookup.xMultiplex && dataSetResult.queryHash.d3Lookup.xMultiplex !== '') {
+              logger.debug("Working with multiplexed data!");
+              streams = [];
+              uniqueMutliplexedXs = _.unique(_.map(dataSetResult.results, function(item) {
+                return item[dataSetResult.queryHash.d3Lookup.xMultiplex];
+              }));
+              _.each(uniqueMutliplexedXs, function(uniqueX) {
+                var stream;
 
-              stream = {
-                key: "" + dataSetResult.queryHash.d3Lookup.key + " (" + uniqueX + ")",
-                values: []
-              };
-              stream.values = _(dataSetResult.results).filter(function(item) {
-                return item[dataSetResult.queryHash.d3Lookup.xMultiplex] === uniqueX;
-              }).map(function(item) {
-                var _ref;
-
-                return {
-                  x: item.x,
-                  xOrig: item.x,
-                  x: (_ref = dataSetResult.queryHash.d3Lookup.xType) === 'date' || _ref === 'datetime' ? +moment(item.x) : item.x,
-                  xType: dataSetResult.queryHash.d3Lookup.xType,
-                  xGroupBy: dataSetResult.queryHash.d3Lookup.xGroupBy,
-                  xMultiplex: dataSetResult.queryHash.d3Lookup.xMultiplex,
-                  xMultipleType: dataSetResult.queryHash.d3Lookup.xMultiplexType,
-                  y: item.y || 0,
-                  yType: dataSetResult.queryHash.d3Lookup.yType
+                stream = {
+                  key: "" + dataSetResult.queryHash.d3Lookup.key + " (" + uniqueX + ")",
+                  values: []
                 };
-              }).value();
-              return streams.push(stream);
-            });
-            uniqueXs = _.without(_.unique(_.map(_.flatten(_.map(streams, function(stream) {
-              return stream.values;
-            }), true), function(item) {
-              return item.x;
-            })), void 0);
-            uniqueXs.sort();
-            refItem = _.first(_.first(streams).values);
-            _.each(uniqueXs, function(uniqueX) {
-              return _.each(streams, function(stream, streamIdx) {
-                var newItem, streamXs;
+                stream.values = _(dataSetResult.results).filter(function(item) {
+                  return item[dataSetResult.queryHash.d3Lookup.xMultiplex] === uniqueX;
+                }).map(function(item) {
+                  var _ref;
 
-                if (stream.key === "professional avg (APAC)" && uniqueX === '2010-09') {
-                  streamXs = _.map(streams[streamIdx].values, function(v) {
-                    return v.x;
-                  });
-                  streamXs.sort();
-                }
-                if (_.find(stream.values, function(v) {
-                  return v.x === uniqueX;
-                }) === void 0) {
-                  newItem = {
-                    x: uniqueX,
-                    y: 0,
-                    xType: refItem.xType,
-                    xGroupBy: refItem.xGroupBy,
-                    xMultiplex: refItem.xMultiplex,
-                    xMultipleType: refItem.xMultiplexType,
-                    yType: refItem.yType
+                  return {
+                    x: item.x,
+                    xOrig: item.x,
+                    x: (_ref = dataSetResult.queryHash.d3Lookup.xType) === 'date' || _ref === 'datetime' ? +moment(item.x) : item.x,
+                    xType: dataSetResult.queryHash.d3Lookup.xType,
+                    xGroupBy: dataSetResult.queryHash.d3Lookup.xGroupBy,
+                    xMultiplex: dataSetResult.queryHash.d3Lookup.xMultiplex,
+                    xMultipleType: dataSetResult.queryHash.d3Lookup.xMultiplexType,
+                    y: item.y || 0,
+                    yType: dataSetResult.queryHash.d3Lookup.yType
                   };
-                  return streams[streamIdx].values.push(newItem);
-                }
+                }).value();
+                return streams.push(stream);
               });
-            });
-            dataSetResult.d3Data = streams;
-            delete dataSetResult.results;
-          } else {
-            logger.debug("Working with non-multiplexed data!");
-            stream = {
-              key: dataSetResult.queryHash.d3Lookup.key,
-              values: []
-            };
-            _.each(dataSetResult.results, function(item) {
-              var _ref;
+              uniqueXs = _.without(_.unique(_.map(_.flatten(_.map(streams, function(stream) {
+                return stream.values;
+              }), true), function(item) {
+                return item.x;
+              })), void 0);
+              uniqueXs.sort();
+              refItem = _.first(_.first(streams).values);
+              _.each(uniqueXs, function(uniqueX) {
+                return _.each(streams, function(stream, streamIdx) {
+                  var newItem, streamXs;
 
-              stream.values.push({
-                xOrig: item.x,
-                x: (_ref = dataSetResult.queryHash.d3Lookup.xType) === 'date' || _ref === 'datetime' ? moment(item.x).unix() : item.x,
-                xType: dataSetResult.queryHash.d3Lookup.xType,
-                xGroupBy: dataSetResult.queryHash.d3Lookup.xGroupBy,
-                xMultiplex: dataSetResult.queryHash.d3Lookup.xMultiplex,
-                xMultipleType: dataSetResult.queryHash.d3Lookup.xMultiplexType,
-                y: item.y,
-                yType: dataSetResult.queryHash.d3Lookup.yType
+                  if (stream.key === "professional avg (APAC)" && uniqueX === '2010-09') {
+                    streamXs = _.map(streams[streamIdx].values, function(v) {
+                      return v.x;
+                    });
+                    streamXs.sort();
+                  }
+                  if (_.find(stream.values, function(v) {
+                    return v.x === uniqueX;
+                  }) === void 0) {
+                    newItem = {
+                      x: uniqueX,
+                      y: 0,
+                      xType: refItem.xType,
+                      xGroupBy: refItem.xGroupBy,
+                      xMultiplex: refItem.xMultiplex,
+                      xMultipleType: refItem.xMultiplexType,
+                      yType: refItem.yType
+                    };
+                    return streams[streamIdx].values.push(newItem);
+                  }
+                });
               });
-              return dataSetResult.d3Data = [stream];
+              dataSetResult.d3Data = streams;
+              delete dataSetResult.results;
+              if (dataSetResult.queryHash.cache != null) {
+                dataSetCache.dataSetResultCachePut(doc, dataSetResult, function(err, outcome) {
+                  if (err) {
+                    return logger.error("Failed to cache the dataSetResult due to: " + (prettyjson.render(err)));
+                  } else {
+                    return callback(null, outcome);
+                  }
+                });
+              }
+            } else {
+              if (dataSetResult.d3Data == null) {
+                logger.debug("Working with non-multiplexed data!");
+                stream = {
+                  key: dataSetResult.queryHash.d3Lookup.key,
+                  values: []
+                };
+                _.each(dataSetResult.results, function(item) {
+                  var _ref;
+
+                  stream.values.push({
+                    xOrig: item.x,
+                    x: (_ref = dataSetResult.queryHash.d3Lookup.xType) === 'date' || _ref === 'datetime' ? +moment(item.x) : item.x,
+                    xType: dataSetResult.queryHash.d3Lookup.xType,
+                    xGroupBy: dataSetResult.queryHash.d3Lookup.xGroupBy,
+                    xMultiplex: dataSetResult.queryHash.d3Lookup.xMultiplex,
+                    xMultipleType: dataSetResult.queryHash.d3Lookup.xMultiplexType,
+                    y: item.y,
+                    yType: dataSetResult.queryHash.d3Lookup.yType
+                  });
+                  return dataSetResult.d3Data = [stream];
+                });
+                delete dataSetResult.results;
+              }
+            }
+            _.each(dataSetResult.d3Data, function(stream) {
+              return stream.values.sort(function(a, b) {
+                return a.x - b.x;
+              });
             });
-            delete dataSetResult.results;
+            return dataSetCache.dataSetResultCachePut(dataSetResult, function(err, outcome) {
+              if (err) {
+                return logger.error("Failed to cache the dataSetResult due to: " + (prettyjson.render(err)));
+              } else {
+                logger.debug("Successfully cached d3Data.");
+                return callback(null, outcome);
+              }
+            });
           }
-          return _.each(dataSetResult.d3Data, function(stream) {
-            return stream.values.sort(function(a, b) {
-              return a.x - b.x;
-            });
-          });
         });
         return callback(null, arrayOfDataSetResults);
       }

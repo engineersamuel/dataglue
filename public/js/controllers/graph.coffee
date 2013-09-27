@@ -54,15 +54,19 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
         return false
 
       # Returns the short display of the option set on a field
-      $scope.fieldOptionDisplay = (dbRefIdx, fieldIdx) ->
-#        console.log "fieldOptionDisplay"
-        field = $scope.dataSet.dbReferences[dbRefIdx]?.fields[fieldIdx]
-        if field?.groupBy? and field.groupBy not in [undefined, ''] then return field.groupBy
-        if field?.aggregation? and field.aggregation not in [undefined, ''] then return field.aggregation
-        #if field.beginDate? and field.beginDate not in [undefined, ''] then return field.beginDate
-        #if field.endDate? and field.endDate not in [undefined, ''] then return true
+      $scope.fieldOptionDisplay = (selectedDbReference, fieldIdx) ->
+        field = selectedDbReference?.fields[fieldIdx]
+        theHtml = []
+        if field?.groupBy? and field.groupBy not in [undefined, ''] then theHtml.push "Group by #{field.groupBy}"
+        if field?.aggregation? and field.aggregation not in [undefined, ''] then theHtml.push "Aggregate by #{field.aggregation}"
+        if field?.beginDate? and field.beginDate not in [undefined, ''] then theHtml.push "Date > #{field.beginDate}"
+        if field?.endDate? and field.endDate not in [undefined, ''] then theHtml.push "Date <= #{field.endDate}"
 #        console.log JSON.stringify(field)
-        return false
+        if theHtml.length is 0
+          return 'Field being used.'
+        else
+          console.log "theHtml: #{theHtml.join(' | ')}"
+          return theHtml.join(' | ')
 
       # Clear All other fields except the specified field index where the varName is say aggregation or groupBy, ect..
       $scope.resetOtherFields = (dbRefIdx, fieldIdx, varName) ->

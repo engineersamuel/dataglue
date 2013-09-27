@@ -95,7 +95,7 @@ define ["angular", "services", "nv", "moment", "bubble"], (angular, services, nv
       createChartByType = () ->
         if chartType is 'multiBarChart'
           chart = nv.models.multiBarChart()
-            .margin({top: 10, right: 30, bottom: 150, left: 30})
+            .margin({top: 10, right: 30, bottom: 150, left: 60})
             #.staggerLabels(true)
             .x((d) -> d.x)
             .y((d) -> d.y)
@@ -104,7 +104,7 @@ define ["angular", "services", "nv", "moment", "bubble"], (angular, services, nv
             )
         else if chartType is 'stackedAreaChart'
           chart = nv.models.stackedAreaChart()
-            .margin({top: 10, right: 30, bottom: 150, left: 30})
+            .margin({top: 10, right: 30, bottom: 150, left: 60})
             #.staggerLabels(true)
             .x((d) -> d.x)
             .y((d) -> d.y)

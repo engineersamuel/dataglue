@@ -92,7 +92,7 @@ DataSetCache.refUpsert = (doc, callback) ->
           _id = mongodb.ObjectID(doc['_id'])
           doc['_id'] = _id
 
-          coll.update {_id: _id}, doc, {upsert: true}, (err, outcome) ->
+          coll.update {_id: _id}, doc, {upsert: true, safe: true}, (err, outcome) ->
             if err
               callback err
             else
@@ -120,13 +120,12 @@ DataSetCache.statementCacheGet = (dbReference, queryHash, callback) ->
     conn.collection settings.master_ref.cache, (err, coll) ->
       if err
         callback err
-        conn.close()
       else
         hash = md5("#{dbReference.key}#{queryHash.sql}")
-        coll.findOne {md5: hash}, (err, doc) ->
+        logger.debug "Cache made up of key: #{dbReference.key} sql: #{queryHash.sql}"
+        coll.findOne {_id: hash}, (err, doc) ->
           if err
             callback err
-            conn.close()
           else if not doc?
             logger.debug "Cache miss for hash: #{hash}, sql: #{queryHash.sql}"
             callback null, null
@@ -144,7 +143,39 @@ DataSetCache.statementCacheGet = (dbReference, queryHash, callback) ->
   return self
 
 # Send sql and see if the results are cached
-DataSetCache.statementCachePut = (dbReference, queryHash, results, callback) ->
+#DataSetCache.statementCachePut = (dbReference, queryHash, results, callback) ->
+#  self = @
+#  logger.debug "Connecting to mongo on: #{mongo_url}"
+#  mongodb.connect mongo_url, (err, conn) ->
+#    if err
+#      logger.error prettyjson.render err
+#      callback err
+#    else
+#      #logger.debug "Attempting to lookup dataset results via the given sql
+#      conn.collection settings.master_ref.cache, (err, coll) ->
+#        if err
+#          callback err
+#        else
+#          hash = md5("#{dbReference.key}#{queryHash.sql}")
+#          zlib.deflate JSON.stringify(results), (err, buffer) ->
+#            if err
+#              logger.error "Problem compressing data: #{err}"
+#              callback err
+#              conn.close()
+#            else
+#              coll.update {md5: hash}, {$set: {sql: queryHash.sql, data: buffer.toString('base64'), last_touched: new Date()}}, {upsert: true, safe: true}, (err, outcome) ->
+#                if err
+#                  callback err
+#                else
+#                  callback null, outcome
+#                conn.close()
+#
+#  return self
+
+# Cache the d3Data for a dataSet, there can be multiple dataSets per reference
+DataSetCache.dataSetResultCachePut = (dataSetResult, callback) ->
+
+#  logger.debug "dataSetResult: #{prettyjson.render dataSetResult}"
   self = @
   logger.debug "Connecting to mongo on: #{mongo_url}"
   mongodb.connect mongo_url, (err, conn) ->
@@ -157,14 +188,20 @@ DataSetCache.statementCachePut = (dbReference, queryHash, results, callback) ->
         if err
           callback err
         else
-          hash = md5("#{dbReference.key}#{queryHash.sql}")
-          zlib.deflate JSON.stringify(results), (err, buffer) ->
+          hash = md5("#{dataSetResult.dbRefKey}#{dataSetResult.queryHash.sql}")
+          logger.debug "Cache made up of key: #{dataSetResult.dbRefKey} sql: #{dataSetResult.queryHash.sql}"
+          zlib.deflate JSON.stringify(dataSetResult.d3Data), (err, buffer) ->
             if err
               logger.error "Problem compressing data: #{err}"
               callback err
-              conn.close()
             else
-              coll.update {md5: hash}, {$set: {sql: queryHash.sql, data: buffer.toString('base64'), last_touched: new Date()}}, {upsert: true}, (err, outcome) ->
+              doc =
+                _id: hash
+                sql: dataSetResult.queryHash.sql
+                data: buffer.toString('base64')
+                lastTouched: new Date()
+              #coll.update {md5: hash}, {$set: {sql: dataSetResult.queryHash.sql, data: buffer.toString('base64'), last_touched: new Date()}}, {upsert: true}, (err, outcome) ->
+              coll.update {_id: doc._id}, doc, {upsert: true, safe: true}, (err, outcome) ->
                 if err
                   callback err
                 else

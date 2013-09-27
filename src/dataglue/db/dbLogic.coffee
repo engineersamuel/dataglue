@@ -149,23 +149,26 @@ CachedDataSet.mysqlQuery = (dbReference, queryHash, callback) ->
     password : mysql_ref['pass'],
 
   # Query mysql, attempt to cache, and return the results regardless
-  logger.debug "Querying mysql reference: #{dbReference.connection} with sql: #{queryHash}"
+  logger.debug "Querying mysql reference: #{dbReference.connection} with sql: #{prettyjson.render queryHash.sql}"
   conn.query queryHash.sql, (err, results) ->
     if err
       logger.debug "Error Querying mysql reference: #{dbReference.connection} with sql: #{queryHash}, err: #{prettyjson.render err}"
       callback err
     else
       logger.debug "Found #{results.length} results."
+      callback null, results
+
+      # Now that I want to store the d3 data and not the db result rows, commenting this out
       # Attempt to cache if the cache option is set to true, otherwise just return the results
-      if queryHash.cache?
-        dataSetCache.statementCachePut dbReference, queryHash, results, (err, outcome) ->
-          if err
-            logger.error "Failed to cache sql due to: #{prettyjson.render err}"
-          else
-            # After the results have been cached go ahead and return the results from the above query
-            callback null, results
-      else
-        callback null, results
+#      if queryHash.cache?
+#        dataSetCache.statementCachePut dbReference, queryHash, results, (err, outcome) ->
+#          if err
+#            logger.error "Failed to cache sql due to: #{prettyjson.render err}"
+#          else
+#            # After the results have been cached go ahead and return the results from the above query
+#            callback null, results
+#      else
+#        callback null, results
 
     # End the connection before existing the function
     conn.end()
@@ -230,7 +233,9 @@ CachedDataSet.queryDynamic = (dbReference, callback) ->
   key = dbReference['key']
   output = {}
   output[key] =
+    dbRefKey: dbReference.key
     results: undefined
+    d3Data: undefined
     queryHash: undefined
 
   # logger.debug "queryDynamic, key: #{key}, dbReference: #{prettyjson.render dbReference}"
@@ -241,21 +246,25 @@ CachedDataSet.queryDynamic = (dbReference, callback) ->
     else
       # To compute the query and transform to the d3 results requires an x or a y to be set, if not, do nothing
       if queryHash.d3Lookup.x isnt undefined and queryHash.d3Lookup.y isnt undefined
-        dataSetCache.statementCacheGet dbReference, queryHash, (err, results) ->
+
+        # The statementCacheGet will attempt to get the d3 data, not the results of the sql query
+        dataSetCache.statementCacheGet dbReference, queryHash, (err, cachedD3Data) ->
           if err
             callback err
           else
             output[key].queryHash = queryHash
             # If results, place into a hash with the key and send back up the chain
-            if results?
-              output[key].results = results
+            if cachedD3Data?
+              output[key].d3Data = cachedD3Data
               callback null, output
             # Otherwise this is a cache miss, need to refetch the data
             else
-              CachedDataSet.mysqlQuery dbReference, queryHash, (err, results) ->
+              CachedDataSet.mysqlQuery dbReference, queryHash, (err, dbResults) ->
                 output[key].queryHash = queryHash
-                output[key].results = results
+                output[key].results = dbResults
                 callback err, output
+
+      # These are mainly convenience warnings to send to the user to indicate why the SQL couldn't be run
       else
         if queryHash.d3Lookup.x is undefined
           warning = "Could not generate data for #{key}, no x set. Please make sure to group on some field."
@@ -276,122 +285,140 @@ CachedDataSet.loadDataSet = (doc, callback) ->
   # Parse to JSON if not already
   doc = if _.isString(doc) then JSON.parse doc else doc
 
+  # TODO First attempt to resolve these queries in cache where the Cache will contain the d3 formatted data
+  # Maybe a first implementation will be an all or nothing cache, but why not make it more intelligent the first time
+  # around?
+
   async.map _.values(doc.dbReferences), self.queryDynamic, (err, arrayOfDataSetResults) ->
     if err
       logger.error "Error querying dbReferences: #{prettyjson.render err}"
       callback err
     else
       _.each arrayOfDataSetResults, (dataSetResult, idx) ->
-        # The dataSetResult is simply a hash
+
+        # The dataSetResult is simply a hash with 1 key, therefore the value is [0]
         dataSetResult = _.values(dataSetResult)[0]
-        # The d3Data for now will be composed of Streams of unique data sets defined by the dataset reference
 
-        # If xMultiplex exists iterate over the results
-        if dataSetResult.queryHash.d3Lookup.xMultiplex and dataSetResult.queryHash.d3Lookup.xMultiplex != ''
-          logger.debug "Working with multiplexed data!"
-          streams = []
-          uniqueMutliplexedXs = _.unique _.map dataSetResult.results, (item) -> item[dataSetResult.queryHash.d3Lookup.xMultiplex]
-          # For each of the unique multiplexed results
-          _.each uniqueMutliplexedXs, (uniqueX) ->
+        # If there is no d3Data defined, no cached data, so compute the d3 data based on the data set results
+        if not dataSetResult.d3Data?
 
-            stream = {key: "#{dataSetResult.queryHash.d3Lookup.key} (#{uniqueX})", values: []}
+          # The d3Data for now will be composed of Streams of unique data sets defined by the dataset reference
+          # If xMultiplex exists iterate over the results
+          if dataSetResult.queryHash.d3Lookup.xMultiplex and dataSetResult.queryHash.d3Lookup.xMultiplex != ''
+            logger.debug "Working with multiplexed data!"
+            streams = []
+            uniqueMutliplexedXs = _.unique _.map dataSetResult.results, (item) -> item[dataSetResult.queryHash.d3Lookup.xMultiplex]
+            # For each of the unique multiplexed results
+            _.each uniqueMutliplexedXs, (uniqueX) ->
 
-            # Filter the results by that multiplexed x
-            stream.values =
-            _(dataSetResult.results)
-            .filter((item) -> item[dataSetResult.queryHash.d3Lookup.xMultiplex] is uniqueX)  # Filter by each unique Mutliplexed x
-            .map((item) ->
-                x: item.x,
-                xOrig: item.x
-                # Converts x to a unix offset (ms) if x is a type date
-                x: if dataSetResult.queryHash.d3Lookup.xType in ['date', 'datetime'] then +moment(item.x) else item.x
-                xType: dataSetResult.queryHash.d3Lookup.xType
-                xGroupBy: dataSetResult.queryHash.d3Lookup.xGroupBy
-                xMultiplex: dataSetResult.queryHash.d3Lookup.xMultiplex
-                xMultipleType: dataSetResult.queryHash.d3Lookup.xMultiplexType
-                y: item.y || 0
-                yType: dataSetResult.queryHash.d3Lookup.yType
-            ) # Each result, filtered by the multiplexed x is composed into a single stream
-            .value()  # The value is the array of values filtered by the multiplexed x value
+              stream = {key: "#{dataSetResult.queryHash.d3Lookup.key} (#{uniqueX})", values: []}
 
-            # Now push this stream onto the streams
-            streams.push stream
+              # Filter the results by that multiplexed x
+              stream.values =
+              _(dataSetResult.results)
+              .filter((item) -> item[dataSetResult.queryHash.d3Lookup.xMultiplex] is uniqueX)  # Filter by each unique Mutliplexed x
+              .map((item) ->
+                  x: item.x,
+                  xOrig: item.x
+                  # Converts x to a unix offset (ms) if x is a type date
+                  x: if dataSetResult.queryHash.d3Lookup.xType in ['date', 'datetime'] then +moment(item.x) else item.x
+                  xType: dataSetResult.queryHash.d3Lookup.xType
+                  xGroupBy: dataSetResult.queryHash.d3Lookup.xGroupBy
+                  xMultiplex: dataSetResult.queryHash.d3Lookup.xMultiplex
+                  xMultipleType: dataSetResult.queryHash.d3Lookup.xMultiplexType
+                  y: item.y || 0
+                  yType: dataSetResult.queryHash.d3Lookup.yType
+              ) # Each result, filtered by the multiplexed x is composed into a single stream
+              .value()  # The value is the array of values filtered by the multiplexed x value
 
-          # The data is pure at this point but d3 doesn't work well with mismatching streams.
-          # I.e. [{a:1,b:2,c:3},{a:4,c:5}] so let's do some slicing and dicing to 0 init any missing data
+              # Now push this stream onto the streams
+              streams.push stream
 
-          # Grab the unique x's in all streams
-          # This takes each values in the stream and maps each value to x, flattens that out so a list of objects with x, then gets the unique values of x and removes undefined
-          uniqueXs = _.without(_.unique(_.map(_.flatten(_.map(streams, (stream) -> stream.values), true), (item) -> item.x)), undefined)
-          uniqueXs.sort()
+            # The data is pure at this point but d3 doesn't work well with mismatching streams.
+            # I.e. [{a:1,b:2,c:3},{a:4,c:5}] so let's do some slicing and dicing to 0 init any missing data
 
-          # Every Unique stream *must* contain a defined set of attributes.  I.e. If x is a datetime it is always a datetime in this unique stream or set of streams
-          # Given that let's extract out a single object of types to apply below when filling in the data
-          refItem = _.first(_.first(streams).values)
+            # Grab the unique x's in all streams
+            # This takes each values in the stream and maps each value to x, flattens that out so a list of objects with x, then gets the unique values of x and removes undefined
+            uniqueXs = _.without(_.unique(_.map(_.flatten(_.map(streams, (stream) -> stream.values), true), (item) -> item.x)), undefined)
+            uniqueXs.sort()
 
-          _.each uniqueXs, (uniqueX) ->
+            # Every Unique stream *must* contain a defined set of attributes.  I.e. If x is a datetime it is always a datetime in this unique stream or set of streams
+            # Given that let's extract out a single object of types to apply below when filling in the data
+            refItem = _.first(_.first(streams).values)
 
-            _.each streams, (stream, streamIdx) ->
-              # TODO must print each line to figur eout why 2010-09 is equaling itself
-#              logger.debug "Looking for: #{uniqueX} in stream: #{stream.key}"
-              if stream.key is "professional avg (APAC)" and uniqueX is '2010-09'
-                streamXs = _.map(streams[streamIdx].values, (v) -> v.x)
-                streamXs.sort()
+            _.each uniqueXs, (uniqueX) ->
+              _.each streams, (stream, streamIdx) ->
+                if stream.key is "professional avg (APAC)" and uniqueX is '2010-09'
+                  streamXs = _.map(streams[streamIdx].values, (v) -> v.x)
+                  streamXs.sort()
 
-              if _.find(stream.values, (v) -> return v.x is uniqueX) is undefined
-                newItem = {
-                  x: uniqueX,
-                  y: 0,
-                  xType: refItem.xType
-                  xGroupBy: refItem.xGroupBy
-                  xMultiplex: refItem.xMultiplex
-                  xMultipleType:  refItem.xMultiplexType
-                  yType: refItem.yType
+                if _.find(stream.values, (v) -> return v.x is uniqueX) is undefined
+                  newItem = {
+                    x: uniqueX,
+                    y: 0,
+                    xType: refItem.xType
+                    xGroupBy: refItem.xGroupBy
+                    xMultiplex: refItem.xMultiplex
+                    xMultipleType:  refItem.xMultiplexType
+                    yType: refItem.yType
 
-                }
-                # The _.merge has SERIOUS implications.  Do NOT use that method without understanding that it overrides
-                # past objects in the future
-                #newItem = _.merge {x: uniqueX, y: 0}, _.clone(refItem)
-                #logger.debug "\tNot Found in stream: #{streamIdx}, adding: #{prettyjson.render newItem}"
-                #logger.debug  "Stream #{streamIdx}.length: before #{streams[streamIdx].values.length}"
-                streams[streamIdx].values.push(newItem)
-                #streamXs = _.map(streams[streamIdx].values, (v) -> v.x)
-                #streamXs.sort()
-                #logger.debug  "Stream: #{streamIdx} now has values: #{streamXs}"
-                #logger.debug  "Stream #{streamIdx}.length: #{streams[streamIdx].values.length}"
+                  }
+                  # The _.merge has SERIOUS implications.  Do NOT use that method without understanding that it overrides
+                  # past objects in the future
+                  #newItem = _.merge {x: uniqueX, y: 0}, _.clone(refItem)
+                  streams[streamIdx].values.push(newItem)
 
-          # Finally set the d3Data to the streams and delete the results so as not to create too big of a response
-          dataSetResult.d3Data = streams
-          delete dataSetResult.results
+            # Finally set the d3Data to the streams and delete the results so as not to create too big of a response
+            dataSetResult.d3Data = streams
+            delete dataSetResult.results
 
-        # else No mutliplex so just return a 1 stream for the array of results
-        else
-          logger.debug "Working with non-multiplexed data!"
-          stream = {key: dataSetResult.queryHash.d3Lookup.key, values: []}
-          _.each dataSetResult.results, (item) ->
+            # Store the d3Data of the dataSetResult after the data has been successfully generated
+            if dataSetResult.queryHash.cache?
+              dataSetCache.dataSetResultCachePut doc, dataSetResult, (err, outcome) ->
+                if err
+                  logger.error "Failed to cache the dataSetResult due to: #{prettyjson.render err}"
+                else
+                  # After the results have been cached go ahead and return the results from the above query
+                  callback null, outcome
 
-            # logger.debug "item: #{prettyjson.render item}"
-            stream.values.push
-#              x: item.x,
-              xOrig: item.x
-              x: if dataSetResult.queryHash.d3Lookup.xType in ['date', 'datetime'] then moment(item.x).unix() else item.x
-              xType: dataSetResult.queryHash.d3Lookup.xType
-              xGroupBy: dataSetResult.queryHash.d3Lookup.xGroupBy
-              xMultiplex: dataSetResult.queryHash.d3Lookup.xMultiplex
-              xMultipleType: dataSetResult.queryHash.d3Lookup.xMultiplexType
-              y: item.y
-              yType: dataSetResult.queryHash.d3Lookup.yType
+          # else No mutliplex so just return a 1 stream for the array of results
+          else
 
-             dataSetResult.d3Data = [stream]
-          delete dataSetResult.results
+            # If there is no d3Data defined compute for this single data set
+            if not dataSetResult.d3Data?
+              logger.debug "Working with non-multiplexed data!"
+              stream = {key: dataSetResult.queryHash.d3Lookup.key, values: []}
+              _.each dataSetResult.results, (item) ->
 
-        # Now that we have a d3Data composed of one or more streams each those streams and sort by x
-        _.each dataSetResult.d3Data, (stream) ->
-          stream.values.sort (a, b) -> a.x - b.x
-#          stream.values.sort (a, b) -> +moment(a.x) - +moment(b.x)
-          # TODO do not renable this unless specifically verifying the moment is not being duplicated resulting in identical values
-          # A clone may be required or a new
-#          stream.values.sort (a, b) -> new moment(a.x).valueOf() - new moment(b.x).valueOf()
+                # logger.debug "item: #{prettyjson.render item}"
+                stream.values.push
+                  # x: item.x,
+                  xOrig: item.x
+                  x: if dataSetResult.queryHash.d3Lookup.xType in ['date', 'datetime'] then +moment(item.x) else item.x
+                  xType: dataSetResult.queryHash.d3Lookup.xType
+                  xGroupBy: dataSetResult.queryHash.d3Lookup.xGroupBy
+                  xMultiplex: dataSetResult.queryHash.d3Lookup.xMultiplex
+                  xMultipleType: dataSetResult.queryHash.d3Lookup.xMultiplexType
+                  y: item.y
+                  yType: dataSetResult.queryHash.d3Lookup.yType
+
+                 dataSetResult.d3Data = [stream]
+              delete dataSetResult.results
+
+          # Now that we have a d3Data composed of one or more streams each those streams and sort by x
+          _.each dataSetResult.d3Data, (stream) ->
+            stream.values.sort (a, b) -> a.x - b.x
+            # stream.values.sort (a, b) -> +moment(a.x) - +moment(b.x)
+
+          # Store the d3Data of the dataSetResult after the data has been successfully generated
+          # if dataSetResult.queryHash.cache?  # Maybe in the future I will allow it to be configurable
+          dataSetCache.dataSetResultCachePut dataSetResult, (err, outcome) ->
+            if err
+              logger.error "Failed to cache the dataSetResult due to: #{prettyjson.render err}"
+            else
+              # After the results have been cached go ahead and return the results from the above query
+              logger.debug "Successfully cached d3Data."
+              callback null, outcome
 
       callback null, arrayOfDataSetResults
   return self

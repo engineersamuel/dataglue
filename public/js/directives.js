@@ -67,7 +67,7 @@
                 top: 10,
                 right: 30,
                 bottom: 150,
-                left: 30
+                left: 60
               }).x(function(d) {
                 return d.x;
               }).y(function(d) {
@@ -80,7 +80,7 @@
                 top: 10,
                 right: 30,
                 bottom: 150,
-                left: 30
+                left: 60
               }).x(function(d) {
                 return d.x;
               }).y(function(d) {

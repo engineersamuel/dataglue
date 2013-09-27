@@ -27,7 +27,7 @@
         <!-- If you'd like it to default open, add the additional class in-->
         <div id="{{$index}}" ng-class="{in: $index == 0}" class="panel-collapse collapse">
           <div class="panel-body">
-            <div ng-repeat="f in r.fields" class="db-info-item text-right"><i ng-if="optionsSetOnField($parent.$index, $index)" tooltip="{{fieldOptionDisplay($parent.$index, $index)}}" class="icon-info-sign"></i><span ng-class="optionsSetOnField($parent.$index, $index) ? 'dataglue-green' : ''">&nbsp;{{f.COLUMN_NAME}}&nbsp;</span><i ng-click="openModalForField($parent.$index, r, $index, f)" class="icon-edit pointer"></i></div>
+            <div ng-repeat="f in r.fields" class="db-info-item text-right"><i ng-if="optionsSetOnField($parent.$index, $index)" tooltip="{{fieldOptionDisplay(r, $index)}}" class="icon-info-sign"></i><span ng-class="optionsSetOnField($parent.$index, $index) ? 'dataglue-green' : ''">&nbsp;{{f.COLUMN_NAME}}&nbsp;</span><i ng-click="openModalForField($parent.$index, r, $index, f)" class="icon-edit pointer"></i></div>
           </div>
         </div>
       </div>
