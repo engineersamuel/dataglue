@@ -88,6 +88,12 @@ To create this github project which is also pushed to openshift:
 * Bower
  * For zsh, to ~/.zshrc add alias bower='noglob bower'
 
+* Testing
+
+`npm install mocha --save-dev`
+`npm install should --save-dev`
+`mocha --require should --compilers coffee:coffee-script src/dataglue/test/*.coffee`
+
 ### References
 * [Getting Started with Openshift](https://www.openshift.com/get-started)
 * [Deploying a Sinatra application on OpenShift](https://www.openshift.com/kb/kb-e1009-deploying-a-sinatra-application-on-openshift)

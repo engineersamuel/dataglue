@@ -15,8 +15,8 @@ div.container
         div.col-xs-12.col-sm-4.col-md-4
             h4.db-info-header Schemas/Databases
             //div.db-info-item(ng-repeat="s in schemas", ng-click="select_schema(s.schema)")
-            div.db-info-item(ng-repeat="s in schemas", ng-click="select_schema(s)")
-                span {{ s }}
+            div.db-info-item(ng-repeat="s in schemas", ng-click="select_schema(s.name)")
+                span {{ s.name }}
         div.col-xs-12.col-sm-4.col-md-4
             h4.db-info-header Tables/Collections
             //dir-table-vis(val="tables")

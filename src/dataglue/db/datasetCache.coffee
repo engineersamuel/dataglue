@@ -9,21 +9,8 @@ prettyjson    = require 'prettyjson'
 #EventEmitter  = require("events").EventEmitter
 
 
-generate_mongo_url = (obj) ->
-  obj.host = (utils.resolveEnvVar(obj.host) || '127.0.0.1')
-  obj.port = (utils.resolveEnvVar(obj.port) || 27017)
-  obj.db = (utils.resolveEnvVar(obj.db) || 'test')
 
-  mongourl = undefined
-  if (obj.user and obj.user isnt '') and (obj.pass and obj.pass isnt '')
-    mongourl = "mongodb://#{utils.resolveEnvVar(obj.user)}:#{utils.resolveEnvVar(obj.pass)}@#{utils.resolveEnvVar(obj.host) || '127.0.0.1'}:#{utils.resolveEnvVar(obj.port) || '27017'}/#{utils.resolveEnvVar(obj.db)}?auto_reconnect=true"
-  else
-    mongourl = "mongodb://#{utils.resolveEnvVar(obj.host) || '127.0.0.1'}:#{utils.resolveEnvVar(obj.port) || '27017'}/#{utils.resolveEnvVar(obj.db) || 'dataglue'}?auto_reconnect=true"
-
-  logger.debug "Finished generating mongo url: #{mongourl}"
-  return mongourl
-
-mongo_url = generate_mongo_url(settings.master_ref)
+mongo_url = utils.generate_mongo_url(settings.master_ref)
 
 #DataSetCache = new EventEmitter()
 DataSetCache = {}
@@ -88,6 +75,10 @@ DataSetCache.refUpsert = (doc, callback) ->
           conn.close()
         else
 
+        # Get the type of the db ref from the yaml and make sure the doc has that field
+        _.each doc.dbReferences, (dbReference) ->
+          dbReference.type = settings.db_refs[dbReference.connection].type
+
         if _.has doc, '_id'
           _id = mongodb.ObjectID(doc['_id'])
           doc['_id'] = _id
@@ -110,27 +101,27 @@ DataSetCache.refUpsert = (doc, callback) ->
               callback null, doc['_id'].toString()
             conn.close()
 
-# Send sql and see if the results are cached
+# Send query and see if the results are cached
 DataSetCache.statementCacheGet = (dbReference, queryHash, callback) ->
   self = @
   logger.debug "Connecting to mongo on: #{mongo_url}"
   mongodb.connect mongo_url, (err, conn) ->
     if err then return callback err
-    #logger.debug "Attempting to lookup dataset results via the given sql
+    #logger.debug "Attempting to lookup dataset results via the given query
     conn.collection settings.master_ref.cache, (err, coll) ->
       if err
         callback err
       else
-        hash = md5("#{dbReference.key}#{queryHash.sql}")
-        logger.debug "Cache made up of key: #{dbReference.key} sql: #{queryHash.sql}"
+        hash = md5("#{dbReference.key}#{utils.stringify(queryHash.query)}")
+        logger.debug "Cache made up of key: #{dbReference.key} query: #{queryHash.query}"
         coll.findOne {_id: hash}, (err, doc) ->
           if err
             callback err
           else if not doc?
-            logger.debug "Cache miss for hash: #{hash}, sql: #{queryHash.sql}"
+            logger.debug "Cache miss for hash: #{hash}, query: #{queryHash.query}"
             callback null, null
           else
-            logger.debug "Cache hit for hash: #{hash}, sql: #{queryHash.sql}"
+            logger.debug "Cache hit for hash: #{hash}, query: #{queryHash.query}"
 
             zlib.unzip new Buffer(doc['data'], 'base64'), (err, results) ->
               if err?
@@ -141,36 +132,6 @@ DataSetCache.statementCacheGet = (dbReference, queryHash, callback) ->
           conn.close()
 
   return self
-
-# Send sql and see if the results are cached
-#DataSetCache.statementCachePut = (dbReference, queryHash, results, callback) ->
-#  self = @
-#  logger.debug "Connecting to mongo on: #{mongo_url}"
-#  mongodb.connect mongo_url, (err, conn) ->
-#    if err
-#      logger.error prettyjson.render err
-#      callback err
-#    else
-#      #logger.debug "Attempting to lookup dataset results via the given sql
-#      conn.collection settings.master_ref.cache, (err, coll) ->
-#        if err
-#          callback err
-#        else
-#          hash = md5("#{dbReference.key}#{queryHash.sql}")
-#          zlib.deflate JSON.stringify(results), (err, buffer) ->
-#            if err
-#              logger.error "Problem compressing data: #{err}"
-#              callback err
-#              conn.close()
-#            else
-#              coll.update {md5: hash}, {$set: {sql: queryHash.sql, data: buffer.toString('base64'), last_touched: new Date()}}, {upsert: true, safe: true}, (err, outcome) ->
-#                if err
-#                  callback err
-#                else
-#                  callback null, outcome
-#                conn.close()
-#
-#  return self
 
 # Cache the d3Data for a dataSet, there can be multiple dataSets per reference
 DataSetCache.dataSetResultCachePut = (dataSetResult, callback) ->
@@ -183,13 +144,13 @@ DataSetCache.dataSetResultCachePut = (dataSetResult, callback) ->
       logger.error prettyjson.render err
       callback err
     else
-      #logger.debug "Attempting to lookup dataset results via the given sql
+      #logger.debug "Attempting to lookup dataset results via the given query
       conn.collection settings.master_ref.cache, (err, coll) ->
         if err
           callback err
         else
-          hash = md5("#{dataSetResult.dbRefKey}#{dataSetResult.queryHash.sql}")
-          logger.debug "Cache made up of key: #{dataSetResult.dbRefKey} sql: #{dataSetResult.queryHash.sql}"
+          hash = md5("#{dataSetResult.dbRefKey}#{utils.stringify(dataSetResult.queryHash.query)}")
+          logger.debug "Cache made up of key: #{dataSetResult.dbRefKey} query: #{dataSetResult.queryHash.query}"
           zlib.deflate JSON.stringify(dataSetResult.d3Data), (err, buffer) ->
             if err
               logger.error "Problem compressing data: #{err}"
@@ -197,10 +158,10 @@ DataSetCache.dataSetResultCachePut = (dataSetResult, callback) ->
             else
               doc =
                 _id: hash
-                sql: dataSetResult.queryHash.sql
+                query: dataSetResult.queryHash.query
                 data: buffer.toString('base64')
                 lastTouched: new Date()
-              #coll.update {md5: hash}, {$set: {sql: dataSetResult.queryHash.sql, data: buffer.toString('base64'), last_touched: new Date()}}, {upsert: true}, (err, outcome) ->
+              #coll.update {md5: hash}, {$set: {query: dataSetResult.queryHash.query, data: buffer.toString('base64'), last_touched: new Date()}}, {upsert: true}, (err, outcome) ->
               coll.update {_id: doc._id}, doc, {upsert: true, safe: true}, (err, outcome) ->
                 if err
                   callback err

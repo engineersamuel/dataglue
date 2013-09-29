@@ -2,12 +2,14 @@ settings      = require '../utilitis/settings'
 utils         = require '../utilitis/utils'
 logger        = require('tracer').colorConsole(utils.logger_config)
 pj            = require 'prettyjson'
-dataSetCache  = require '../db/datasetCache'
-dbLogic       = require '../db/dbLogic'
+dataSetCache  = require 'datasetCache'
+dbLogic       = require 'dbLogic'
 zlib          = require 'zlib'
 prettyjson    = require 'prettyjson'
+Db            = require('mongodb').Db
 mongodb       = require 'mongodb'
 _             = require 'lodash'
+assert        = require('assert')
 
 sandbox = {}
 sandbox.hashEach = () ->
@@ -147,6 +149,81 @@ sandbox.test_mongo_bson_types = () ->
             #  logger.debug prettyjson.render r
             conn.close()
 
+sandbox.test_mongo_run_command = () ->
+  mongourl = "mongodb://127.0.0.1:27017/admin?auto_reconnect=true"
+  logger.info "Attempting to connect to: #{mongourl}"
+  mongodb.connect mongourl, (err, conn) ->
+    if err
+      logger.error err
+    else
+      logger.info "Attempting to connect to collection: #{settings.master_ref.collection}"
+      #conn.executeDbCommand {text: 'show databases'}, (err, output) ->
+      conn.command {listDatabases: 1}, (err, output) ->
+#        logger.info prettyjson.render output
+        filteredOutput = _.filter output?['databases'] || [], (item) ->
+          return not _.find(['local', 'dataglue', 'unified-monthly_one_day_closed_link_report', 'unified-salesforce-jobs'], (excludedSchema) -> excludedSchema is item.name)
+        logger.info prettyjson.render filteredOutput
+        conn.close()
+
+sandbox.test_collections = () ->
+  mongourl = "mongodb://127.0.0.1:27017/dataglue?auto_reconnect=true"
+  logger.info "Attempting to connect to: #{mongourl}"
+  Db.connect mongourl, (err, db) ->
+    assert.equal null, err
+    logger.info "Opened connection to: #{mongourl}"
+
+    db.collectionNames (err, collectionNames) ->
+      assert.equal(null, err)
+      logger.info prettyjson.render collectionNames
+
+      db.close()
+
+#    db.collections (err, collections) ->
+#      _.each collections, (coll) ->
+#        coll.stats (err, stats) ->
+#          logger.info prettyjson.render stats
+#      db.close()
+
+sandbox.test_find = () ->
+  logger.info _.find undefined, (item) -> item is 'a'
+
+sandbox.test_substring = () ->
+  dbName = 'unified-salesforce'
+  item = {name: 'unified-salesforce.system.indexes'}
+  logger.info item.name.replace(dbName + '.', '')
+
+# http://www.w3schools.com/sql/sql_datatypes_general.asp
+sandbox.setMongoDataTypes = (obj) ->
+  if _.isDate obj
+    return 'datetime'
+  else if _.isBoolean obj
+    # column type tinyint(1)
+    return 'boolean'
+  else if _.isArray obj
+    return 'array'
+  else if _.isObject obj
+    return 'object'
+  else if _.isString obj
+    return 'varchar'
+  else if utils.isInteger obj
+    return 'int'
+  else if utils.isFloat obj
+    return 'float'
+
+
+sandbox.test_fields = () ->
+  mongourl = "mongodb://127.0.0.1:27017/unified-cache?auto_reconnect=true"
+  logger.info "Attempting to connect to: #{mongourl}"
+  Db.connect mongourl, (err, db) ->
+    assert.equal null, err
+    logger.info "Opened connection to: #{mongourl}"
+    db.collection 'managers', (err, coll) ->
+      logger.info "Opened collection: ref"
+      coll.findOne {}, (err, doc) ->
+        fields = _.map(_.keys(doc), (f) -> {COLUMN_NAME: f, DATA_TYPE: sandbox.setMongoDataTypes(doc[f]), COLUMN_TYPE: undefined, COLUMN_KEY: undefined})
+        logger.info prettyjson.render fields
+        db.close()
+
 #sandbox.hashEach()
 #sandbox.test_compress('Hello World!')
 #sandbox.test_decompress('eJzzSM3JyVcIzy/KSVEEABxJBD4=')
@@ -162,4 +239,9 @@ sandbox.test_mongo_bson_types = () ->
 #sandbox.test_first_stream_value()
 #sandbox.test_merge()
 #sandbox.test_unique_sort()
-sandbox.test_mongo_bson_types()
+#sandbox.test_mongo_bson_types()
+#sandbox.test_mongo_run_command()
+#sandbox.test_find()
+#sandbox.test_collections()
+#sandbox.test_substring()
+sandbox.test_fields()

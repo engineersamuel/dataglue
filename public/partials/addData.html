@@ -16,7 +16,7 @@
     <div class="col-xs-12 col-sm-4 col-md-4">
       <h4 class="db-info-header">Schemas/Databases</h4>
       <!--div.db-info-item(ng-repeat="s in schemas", ng-click="select_schema(s.schema)")-->
-      <div ng-repeat="s in schemas" ng-click="select_schema(s)" class="db-info-item"><span>{{ s }}</span></div>
+      <div ng-repeat="s in schemas" ng-click="select_schema(s.name)" class="db-info-item"><span>{{ s.name }}</span></div>
     </div>
     <div class="col-xs-12 col-sm-4 col-md-4">
       <h4 class="db-info-header">Tables/Collections</h4>

@@ -1,6 +1,8 @@
 settings      = require '../utilitis/settings'
 utils         = require '../utilitis/utils'
-dataSetCache  = require '../db/datasetCache'
+dataSetCache  = require './datasetCache'
+DbQuery       = require './dbQuery'
+QueryBuilder  = require './queryBuilder'
 squel         = require 'squel'
 _             = require 'lodash'
 async         = require 'async'
@@ -12,220 +14,6 @@ prettyjson    = require 'prettyjson'
 
 #CachedDataSet = new EventEmitter()
 CachedDataSet = {}
-
-# Convenience method to verify a field exists and has a valid value
-CachedDataSet.verifyPropertyExists = (obj, field) ->
-  if (_.has obj, field) and (obj[field] isnt undefined) and (obj[field] isnt '') then return true else return false
-
-# Must do a callback here as this will be called in parallel and collected up
-CachedDataSet.buildSql = (dbReference, callback) ->
-  self = @
-  type = settings.db_refs[dbReference['connection']]['type']
-  #tableAliasLookup = {}
-  # Define a lookup to easily associate the field aliases to the d3 to be parsed out later
-  d3Lookup =
-    key: undefined
-    x: undefined
-    xType: undefined
-    y: undefined
-    yType: undefined
-    y2: undefined
-    y2Type: undefined
-    z: undefined
-    zType: undefined
-    r: undefined
-    rType: undefined
-
-  output = {
-    sql: undefined
-    d3Lookup: undefined
-  }
-
-  if type in ['mysql']
-    sql = squel.select()
-    sql.from("#{dbReference.schema}.#{dbReference.table}")
-
-    ################################################################################################################
-    # Limit the query by default
-    ################################################################################################################
-    if self.verifyPropertyExists dbReference, 'limit'
-      sql.limit(dbReference.limit)
-
-    _.each dbReference.fields, (field) ->
-      if not field['excluded']?
-
-        fieldName = field.COLUMN_NAME
-        fieldAlias = undefined
-        ################################################################################################################
-        # Aggregations require the field be wrapped in something like COUNT
-        ################################################################################################################
-        if self.verifyPropertyExists field, 'aggregation'
-          fieldAlias = 'y'
-          if field.aggregation is 'count'
-            sql.field("COUNT(#{fieldName})", fieldAlias)
-            d3Lookup.key = "#{fieldName} count"
-          else if field.aggregation is 'distinctCount'
-            sql.field("COUNT(DISTINCT #{fieldName})", fieldAlias)
-            d3Lookup.key = "#{fieldName} distinct count"
-          else if field.aggregation is 'sum'
-            sql.field("SUM(#{fieldName})", fieldAlias)
-            d3Lookup.key = "#{fieldName} sum"
-          else if field.aggregation is 'avg'
-            sql.field("AVG(#{fieldName})", fieldAlias)
-            d3Lookup.key = "#{fieldName} avg"
-
-          d3Lookup.y = fieldName
-          d3Lookup.yType = field.DATA_TYPE
-
-        ################################################################################################################
-        # Otherwise it is just the plain field
-        ################################################################################################################
-        else
-          sql.field(fieldName)
-
-        ################################################################################################################
-        # See if a begin and end date are set
-        ################################################################################################################
-        if self.verifyPropertyExists field, 'beginDate'
-          sql.where("#{fieldName} >= TIMESTAMP('#{field.beginDate}')")
-
-        if self.verifyPropertyExists field, 'endDate'
-          sql.where("#{fieldName} < TIMESTAMP('#{field.endDate}')")
-
-        ################################################################################################################
-        # Group By's require the group and the field
-        ################################################################################################################
-        addX = (field, fieldAlias, multiplex=false) ->
-          if multiplex
-            d3Lookup.xMultiplex = fieldAlias
-            d3Lookup.xMultiplexType = field.DATA_TYPE
-          else
-            d3Lookup.x = fieldAlias
-            d3Lookup.xType = field.DATA_TYPE
-            d3Lookup.xGroupBy = field.groupBy
-
-        addGroupByDate = (sql, field, fieldAlias, dateFormat) ->
-          addX field, fieldAlias
-          sql.field("DATE_FORMAT(#{field.COLUMN_NAME}, '#{dateFormat}')", fieldAlias)
-          sql.group(fieldAlias)
-
-        if self.verifyPropertyExists field, 'groupBy'
-
-          if field.groupBy is 'multiplex'
-            fieldAlias = 'x_multiplex'
-            sql.field(field.COLUMN_NAME, fieldAlias)
-            sql.group(fieldAlias)
-            addX field, fieldAlias, true
-
-          else
-            fieldAlias = 'x'
-            if field.groupBy is 'hour'
-              addGroupByDate sql, field, fieldAlias, "%Y-%m-%d %H"
-            else if field.groupBy is "day"
-              addGroupByDate sql, field, fieldAlias, "%Y-%m-%d"
-            else if field.groupBy is "month"
-              addGroupByDate sql, field, fieldAlias, "%Y-%m"
-            else if field.groupBy is "year"
-              addGroupByDate sql, field, fieldAlias, "%Y"
-            else if field.groupBy is 'field'
-              sql.field(field.COLUMN_NAME, fieldAlias)
-              sql.group(fieldAlias)
-              addX field, fieldAlias
-
-    output.sql = sql.toString()
-    output.d3Lookup = d3Lookup
-
-    callback null, output
-
-  return self
-
-CachedDataSet.mysqlQuery = (dbReference, queryHash, callback) ->
-  self = @
-  # Remember the connection property is the unique name of the connection reference
-  mysql_ref = settings.mysql_refs[dbReference.connection || dbReference.name]
-  conn = mysql.createConnection
-    host     : mysql_ref['host'],
-    user     : mysql_ref['user'],
-    password : mysql_ref['pass'],
-
-  # Query mysql, attempt to cache, and return the results regardless
-  logger.debug "Querying mysql reference: #{dbReference.connection} with sql: #{prettyjson.render queryHash.sql}"
-  conn.query queryHash.sql, (err, results) ->
-    if err
-      logger.debug "Error Querying mysql reference: #{dbReference.connection} with sql: #{queryHash}, err: #{prettyjson.render err}"
-      callback err
-    else
-      logger.debug "Found #{results.length} results."
-      callback null, results
-
-      # Now that I want to store the d3 data and not the db result rows, commenting this out
-      # Attempt to cache if the cache option is set to true, otherwise just return the results
-#      if queryHash.cache?
-#        dataSetCache.statementCachePut dbReference, queryHash, results, (err, outcome) ->
-#          if err
-#            logger.error "Failed to cache sql due to: #{prettyjson.render err}"
-#          else
-#            # After the results have been cached go ahead and return the results from the above query
-#            callback null, results
-#      else
-#        callback null, results
-
-    # End the connection before existing the function
-    conn.end()
-
-  return self
-
-CachedDataSet.query = (dbReference, queryHash, callback) ->
-  self = @
-  if dbReference.type is 'mysql'
-    logger.debug "Querying mysql reference: #{dbReference.name} with sql: #{queryHash.sql}"
-    CachedDataSet.mysqlQuery dbReference, queryHash, (err, results) ->
-      if err
-        callback err
-      else callback null, results
-  return self
-
-#CachedDataSet.getAllDbInformation = (callback) ->
-#  output =
-#    d3TreeData:
-#      name: 'DB References',
-#      children: _.map settings.db_refs, (db_ref) ->
-#        name: db_ref.name,
-#        children: CachedDataSet.showSchemas db_ref, (schema) ->
-#          name: schema
-##              children: _.map dbLogic.showTables, (table) ->
-##                name: table,
-##                children: []
-##              }
-CachedDataSet.getFields = (dbRefName, schemaName, tableName, callback) ->
-  dbReference = settings.db_refs[dbRefName]
-  sql = "SELECT COLUMN_NAME, DATA_TYPE, COLUMN_KEY, COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '#{schemaName}' AND TABLE_NAME = '#{tableName}'"
-  CachedDataSet.query dbReference, {sql: sql, cache: false}, (err, fields) ->
-    callback err, fields
-  return @
-
-#  return DatabaseManagerModule::query(params[:ref], sql).to_a.to_json || []
-CachedDataSet.getTables = (dbRefName, schemaName, callback) ->
-  dbReference = settings.db_refs[dbRefName]
-  sql = "SELECT DISTINCT TABLE_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '#{schemaName}'"
-  CachedDataSet.query dbReference, {sql: sql, cache: false}, (err, results) ->
-    callback err, _.map results
-  return @
-
-CachedDataSet.getSchemas = (dbRefName, callback) ->
-  logger.debug "Call to getSchemas"
-  dbReference = settings.db_refs[dbRefName]
-  sql = 'SELECT SCHEMA_NAME AS `schema` FROM INFORMATION_SCHEMA.SCHEMATA'
-  CachedDataSet.query dbReference, {sql: sql, cache: false}, (err, results) ->
-    logger.debug prettyjson.render "Schemas: results"
-    callback err, _.map results, (schema) -> schema.schema
-  return @
-
-#
-#CachedDataSet.showSchemas = (dbReference, callback) ->
-#  sql = 'SELECT SCHEMA_NAME AS `schema` FROM INFORMATION_SCHEMA.SCHEMATA'
-#  CachedDataSet.query dbReference, {sql: sql, cache: false}, (err, results) ->
-#    callback err, _.map results, (schema) -> results.schema
 
 CachedDataSet.queryDynamic = (dbReference, callback) ->
   self = @
@@ -239,9 +27,9 @@ CachedDataSet.queryDynamic = (dbReference, callback) ->
     queryHash: undefined
 
   # logger.debug "queryDynamic, key: #{key}, dbReference: #{prettyjson.render dbReference}"
-  CachedDataSet.buildSql dbReference, (err, queryHash) ->
+  QueryBuilder.buildQuery dbReference, (err, queryHash) ->
     if err
-      logger.error "Error building SQL: #{prettyjson.render err}"
+      logger.error "Error building query: #{prettyjson.render err}"
       callback err
     else
       # To compute the query and transform to the d3 results requires an x or a y to be set, if not, do nothing

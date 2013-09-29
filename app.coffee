@@ -5,12 +5,13 @@ http          = require('http')
 path          = require('path')
 utils         = require('./src/dataglue/utilitis/utils')
 logger        = require('tracer').colorConsole(utils.logger_config)
-dataSetCache  = require './src/dataglue/db/datasetCache'
-dbLogic       = require './src/dataglue/db/dbLogic'
-prettyjson    = require 'prettyjson'
-_             = require 'lodash'
 settings      = require './src/dataglue/utilitis/settings'
 utils         = require './src/dataglue/utilitis/utils'
+dataSetCache  = require './src/dataglue/db/datasetCache'
+dbLogic       = require './src/dataglue/db/dbLogic'
+dbInfo        = require './src/dataglue/db/dbInfo'
+prettyjson    = require 'prettyjson'
+_             = require 'lodash'
 
 ##########################################################
 # Handle configuration
@@ -107,17 +108,17 @@ app.get '/dataset/query/:_id', (req, res) ->
 ########################################################################################################################
 # Get fields
 app.get '/db/info/:ref/:schema/:table', (req, res) ->
-  dbLogic.getFields req.param('ref'), req.param('schema'), req.param('table'), (err, output) ->
+  dbInfo.getFields req.param('ref'), req.param('schema'), req.param('table'), (err, output) ->
     res.send output
 
 # Get tables
 app.get '/db/info/:ref/:schema', (req, res) ->
-  dbLogic.getTables req.param('ref'), req.param('schema'), (err, output) ->
+  dbInfo.getTables req.param('ref'), req.param('schema'), (err, output) ->
     res.send output
 
 # Get schemas
 app.get '/db/info/:ref', (req, res) ->
-  dbLogic.getSchemas req.param('ref'), (err, output) ->
+  dbInfo.getSchemas req.param('ref'), (err, output) ->
     res.send output
 
 # Get list of database connection references
