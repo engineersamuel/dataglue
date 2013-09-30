@@ -47,9 +47,13 @@ CachedDataSet.queryDynamic = (dbReference, callback) ->
               callback null, output
             # Otherwise this is a cache miss, need to refetch the data
             else
-              CachedDataSet.mysqlQuery dbReference, queryHash, (err, dbResults) ->
+              DbQuery.query dbReference, queryHash, (err, dbResults) ->
                 output[key].queryHash = queryHash
                 output[key].results = dbResults
+                # If a SQL result we must do further processing on the data to transform it to d3 streams
+#                if dbReference.type in utils.sqlDbTypes then output[key].results = dbResults
+#                # If a NoSQL result no further processing need due to pipelining ability
+#                if dbReference.type in utils.noSqlTypes then output[key].d3Data = dbResults
                 callback err, output
 
       # These are mainly convenience warnings to send to the user to indicate why the SQL couldn't be run
@@ -62,6 +66,7 @@ CachedDataSet.queryDynamic = (dbReference, callback) ->
           warning = "Could not generate data for #{key}, no y set. Please make sure to aggregate a field."
           output[key].warning = warning
           logger.warn warning
+
         output[key].queryHash = queryHash
         callback err, output
 
@@ -84,6 +89,7 @@ CachedDataSet.loadDataSet = (doc, callback) ->
     else
       _.each arrayOfDataSetResults, (dataSetResult, idx) ->
 
+        logger.debug "arrayOfDataSetResults: #{prettyjson.render arrayOfDataSetResults}"
         # The dataSetResult is simply a hash with 1 key, therefore the value is [0]
         dataSetResult = _.values(dataSetResult)[0]
 
@@ -161,7 +167,7 @@ CachedDataSet.loadDataSet = (doc, callback) ->
             delete dataSetResult.results
 
             # Store the d3Data of the dataSetResult after the data has been successfully generated
-            if dataSetResult.queryHash.cache?
+            if dataSetResult.queryHash.cache? and dataSetResult.d3Data? and dataSetResult.d3Data.length > 0
               dataSetCache.dataSetResultCachePut doc, dataSetResult, (err, outcome) ->
                 if err
                   logger.error "Failed to cache the dataSetResult due to: #{prettyjson.render err}"
@@ -200,13 +206,14 @@ CachedDataSet.loadDataSet = (doc, callback) ->
 
           # Store the d3Data of the dataSetResult after the data has been successfully generated
           # if dataSetResult.queryHash.cache?  # Maybe in the future I will allow it to be configurable
-          dataSetCache.dataSetResultCachePut dataSetResult, (err, outcome) ->
-            if err
-              logger.error "Failed to cache the dataSetResult due to: #{prettyjson.render err}"
-            else
-              # After the results have been cached go ahead and return the results from the above query
-              logger.debug "Successfully cached d3Data."
-              callback null, outcome
+          if dataSetResult.queryHash.cache? and dataSetResult.d3Data? and dataSetResult.d3Data.length > 0
+            dataSetCache.dataSetResultCachePut dataSetResult, (err, outcome) ->
+              if err
+                logger.error "Failed to cache the dataSetResult due to: #{prettyjson.render err}"
+              else
+                # After the results have been cached go ahead and return the results from the above query
+                logger.debug "Successfully cached d3Data."
+                callback null, outcome
 
       callback null, arrayOfDataSetResults
   return self

@@ -6,21 +6,23 @@ logger        = require('tracer').colorConsole(utils.logger_config)
 mongodb       = require 'mongodb'
 Db            = require('mongodb').Db
 prettyjson    = require 'prettyjson'
+async         = require 'async'
 
 
 DbQuery = {}
 
 DbQuery.query = (dbReference, queryHash, callback) ->
   self = @
+  logger.debug "Query: #{JSON.stringify(queryHash.query)}"
   if dbReference.type is 'mysql'
-    logger.debug "Querying mysql reference: #{dbReference.name} with query: #{queryHash.query}"
+    logger.debug "Querying mysql reference: #{dbReference.name} with queryHash: #{prettyjson.render queryHash}"
     DbQuery.mysqlQuery dbReference, queryHash, (err, results) ->
       if err
         callback err
       else callback null, results
 
   else if dbReference.type is 'mongo'
-    logger.debug "Querying mongo reference: #{dbReference.name} with queryHash: #{prettyjson.render queryHash}"
+#    logger.debug "Querying mongo reference: #{dbReference.name} with queryHash: #{prettyjson.render queryHash}"
     DbQuery.mongoQuery dbReference, queryHash, (err, results) ->
       callback err, results
   return self
@@ -31,20 +33,40 @@ DbQuery.mongoQuery = (dbReference, queryHash, callback) ->
   # Make a clone of the dbReference to override any necessary fields like the db
   dbRefCopy = _.clone dbReference
   # If a command is present, must run it against the admin database
-  if queryHash.command? then dbRefCopy.db = 'admin'
+  if queryHash.command? then dbRefCopy.db = 'admin' else dbRefCopy.db = dbRefCopy.schema
   mongoUrl = utils.generate_mongo_url(dbRefCopy)
-  mongodb.connect mongoUrl, (err, conn) ->
-    if err
-      logger.error err
+
+  #logger.info "Attempting to connect to: #{mongoUrl}"
+  Db.connect mongoUrl, (err, db) ->
+    if queryHash.command?
+      #logger.debug "Executing mongo command: #{JSON.stringify(queryHash.command)}"
+      # First connect to the db the run the command
+      async.waterfall [
+        (callback) ->
+          db.command queryHash.command, (err, results) ->
+            callback err, results
+            db.close()
+      ],
+      (err, results) ->
+        callback err, results
     else
-      if queryHash.command?
-        conn.command queryHash.command, (err, results) ->
-          callback err, results
-          conn.close()
-      else
-        logger.info "Attempting to connect to collection: #{settings.master_ref.collection}"
-        # TODO TBD
-        conn.close()
+      # First connect to the db, then the collection, then run the aggregation
+      #logger.debug "Executing mongo aggregate query: #{JSON.stringify(queryHash.query)}"
+      async.waterfall [
+        (callback) ->
+          db.collection dbRefCopy.table, (err, coll) ->
+            #logger.debug "attempting to connect to collection: #{dbRefCopy.table}"
+            callback err, coll
+        (coll, callback) ->
+          #logger.debug "connected to collection"
+          # Execute aggregate, notice the pipeline is expressed as an Array
+          coll.aggregate queryHash.query, (err, result) ->
+            #logger.debug prettyjson.render result
+            callback err, result
+      ],
+      (err, result) ->
+        #logger.debug prettyjson.render result
+        callback err, result
 
   return self
 

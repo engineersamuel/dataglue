@@ -58,7 +58,7 @@
                 output[key].d3Data = cachedD3Data;
                 return callback(null, output);
               } else {
-                return CachedDataSet.mysqlQuery(dbReference, queryHash, function(err, dbResults) {
+                return DbQuery.query(dbReference, queryHash, function(err, dbResults) {
                   output[key].queryHash = queryHash;
                   output[key].results = dbResults;
                   return callback(err, output);
@@ -98,6 +98,7 @@
         _.each(arrayOfDataSetResults, function(dataSetResult, idx) {
           var refItem, stream, streams, uniqueMutliplexedXs, uniqueXs;
 
+          logger.debug("arrayOfDataSetResults: " + (prettyjson.render(arrayOfDataSetResults)));
           dataSetResult = _.values(dataSetResult)[0];
           if (dataSetResult.d3Data == null) {
             if (dataSetResult.queryHash.d3Lookup.xMultiplex && dataSetResult.queryHash.d3Lookup.xMultiplex !== '') {
@@ -167,7 +168,7 @@
               });
               dataSetResult.d3Data = streams;
               delete dataSetResult.results;
-              if (dataSetResult.queryHash.cache != null) {
+              if ((dataSetResult.queryHash.cache != null) && (dataSetResult.d3Data != null) && dataSetResult.d3Data.length > 0) {
                 dataSetCache.dataSetResultCachePut(doc, dataSetResult, function(err, outcome) {
                   if (err) {
                     return logger.error("Failed to cache the dataSetResult due to: " + (prettyjson.render(err)));
@@ -206,14 +207,16 @@
                 return a.x - b.x;
               });
             });
-            return dataSetCache.dataSetResultCachePut(dataSetResult, function(err, outcome) {
-              if (err) {
-                return logger.error("Failed to cache the dataSetResult due to: " + (prettyjson.render(err)));
-              } else {
-                logger.debug("Successfully cached d3Data.");
-                return callback(null, outcome);
-              }
-            });
+            if ((dataSetResult.queryHash.cache != null) && (dataSetResult.d3Data != null) && dataSetResult.d3Data.length > 0) {
+              return dataSetCache.dataSetResultCachePut(dataSetResult, function(err, outcome) {
+                if (err) {
+                  return logger.error("Failed to cache the dataSetResult due to: " + (prettyjson.render(err)));
+                } else {
+                  logger.debug("Successfully cached d3Data.");
+                  return callback(null, outcome);
+                }
+              });
+            }
           }
         });
         return callback(null, arrayOfDataSetResults);

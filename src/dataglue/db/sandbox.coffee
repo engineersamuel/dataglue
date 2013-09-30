@@ -2,14 +2,15 @@ settings      = require '../utilitis/settings'
 utils         = require '../utilitis/utils'
 logger        = require('tracer').colorConsole(utils.logger_config)
 pj            = require 'prettyjson'
-dataSetCache  = require 'datasetCache'
-dbLogic       = require 'dbLogic'
+dataSetCache  = require '../db/datasetCache'
+dbLogic       = require '../db/dbLogic'
 zlib          = require 'zlib'
 prettyjson    = require 'prettyjson'
 Db            = require('mongodb').Db
 mongodb       = require 'mongodb'
 _             = require 'lodash'
 assert        = require('assert')
+async         = require 'async'
 
 sandbox = {}
 sandbox.hashEach = () ->
@@ -159,10 +160,7 @@ sandbox.test_mongo_run_command = () ->
       logger.info "Attempting to connect to collection: #{settings.master_ref.collection}"
       #conn.executeDbCommand {text: 'show databases'}, (err, output) ->
       conn.command {listDatabases: 1}, (err, output) ->
-#        logger.info prettyjson.render output
-        filteredOutput = _.filter output?['databases'] || [], (item) ->
-          return not _.find(['local', 'dataglue', 'unified-monthly_one_day_closed_link_report', 'unified-salesforce-jobs'], (excludedSchema) -> excludedSchema is item.name)
-        logger.info prettyjson.render filteredOutput
+        logger.info prettyjson.render output
         conn.close()
 
 sandbox.test_collections = () ->
@@ -188,8 +186,8 @@ sandbox.test_find = () ->
   logger.info _.find undefined, (item) -> item is 'a'
 
 sandbox.test_substring = () ->
-  dbName = 'unified-salesforce'
-  item = {name: 'unified-salesforce.system.indexes'}
+  dbName = 'dataglue-foo'
+  item = {name: 'dataglue-foo.system.indexes'}
   logger.info item.name.replace(dbName + '.', '')
 
 # http://www.w3schools.com/sql/sql_datatypes_general.asp
@@ -212,7 +210,7 @@ sandbox.setMongoDataTypes = (obj) ->
 
 
 sandbox.test_fields = () ->
-  mongourl = "mongodb://127.0.0.1:27017/unified-cache?auto_reconnect=true"
+  mongourl = "mongodb://127.0.0.1:27017/test?auto_reconnect=true"
   logger.info "Attempting to connect to: #{mongourl}"
   Db.connect mongourl, (err, db) ->
     assert.equal null, err
@@ -224,6 +222,11 @@ sandbox.test_fields = () ->
         logger.info prettyjson.render fields
         db.close()
 
+
+sandbox.test_array_concat = () ->
+  a = [1, 2]
+  b = a.concat [3, 4]
+  logger.info prettyjson.render b
 #sandbox.hashEach()
 #sandbox.test_compress('Hello World!')
 #sandbox.test_decompress('eJzzSM3JyVcIzy/KSVEEABxJBD4=')
@@ -244,4 +247,5 @@ sandbox.test_fields = () ->
 #sandbox.test_find()
 #sandbox.test_collections()
 #sandbox.test_substring()
-sandbox.test_fields()
+#sandbox.test_fields()
+sandbox.test_array_concat()

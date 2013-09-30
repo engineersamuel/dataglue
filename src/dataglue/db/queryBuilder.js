@@ -24,13 +24,7 @@
       x: void 0,
       xType: void 0,
       y: void 0,
-      yType: void 0,
-      y2: void 0,
-      y2Type: void 0,
-      z: void 0,
-      zType: void 0,
-      r: void 0,
-      rType: void 0
+      yType: void 0
     };
     output = {
       query: void 0,
@@ -122,8 +116,15 @@
   };
 
   QueryBuilder.buildMongoQuery = function(dbReference, callback) {
-    var output, pipeline, theGroup, theLimit, theMatch;
+    var addX, addY, d3Lookup, multiplex, output, pipeline, theGroup, theLimit, theMatch, theProject;
 
+    d3Lookup = {
+      key: void 0,
+      x: void 0,
+      xType: void 0,
+      y: void 0,
+      yType: void 0
+    };
     output = {
       query: void 0,
       d3Lookup: {}
@@ -137,6 +138,11 @@
         _id: {}
       }
     };
+    theProject = {
+      '$project': {
+        '_id': 0
+      }
+    };
     theLimit = {
       '$limit': void 0
     };
@@ -145,8 +151,26 @@
     } else {
       theLimit['$limit'] = dbReference.limit;
     }
+    addX = function(field, fieldAlias, multiplex) {
+      if (multiplex == null) {
+        multiplex = false;
+      }
+      if (multiplex) {
+        d3Lookup.xMultiplex = fieldAlias;
+        return d3Lookup.xMultiplexType = field.DATA_TYPE;
+      } else {
+        d3Lookup.x = fieldAlias;
+        d3Lookup.xType = field.DATA_TYPE;
+        return d3Lookup.xGroupBy = field.groupBy;
+      }
+    };
+    addY = function(field, fieldAlias) {
+      d3Lookup.y = fieldAlias;
+      return d3Lookup.yType = field.DATA_TYPE;
+    };
+    multiplex = false;
     _.each(dbReference.fields, function(field) {
-      var fieldName;
+      var fieldAlias, fieldName;
 
       if (field['excluded'] == null) {
         fieldName = field.COLUMN_NAME;
@@ -164,59 +188,91 @@
           theMatch['$match'][fieldName] = {
             '$exists': true
           };
-          if (field.groupBy === 'year') {
-            theGroup['$group']['_id'].year = {
-              '$year': "$" + fieldName
-            };
-          } else if (field.groupBy === 'month') {
-            theGroup['$group']['_id'].year = {
-              '$year': "$" + fieldName
-            };
-            theGroup['$group']['_id'].month = {
-              '$month': "$" + fieldName
-            };
-          } else if (field.groupBy === 'day') {
-            theGroup['$group']['_id'].year = {
-              '$year': "$" + fieldName
-            };
-            theGroup['$group']['_id'].month = {
-              '$month': "$" + fieldName
-            };
-            theGroup['$group']['_id'].day = {
-              '$dayOfMonth': "$" + fieldName
-            };
-          } else if (field.groupBy === 'hour') {
-            theGroup['$group']['_id'].year = {
-              '$year': "$" + fieldName
-            };
-            theGroup['$group']['_id'].month = {
-              '$month': "$" + fieldName
-            };
-            theGroup['$group']['_id'].day = {
-              '$dayOfMonth': "$" + fieldName
-            };
-            theGroup['$group']['_id'].hour = {
-              '$hour': "$" + fieldName
-            };
-          } else if (field.groupBy === 'field') {
-            theGroup['$group']['_id'] = "$" + fieldName;
+          if (field.groupBy === 'multiplex') {
+            fieldAlias = 'x_multiplex';
+            theGroup['$group']['_id'].x_multiplex = "$" + fieldName;
+            theProject['$project'].x_multiplex = '$_id.x_multiplex';
+            addX(field, fieldAlias, true);
+            multiplex = true;
+          } else {
+            fieldAlias = 'x';
+            if (field.groupBy === 'year') {
+              theGroup['$group']['_id'].year = {
+                '$year': "$" + fieldName
+              };
+              addX(field, fieldAlias);
+              theProject['$project'].x = '$_id.year';
+            } else if (field.groupBy === 'month') {
+              theGroup['$group']['_id'].year = {
+                '$year': "$" + fieldName
+              };
+              theGroup['$group']['_id'].month = {
+                '$month': "$" + fieldName
+              };
+              addX(field, fieldAlias);
+              theProject['$project'].x = {
+                '$concat': ['$_id.year', '-', '$_id.month']
+              };
+            } else if (field.groupBy === 'day') {
+              theGroup['$group']['_id'].year = {
+                '$year': "$" + fieldName
+              };
+              theGroup['$group']['_id'].month = {
+                '$month': "$" + fieldName
+              };
+              theGroup['$group']['_id'].day = {
+                '$dayOfMonth': "$" + fieldName
+              };
+              theProject['$project'].x = {
+                '$concat': ['$_id.year', '-', '$_id.month', '-', '$_id.day']
+              };
+              addX(field, fieldAlias);
+            } else if (field.groupBy === 'hour') {
+              theGroup['$group']['_id'].year = {
+                '$year': "$" + fieldName
+              };
+              theGroup['$group']['_id'].month = {
+                '$month': "$" + fieldName
+              };
+              theGroup['$group']['_id'].day = {
+                '$dayOfMonth': "$" + fieldName
+              };
+              theGroup['$group']['_id'].hour = {
+                '$hour': "$" + fieldName
+              };
+              theProject['$project'].x = {
+                '$concat': ['$_id.year', '-', '$_id.month', '-', '$_id.day', '-', '$_id.hour']
+              };
+              addX(field, 'x');
+            } else if (field.groupBy === 'field') {
+              theGroup['$group']['_id'] = {
+                'x': "$" + fieldName
+              };
+              addX(field, fieldAlias);
+              theProject['$project'].x = '$_id.x';
+            }
           }
         }
         if (utils.verifyPropertyExists(field, 'aggregation')) {
           if (field.aggregation === 'count') {
-            return theGroup['$group']['count'] = {
+            addY(field, 'y');
+            theGroup['$group']['count'] = {
               '$sum': 1
             };
+            theProject['$project'].y = '$count';
+            return d3Lookup.key = "" + fieldName + " count";
           }
         }
       }
     });
     pipeline.push(theMatch);
     pipeline.push(theGroup);
+    pipeline.push(theProject);
     if (theLimit['$limit'] !== void 0) {
       pipeline.push(theLimit);
     }
     output.query = pipeline;
+    output.d3Lookup = d3Lookup;
     return callback(null, output);
   };
 

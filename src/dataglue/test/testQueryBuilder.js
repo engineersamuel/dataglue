@@ -15,7 +15,7 @@
   prettyjson = require('prettyjson');
 
   describe('queryBuilder', function() {
-    var simpleMongoDbReference, simpleMysqlDbReference;
+    var mongoCommonMultiplex, mongoCommonMultiplexProject, simpleMongoDbReference, simpleMysqlDbReference;
 
     simpleMongoDbReference = {
       "key": "Test⦀some_schema⦀some_table",
@@ -49,6 +49,28 @@
         }
       ],
       "limit": 1000
+    };
+    mongoCommonMultiplex = {
+      '$group': {
+        '_id': {
+          'x_multiplex': '$x_multiplex'
+        },
+        'values': {
+          '$push': {
+            'x': '$x',
+            'y': '$y'
+          }
+        }
+      }
+    };
+    mongoCommonMultiplexProject = {
+      '$project': {
+        '_id': 0,
+        'key': {
+          '$concat': ['$_id.x_multiplex']
+        },
+        'values': 1
+      }
     };
     describe('#buildMysqlQuery', function() {
       it('build a simple mysql query', function(done) {
@@ -87,6 +109,55 @@
       });
     });
     return describe('#buildMongoQuery', function() {
+      it('test deep equals', function() {
+        var x, y;
+
+        x = [
+          {
+            "$match": {
+              "created_date": {
+                "$exists": true
+              }
+            }
+          }, {
+            "$group": {
+              "_id": {
+                "year": {
+                  "$year": "$created_date"
+                }
+              }
+            }
+          }, {
+            "$project": {
+              "_id": 0,
+              "x": "$_id.year"
+            }
+          }
+        ];
+        y = [
+          {
+            '$match': {
+              "created_date": {
+                "$exists": true
+              }
+            }
+          }, {
+            '$group': {
+              "_id": {
+                "year": {
+                  "$year": "$created_date"
+                }
+              }
+            }
+          }, {
+            "$project": {
+              "_id": 0,
+              "x": "$_id.year"
+            }
+          }
+        ];
+        return x.should.eql(y);
+      });
       it('build a simple mongo group by year query', function(done) {
         var expectedQuery, ref;
 
@@ -106,6 +177,11 @@
                   "$year": "$created_date"
                 }
               }
+            }
+          }, {
+            "$project": {
+              "_id": 0,
+              "x": "$_id.year"
             }
           }
         ];
@@ -138,6 +214,13 @@
                 "month": {
                   "$month": "$created_date"
                 }
+              }
+            }
+          }, {
+            "$project": {
+              "_id": 0,
+              "x": {
+                "$concat": ["$_id.year", "-", "$_id.month"]
               }
             }
           }
@@ -174,6 +257,13 @@
                 "day": {
                   "$dayOfMonth": "$created_date"
                 }
+              }
+            }
+          }, {
+            "$project": {
+              "_id": 0,
+              "x": {
+                "$concat": ["$_id.year", "-", "$_id.month", "-", "$_id.day"]
               }
             }
           }
@@ -215,6 +305,13 @@
                 }
               }
             }
+          }, {
+            "$project": {
+              "_id": 0,
+              "x": {
+                "$concat": ["$_id.year", "-", "$_id.month", "-", "$_id.day", "-", "$_id.hour"]
+              }
+            }
           }
         ];
         return queryBuilder.buildQuery(ref, function(err, output) {
@@ -244,7 +341,14 @@
             }
           }, {
             '$group': {
-              "_id": "$geo"
+              "_id": {
+                "x": "$geo"
+              }
+            }
+          }, {
+            "$project": {
+              "_id": 0,
+              "x": "$_id.x"
             }
           }, {
             '$limit': 500
@@ -277,10 +381,18 @@
             }
           }, {
             '$group': {
-              "_id": "$geo",
+              "_id": {
+                "x": "$geo"
+              },
               "count": {
                 "$sum": 1
               }
+            }
+          }, {
+            "$project": {
+              "_id": 0,
+              "x": "$_id.x",
+              "y": "$count"
             }
           }
         ];
@@ -292,21 +404,21 @@
           return done();
         });
       });
-      return it('mongo count by month', function(done) {
+      it('mongo count by month', function(done) {
         var expectedQuery, ref;
 
         ref = _.cloneDeep(simpleMongoDbReference);
-        ref.fields[0].aggregation = 'count';
+        ref.fields[0].aggregation = "count";
         ref.fields[1].groupBy = "month";
         expectedQuery = [
           {
-            '$match': {
+            "$match": {
               "created_date": {
                 "$exists": true
               }
             }
           }, {
-            '$group': {
+            "$group": {
               "_id": {
                 "year": {
                   "$year": "$created_date"
@@ -319,13 +431,75 @@
                 "$sum": 1
               }
             }
+          }, {
+            "$project": {
+              "_id": 0,
+              "x": {
+                "$concat": ["$_id.year", "-", "$_id.month"]
+              },
+              "y": "$count"
+            }
           }
         ];
         return queryBuilder.buildQuery(ref, function(err, output) {
           if (err) {
             return done(err);
           }
-          logger.debug(JSON.stringify(output));
+          output.query.should.eql(expectedQuery);
+          return done();
+        });
+      });
+      return it('mongo count by month multiplex by geo field', function(done) {
+        var expectedQuery, ref;
+
+        ref = _.cloneDeep(simpleMongoDbReference);
+        ref.fields[0].aggregation = 'count';
+        ref.fields[1].groupBy = 'month';
+        ref.fields.push({
+          COLUMN_NAME: "geo",
+          DATA_TYPE: "varchar",
+          groupBy: 'multiplex'
+        });
+        expectedQuery = [
+          {
+            '$match': {
+              "created_date": {
+                "$exists": true
+              },
+              "geo": {
+                "$exists": true
+              }
+            }
+          }, {
+            '$group': {
+              "_id": {
+                "year": {
+                  "$year": "$created_date"
+                },
+                "month": {
+                  "$month": "$created_date"
+                },
+                "x_multiplex": "$geo"
+              },
+              "count": {
+                "$sum": 1
+              }
+            }
+          }, {
+            "$project": {
+              "_id": 0,
+              "y": "$count",
+              "x": {
+                "$concat": ["$_id.year", "-", "$_id.month"]
+              },
+              "x_multiplex": "$_id.x_multiplex"
+            }
+          }
+        ];
+        return queryBuilder.buildQuery(ref, function(err, output) {
+          if (err) {
+            return done(err);
+          }
           output.query.should.eql(expectedQuery);
           return done();
         });

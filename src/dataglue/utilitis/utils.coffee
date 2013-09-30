@@ -60,3 +60,6 @@ exports.stringify = (obj) ->
     return JSON.stringify obj
 
   return obj
+
+exports.sqlDbTypes = ['mysql', 'postgresql', 'postgre', 'mariadb']
+exports.noSqlTypes = ['mongo']

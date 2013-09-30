@@ -78,6 +78,10 @@
     return obj;
   };
 
+  exports.sqlDbTypes = ['mysql', 'postgresql', 'postgre', 'mariadb'];
+
+  exports.noSqlTypes = ['mongo'];
+
 }).call(this);
 
 /*
