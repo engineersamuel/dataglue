@@ -81,16 +81,16 @@ define ["angular", "services", "nv", "moment", "bubble"], (angular, services, nv
 
         if xAxisDataType in ['datetime']
           if xAxisGroupBy is 'hour'
-            chart.xAxis.tickFormat((d) -> moment(d).format('YYYY-MM-DD HH'))
+            chart.xAxis.tickFormat((d) -> moment.utc(d).format('YYYY-MM-DD HH'))
           else if xAxisGroupBy is 'day'
-            chart.xAxis.tickFormat((d) -> moment(d).format('YYYY-MM-DD'))
+            chart.xAxis.tickFormat((d) -> moment.utc(d).format('YYYY-MM-DD'))
           else if xAxisGroupBy is 'month'
-            chart.xAxis.tickFormat((d) -> moment(d).format('YYYY-MM'))
+            chart.xAxis.tickFormat((d) -> moment.utc(d).format('YYYY-MM'))
           else if xAxisGroupBy is 'year'
-            chart.xAxis.tickFormat((d) -> moment(d).format('YYYY'))
+            chart.xAxis.tickFormat((d) -> moment.utc(d).format('YYYY'))
           # Default
           else
-            chart.xAxis.tickFormat((d) -> moment(d).format('YYYY-MM-DD'))
+            chart.xAxis.tickFormat((d) -> moment.utc(d).format('YYYY-MM-DD'))
 
       createChartByType = () ->
         if chartType is 'multiBarChart'

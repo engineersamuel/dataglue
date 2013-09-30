@@ -35,7 +35,42 @@ describe 'utils', ->
 
   describe '#parseDateToOffset ', ->
     it 'parse 2009 with year format', ->
-      utils.parseDateToOffset('2009', 'year').should.equal 1230786000000
+      utils.parseDateToOffset('2009', 'year').should.equal 1230768000000
     it 'parse 2009 with no format', ->
-      utils.parseDateToOffset('2009', undefined).should.equal 1230786000000
+      utils.parseDateToOffset('2009', undefined).should.equal 1230768000000
 
+  describe '#xParse ', ->
+    it 'parse string 2009', ->
+      utils.parseX('2009', {xType: 'datetime', xGroupBy: 'year'}).should.equal 1230768000000
+    it 'parse number 2009', ->
+      utils.parseX(2009, {xType: 'datetime', xGroupBy: 'year'}).should.equal 1230768000000
+    it 'parse a number, 10', ->
+      utils.parseX(10, undefined).should.equal 10
+    it 'parse a number, 10', ->
+      utils.parseX(10).should.equal 10
+    it 'parse 2012', ->
+      utils.parseX('2012', {"xType":"datetime","xGroupBy":"year"}).should.equal 1325376000000
+
+  describe '#isUnixOffset ', ->
+    it 'parse a unix offset', ->
+      utils.isUnixOffset(1230768000000).should.be.true
+    it 'parse a unix timestamp', ->
+      utils.isUnixOffset(1230768000).should.be.false
+    it 'parse undefined', ->
+      utils.isUnixOffset(undefined).should.be.false
+    it 'parse nothing', ->
+      utils.isUnixOffset().should.be.false
+    it 'parse a string of length 13', ->
+      utils.isUnixOffset('aaaaaaaaaaaaa').should.be.false
+
+  describe '#isUnixTimestamp ', ->
+    it 'parse a unix timestamp', ->
+      utils.isUnixTimestamp(1230768000).should.be.true
+    it 'parse a unix offset', ->
+      utils.isUnixTimestamp(1230768000000).should.be.false
+    it 'parse undefined', ->
+      utils.isUnixTimestamp(undefined).should.be.false
+    it 'parse nothing', ->
+      utils.isUnixTimestamp().should.be.false
+    it 'parse a string of length 13', ->
+      utils.isUnixTimestamp('aaaaaaaaaaaaa').should.be.false

@@ -40,23 +40,23 @@
             if (xAxisDataType === 'datetime') {
               if (xAxisGroupBy === 'hour') {
                 return chart.xAxis.tickFormat(function(d) {
-                  return moment(d).format('YYYY-MM-DD HH');
+                  return moment.utc(d).format('YYYY-MM-DD HH');
                 });
               } else if (xAxisGroupBy === 'day') {
                 return chart.xAxis.tickFormat(function(d) {
-                  return moment(d).format('YYYY-MM-DD');
+                  return moment.utc(d).format('YYYY-MM-DD');
                 });
               } else if (xAxisGroupBy === 'month') {
                 return chart.xAxis.tickFormat(function(d) {
-                  return moment(d).format('YYYY-MM');
+                  return moment.utc(d).format('YYYY-MM');
                 });
               } else if (xAxisGroupBy === 'year') {
                 return chart.xAxis.tickFormat(function(d) {
-                  return moment(d).format('YYYY');
+                  return moment.utc(d).format('YYYY');
                 });
               } else {
                 return chart.xAxis.tickFormat(function(d) {
-                  return moment(d).format('YYYY-MM-DD');
+                  return moment.utc(d).format('YYYY-MM-DD');
                 });
               }
             }

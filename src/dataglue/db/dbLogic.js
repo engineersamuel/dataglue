@@ -98,7 +98,6 @@
         _.each(arrayOfDataSetResults, function(dataSetResult, idx) {
           var refItem, stream, streams, uniqueMutliplexedXs, uniqueXs;
 
-          logger.debug("arrayOfDataSetResults: " + (prettyjson.render(arrayOfDataSetResults)));
           dataSetResult = _.values(dataSetResult)[0];
           if (dataSetResult.d3Data == null) {
             if (dataSetResult.queryHash.d3Lookup.xMultiplex && dataSetResult.queryHash.d3Lookup.xMultiplex !== '') {
@@ -117,12 +116,12 @@
                 stream.values = _(dataSetResult.results).filter(function(item) {
                   return item[dataSetResult.queryHash.d3Lookup.xMultiplex] === uniqueX;
                 }).map(function(item) {
-                  var _ref;
-
                   return {
-                    x: item.x,
+                    x: utils.parseX(item.x, {
+                      xType: dataSetResult.queryHash.d3Lookup.xType,
+                      xGroupBy: dataSetResult.queryHash.d3Lookup.xGroupBy
+                    }),
                     xOrig: item.x,
-                    x: (_ref = dataSetResult.queryHash.d3Lookup.xType) === 'date' || _ref === 'datetime' ? utils.parseDateToOffset(item.x, dataSetResult.queryHash.d3Lookup.xGroupBy) : item.x,
                     xType: dataSetResult.queryHash.d3Lookup.xType,
                     xGroupBy: dataSetResult.queryHash.d3Lookup.xGroupBy,
                     xMultiplex: dataSetResult.queryHash.d3Lookup.xMultiplex,
@@ -179,11 +178,12 @@
                   values: []
                 };
                 _.each(dataSetResult.results, function(item) {
-                  var _ref;
-
                   stream.values.push({
+                    x: utils.parseX(item.x, {
+                      xType: dataSetResult.queryHash.d3Lookup.xType,
+                      xGroupBy: dataSetResult.queryHash.d3Lookup.xGroupBy
+                    }),
                     xOrig: item.x,
-                    x: (_ref = dataSetResult.queryHash.d3Lookup.xType) === 'date' || _ref === 'datetime' ? utils.parseDateToOffset(item.x, dataSetResult.queryHash.d3Lookup.xGroupBy) : item.x,
                     xType: dataSetResult.queryHash.d3Lookup.xType,
                     xGroupBy: dataSetResult.queryHash.d3Lookup.xGroupBy,
                     xMultiplex: dataSetResult.queryHash.d3Lookup.xMultiplex,
@@ -213,6 +213,7 @@
             }
           }
         });
+        logger.debug(prettyjson.render(arrayOfDataSetResults));
         return callback(null, arrayOfDataSetResults);
       }
     });

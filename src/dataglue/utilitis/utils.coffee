@@ -1,5 +1,6 @@
 _         = require 'lodash'
 moment    = require 'moment'
+logger    = require('tracer').colorConsole(exports.logger_config)
 
 exports.logger_config =
   level: if process.env.OPENSHIFT_DATA_DIR is undefined then 'debug' else 'info'
@@ -64,18 +65,46 @@ exports.stringify = (obj) ->
 
 exports.sqlDbTypes = ['mysql', 'postgresql', 'postgre', 'mariadb']
 exports.noSqlTypes = ['mongo']
+exports.isUnixOffset = (theInput) -> /[0-9]{13}/.test(theInput)
+exports.isUnixTimestamp = (theInput) -> /[0-9]{10}/.test(theInput) and String(theInput).length is 10
 
-exports.parseDateToOffset = (theDate, theFormat=undefined) ->
+# Parses a variety of inputs to a unix offset (ms)
+exports.parseDateToOffset = (theDate, opts = {}) ->
+  format = opts?.format
+  utc = opts?.utc || true
+
+  # Assume if a number and if of length 1230768000000 then a unix offset, length of 10 is unix timestamp
+  isUnixOffset = exports.isUnixOffset(theDate)
+  isUnixTimestamp = exports.isUnixOffset(theDate)
+
+  pFormat = switch format
+    when 'year'  then 'YYYY'
+    when 'month' then 'YYYY-MM'
+    when 'day'   then 'YYYY-MM-DD'
+    when 'hour'  then 'YYYY-MM-DD HH'
+    else  undefined
+
+  if exports.isUnixOffset(theDate)
+    return if utc then +moment.utc(theDate) else +moment(theDate)
+  else if exports.isUnixTimestamp(theDate)
+    return +moment.unix(theDate)
   if _.isDate theDate
-    return +moment(theDate)
-  else if _.isString theDate
-    pFormat = undefined
-    if theFormat?
-      switch theFormat
-        when 'year' then pFormat = 'YYYY'
-        when 'month' then pFormat = 'YYYY-MM'
-        when 'day' then pFormat = 'YYYY-MM-DD'
-        when 'hour' then pFormat = 'YYYY-MM-DD HH'
-        else pformat = undefined
+    return +moment.utc(theDate)
+  else if format is 'year' and _.isNumber(theDate)
+    return if utc then +moment.utc(String(theDate), pFormat) else +moment(String(theDate), pFormat)
+  # The default here is theDate is a String
+  else
+    return if utc then +moment.utc(theDate, pFormat) else +moment(theDate, pFormat)
 
-    return +moment(theDate, pFormat)
+# Convenience method to parse x base on a type
+exports.parseX = (item, opts={}) ->
+  xType = opts?.xType
+  xGroupBy = opts?.xGroupBy
+
+  #logger.debug "parseX: item: #{item}, opts: #{JSON.stringify(opts)}"
+  if _.contains ['date', 'datetime'], xType
+    #logger.debug "returning: #{exports.parseDateToOffset(item, {format: xGroupBy})}"
+    return exports.parseDateToOffset(item, {format: xGroupBy})
+
+  #logger.debug "returning: #{item}"
+  return item

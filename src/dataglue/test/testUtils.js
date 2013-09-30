@@ -52,12 +52,72 @@
         return should.not.exist(utils.resolveEnvVar());
       });
     });
-    return describe('#parseDateToOffset ', function() {
+    describe('#parseDateToOffset ', function() {
       it('parse 2009 with year format', function() {
-        return utils.parseDateToOffset('2009', 'year').should.equal(1230786000000);
+        return utils.parseDateToOffset('2009', 'year').should.equal(1230768000000);
       });
       return it('parse 2009 with no format', function() {
-        return utils.parseDateToOffset('2009', void 0).should.equal(1230786000000);
+        return utils.parseDateToOffset('2009', void 0).should.equal(1230768000000);
+      });
+    });
+    describe('#xParse ', function() {
+      it('parse string 2009', function() {
+        return utils.parseX('2009', {
+          xType: 'datetime',
+          xGroupBy: 'year'
+        }).should.equal(1230768000000);
+      });
+      it('parse number 2009', function() {
+        return utils.parseX(2009, {
+          xType: 'datetime',
+          xGroupBy: 'year'
+        }).should.equal(1230768000000);
+      });
+      it('parse a number, 10', function() {
+        return utils.parseX(10, void 0).should.equal(10);
+      });
+      it('parse a number, 10', function() {
+        return utils.parseX(10).should.equal(10);
+      });
+      return it('parse 2012', function() {
+        return utils.parseX('2012', {
+          "xType": "datetime",
+          "xGroupBy": "year"
+        }).should.equal(1325376000000);
+      });
+    });
+    describe('#isUnixOffset ', function() {
+      it('parse a unix offset', function() {
+        return utils.isUnixOffset(1230768000000).should.be["true"];
+      });
+      it('parse a unix timestamp', function() {
+        return utils.isUnixOffset(1230768000).should.be["false"];
+      });
+      it('parse undefined', function() {
+        return utils.isUnixOffset(void 0).should.be["false"];
+      });
+      it('parse nothing', function() {
+        return utils.isUnixOffset().should.be["false"];
+      });
+      return it('parse a string of length 13', function() {
+        return utils.isUnixOffset('aaaaaaaaaaaaa').should.be["false"];
+      });
+    });
+    return describe('#isUnixTimestamp ', function() {
+      it('parse a unix timestamp', function() {
+        return utils.isUnixTimestamp(1230768000).should.be["true"];
+      });
+      it('parse a unix offset', function() {
+        return utils.isUnixTimestamp(1230768000000).should.be["false"];
+      });
+      it('parse undefined', function() {
+        return utils.isUnixTimestamp(void 0).should.be["false"];
+      });
+      it('parse nothing', function() {
+        return utils.isUnixTimestamp().should.be["false"];
+      });
+      return it('parse a string of length 13', function() {
+        return utils.isUnixTimestamp('aaaaaaaaaaaaa').should.be["false"];
       });
     });
   });

@@ -89,7 +89,7 @@ CachedDataSet.loadDataSet = (doc, callback) ->
     else
       _.each arrayOfDataSetResults, (dataSetResult, idx) ->
 
-        logger.debug "arrayOfDataSetResults: #{prettyjson.render arrayOfDataSetResults}"
+        #logger.debug "arrayOfDataSetResults: #{prettyjson.render arrayOfDataSetResults}"
         # The dataSetResult is simply a hash with 1 key, therefore the value is [0]
         dataSetResult = _.values(dataSetResult)[0]
 
@@ -112,11 +112,12 @@ CachedDataSet.loadDataSet = (doc, callback) ->
               _(dataSetResult.results)
               .filter((item) -> item[dataSetResult.queryHash.d3Lookup.xMultiplex] is uniqueX)  # Filter by each unique Mutliplexed x
               .map((item) ->
-                  x: item.x,
+                  #x: item.x,
+                  x: utils.parseX(item.x, {xType: dataSetResult.queryHash.d3Lookup.xType, xGroupBy: dataSetResult.queryHash.d3Lookup.xGroupBy})
                   xOrig: item.x
                   # Converts x to a unix offset (ms) if x is a type date
-                  #x: if dataSetResult.queryHash.d3Lookup.xType in ['date', 'datetime'] then +moment(item.x) else item.x
-                  x: if dataSetResult.queryHash.d3Lookup.xType in ['date', 'datetime'] then utils.parseDateToOffset(item.x, dataSetResult.queryHash.d3Lookup.xGroupBy) else item.x
+#                  x: if dataSetResult.queryHash.d3Lookup.xType in ['date', 'datetime'] then +moment.utc(item.x) else item.x
+#                  x: if dataSetResult.queryHash.d3Lookup.xType in ['date', 'datetime'] then utils.parseDateToOffset(item.x, dataSetResult.queryHash.d3Lookup.xGroupBy) else item.x
                   xType: dataSetResult.queryHash.d3Lookup.xType
                   xGroupBy: dataSetResult.queryHash.d3Lookup.xGroupBy
                   xMultiplex: dataSetResult.queryHash.d3Lookup.xMultiplex
@@ -184,9 +185,10 @@ CachedDataSet.loadDataSet = (doc, callback) ->
                 # logger.debug "item: #{prettyjson.render item}"
                 stream.values.push
                   # x: item.x,
+                  x: utils.parseX(item.x, {xType: dataSetResult.queryHash.d3Lookup.xType, xGroupBy: dataSetResult.queryHash.d3Lookup.xGroupBy})
                   xOrig: item.x
                   #x: if dataSetResult.queryHash.d3Lookup.xType in ['date', 'datetime'] then +moment(item.x) else item.x
-                  x: if dataSetResult.queryHash.d3Lookup.xType in ['date', 'datetime'] then utils.parseDateToOffset(item.x, dataSetResult.queryHash.d3Lookup.xGroupBy) else item.x
+                  #x: if dataSetResult.queryHash.d3Lookup.xType in ['date', 'datetime'] then utils.parseDateToOffset(item.x, dataSetResult.queryHash.d3Lookup.xGroupBy) else item.x
                   xType: dataSetResult.queryHash.d3Lookup.xType
                   xGroupBy: dataSetResult.queryHash.d3Lookup.xGroupBy
                   xMultiplex: dataSetResult.queryHash.d3Lookup.xMultiplex
@@ -213,6 +215,7 @@ CachedDataSet.loadDataSet = (doc, callback) ->
                 logger.debug "Successfully cached d3Data."
                 callback null, outcome
 
+      logger.debug prettyjson.render arrayOfDataSetResults
       callback null, arrayOfDataSetResults
   return self
 
