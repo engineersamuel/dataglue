@@ -116,7 +116,7 @@
           {
             "$match": {
               "created_date": {
-                "$exists": true
+                "$ne": null
               }
             }
           }, {
@@ -138,7 +138,7 @@
           {
             '$match': {
               "created_date": {
-                "$exists": true
+                "$ne": null
               }
             }
           }, {
@@ -167,7 +167,7 @@
           {
             '$match': {
               "created_date": {
-                "$exists": true
+                "$ne": null
               }
             }
           }, {
@@ -202,7 +202,7 @@
           {
             '$match': {
               "created_date": {
-                "$exists": true
+                "$ne": null
               }
             }
           }, {
@@ -242,7 +242,7 @@
           {
             '$match': {
               "created_date": {
-                "$exists": true
+                "$ne": null
               }
             }
           }, {
@@ -285,7 +285,7 @@
           {
             '$match': {
               "created_date": {
-                "$exists": true
+                "$ne": null
               }
             }
           }, {
@@ -414,7 +414,7 @@
           {
             "$match": {
               "created_date": {
-                "$exists": true
+                "$ne": null
               }
             }
           }, {
@@ -464,7 +464,7 @@
           {
             '$match': {
               "created_date": {
-                "$exists": true
+                "$ne": null
               },
               "geo": {
                 "$exists": true

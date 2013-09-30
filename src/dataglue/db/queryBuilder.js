@@ -170,7 +170,7 @@
     };
     multiplex = false;
     _.each(dbReference.fields, function(field) {
-      var fieldAlias, fieldName;
+      var fieldAlias, fieldName, _ref;
 
       if (field['excluded'] == null) {
         fieldName = field.COLUMN_NAME;
@@ -188,6 +188,11 @@
           theMatch['$match'][fieldName] = {
             '$exists': true
           };
+          if ((_ref = field.groupBy) === 'year' || _ref === 'month' || _ref === 'day' || _ref === 'hour') {
+            theMatch['$match'][fieldName] = {
+              '$ne': null
+            };
+          }
           if (field.groupBy === 'multiplex') {
             fieldAlias = 'x_multiplex';
             theGroup['$group']['_id'].x_multiplex = "$" + fieldName;

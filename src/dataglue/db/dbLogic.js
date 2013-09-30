@@ -122,7 +122,7 @@
                   return {
                     x: item.x,
                     xOrig: item.x,
-                    x: (_ref = dataSetResult.queryHash.d3Lookup.xType) === 'date' || _ref === 'datetime' ? +moment(item.x) : item.x,
+                    x: (_ref = dataSetResult.queryHash.d3Lookup.xType) === 'date' || _ref === 'datetime' ? utils.parseDateToOffset(item.x, dataSetResult.queryHash.d3Lookup.xGroupBy) : item.x,
                     xType: dataSetResult.queryHash.d3Lookup.xType,
                     xGroupBy: dataSetResult.queryHash.d3Lookup.xGroupBy,
                     xMultiplex: dataSetResult.queryHash.d3Lookup.xMultiplex,
@@ -142,14 +142,8 @@
               refItem = _.first(_.first(streams).values);
               _.each(uniqueXs, function(uniqueX) {
                 return _.each(streams, function(stream, streamIdx) {
-                  var newItem, streamXs;
+                  var newItem;
 
-                  if (stream.key === "professional avg (APAC)" && uniqueX === '2010-09') {
-                    streamXs = _.map(streams[streamIdx].values, function(v) {
-                      return v.x;
-                    });
-                    streamXs.sort();
-                  }
                   if (_.find(stream.values, function(v) {
                     return v.x === uniqueX;
                   }) === void 0) {
@@ -189,7 +183,7 @@
 
                   stream.values.push({
                     xOrig: item.x,
-                    x: (_ref = dataSetResult.queryHash.d3Lookup.xType) === 'date' || _ref === 'datetime' ? +moment(item.x) : item.x,
+                    x: (_ref = dataSetResult.queryHash.d3Lookup.xType) === 'date' || _ref === 'datetime' ? utils.parseDateToOffset(item.x, dataSetResult.queryHash.d3Lookup.xGroupBy) : item.x,
                     xType: dataSetResult.queryHash.d3Lookup.xType,
                     xGroupBy: dataSetResult.queryHash.d3Lookup.xGroupBy,
                     xMultiplex: dataSetResult.queryHash.d3Lookup.xMultiplex,

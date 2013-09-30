@@ -1,4 +1,5 @@
-_ = require 'lodash'
+_         = require 'lodash'
+moment    = require 'moment'
 
 exports.logger_config =
   level: if process.env.OPENSHIFT_DATA_DIR is undefined then 'debug' else 'info'
@@ -63,3 +64,18 @@ exports.stringify = (obj) ->
 
 exports.sqlDbTypes = ['mysql', 'postgresql', 'postgre', 'mariadb']
 exports.noSqlTypes = ['mongo']
+
+exports.parseDateToOffset = (theDate, theFormat=undefined) ->
+  if _.isDate theDate
+    return +moment(theDate)
+  else if _.isString theDate
+    pFormat = undefined
+    if theFormat?
+      switch theFormat
+        when 'year' then pFormat = 'YYYY'
+        when 'month' then pFormat = 'YYYY-MM'
+        when 'day' then pFormat = 'YYYY-MM-DD'
+        when 'hour' then pFormat = 'YYYY-MM-DD HH'
+        else pformat = undefined
+
+    return +moment(theDate, pFormat)

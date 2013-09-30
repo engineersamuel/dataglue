@@ -216,6 +216,10 @@ QueryBuilder.buildMongoQuery = (dbReference, callback) ->
         # Mongo likes to always hae the field exist in the doc if grouping on
         theMatch['$match'][fieldName] = {'$exists': true}
 
+        # For any date specific groups, must ensure the field is not null
+        if field.groupBy in ['year', 'month', 'day', 'hour']
+          theMatch['$match'][fieldName] = {'$ne': null}
+
         # Multiplexed mongo fields can be easily handled with an additional $group after the $project, love mongo
         if field.groupBy is 'multiplex'
           fieldAlias = 'x_multiplex'

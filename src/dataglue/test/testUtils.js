@@ -47,9 +47,17 @@
         return utils.isFloat(void 0).should.equal(false);
       });
     });
-    return describe('#resolveEnvVar', function() {
+    describe('#resolveEnvVar', function() {
       return it('undefined should return undefined', function() {
         return should.not.exist(utils.resolveEnvVar());
+      });
+    });
+    return describe('#parseDateToOffset ', function() {
+      it('parse 2009 with year format', function() {
+        return utils.parseDateToOffset('2009', 'year').should.equal(1230786000000);
+      });
+      return it('parse 2009 with no format', function() {
+        return utils.parseDateToOffset('2009', void 0).should.equal(1230786000000);
       });
     });
   });

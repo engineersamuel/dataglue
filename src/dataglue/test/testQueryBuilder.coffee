@@ -87,9 +87,9 @@ describe 'queryBuilder', ->
 
   describe '#buildMongoQuery', ->
     it 'test deep equals', () ->
-      x = [{"$match":{"created_date":{"$exists":true}}},{"$group":{"_id":{"year":{"$year":"$created_date"}}}},{"$project":{"_id":0,"x":"$_id.year"}}]
+      x = [{"$match":{"created_date":{"$ne":null}}},{"$group":{"_id":{"year":{"$year":"$created_date"}}}},{"$project":{"_id":0,"x":"$_id.year"}}]
       y = [
-        { '$match': {"created_date": {"$exists": true}} },
+        { '$match': {"created_date": {"$ne": null}} },
         { '$group': { "_id":  {"year": {"$year": "$created_date"}} } }
         { "$project": {"_id": 0, "x": "$_id.year"}}
       ]
@@ -99,7 +99,7 @@ describe 'queryBuilder', ->
       ref = _.cloneDeep simpleMongoDbReference
       ref.fields[1].groupBy = "year"
       expectedQuery = [
-        { '$match': {"created_date": {"$exists": true}} },
+        { '$match': {"created_date": {"$ne": null}} },
         { '$group': { "_id":  {"year": {"$year": "$created_date"}} } }
         { "$project": {"_id": 0, "x": "$_id.year"}}
       ]
@@ -113,7 +113,7 @@ describe 'queryBuilder', ->
       ref = _.cloneDeep simpleMongoDbReference
       ref.fields[1].groupBy = "month"
       expectedQuery = [
-        { '$match': {"created_date": {"$exists": true}} },
+        { '$match': {"created_date": {"$ne": null}} },
         { '$group': { "_id":  {"year": {"$year": "$created_date"}, "month": {"$month": "$created_date"}} } },
         {
           "$project": {
@@ -137,7 +137,7 @@ describe 'queryBuilder', ->
       ref = _.cloneDeep simpleMongoDbReference
       ref.fields[1].groupBy = "day"
       expectedQuery = [
-        { '$match': {"created_date": {"$exists": true}} },
+        { '$match': {"created_date": {"$ne": null}} },
         { '$group': { "_id":  {"year": {"$year": "$created_date"}, "month": {"$month": "$created_date"}, "day": {"$dayOfMonth": "$created_date"}} } },
         {
           "$project": {
@@ -163,7 +163,7 @@ describe 'queryBuilder', ->
       ref = _.cloneDeep simpleMongoDbReference
       ref.fields[1].groupBy = "hour"
       expectedQuery = [
-        { '$match': {"created_date": {"$exists": true}} },
+        { '$match': {"created_date": {"$ne": null}} },
         { '$group': { "_id":
           {"year": {"$year": "$created_date"}, "month": {"$month": "$created_date"}, "day": {"$dayOfMonth": "$created_date"}, "hour": {"$hour": "$created_date"}} }
         },
@@ -242,7 +242,7 @@ describe 'queryBuilder', ->
       ref.fields[0].aggregation = "count"
       ref.fields[1].groupBy = "month"
       expectedQuery = [
-        { "$match": {"created_date": {"$exists": true}} },
+        { "$match": {"created_date": {"$ne": null}} },
         {
           "$group": {
             "_id":  {"year": {"$year": "$created_date"}, "month": {"$month": "$created_date"}},
@@ -269,7 +269,7 @@ describe 'queryBuilder', ->
       expectedQuery = [
         {
           '$match': {
-            "created_date": {"$exists": true},
+            "created_date": {"$ne": null},
             "geo": {"$exists": true}
           }
         },

@@ -32,3 +32,10 @@ describe 'utils', ->
   describe '#resolveEnvVar', ->
     it 'undefined should return undefined', ->
       should.not.exist(utils.resolveEnvVar())
+
+  describe '#parseDateToOffset ', ->
+    it 'parse 2009 with year format', ->
+      utils.parseDateToOffset('2009', 'year').should.equal 1230786000000
+    it 'parse 2009 with no format', ->
+      utils.parseDateToOffset('2009', undefined).should.equal 1230786000000
+

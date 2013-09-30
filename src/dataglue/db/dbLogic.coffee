@@ -115,7 +115,8 @@ CachedDataSet.loadDataSet = (doc, callback) ->
                   x: item.x,
                   xOrig: item.x
                   # Converts x to a unix offset (ms) if x is a type date
-                  x: if dataSetResult.queryHash.d3Lookup.xType in ['date', 'datetime'] then +moment(item.x) else item.x
+                  #x: if dataSetResult.queryHash.d3Lookup.xType in ['date', 'datetime'] then +moment(item.x) else item.x
+                  x: if dataSetResult.queryHash.d3Lookup.xType in ['date', 'datetime'] then utils.parseDateToOffset(item.x, dataSetResult.queryHash.d3Lookup.xGroupBy) else item.x
                   xType: dataSetResult.queryHash.d3Lookup.xType
                   xGroupBy: dataSetResult.queryHash.d3Lookup.xGroupBy
                   xMultiplex: dataSetResult.queryHash.d3Lookup.xMultiplex
@@ -142,10 +143,6 @@ CachedDataSet.loadDataSet = (doc, callback) ->
 
             _.each uniqueXs, (uniqueX) ->
               _.each streams, (stream, streamIdx) ->
-                if stream.key is "professional avg (APAC)" and uniqueX is '2010-09'
-                  streamXs = _.map(streams[streamIdx].values, (v) -> v.x)
-                  streamXs.sort()
-
                 if _.find(stream.values, (v) -> return v.x is uniqueX) is undefined
                   newItem = {
                     x: uniqueX,
@@ -188,7 +185,8 @@ CachedDataSet.loadDataSet = (doc, callback) ->
                 stream.values.push
                   # x: item.x,
                   xOrig: item.x
-                  x: if dataSetResult.queryHash.d3Lookup.xType in ['date', 'datetime'] then +moment(item.x) else item.x
+                  #x: if dataSetResult.queryHash.d3Lookup.xType in ['date', 'datetime'] then +moment(item.x) else item.x
+                  x: if dataSetResult.queryHash.d3Lookup.xType in ['date', 'datetime'] then utils.parseDateToOffset(item.x, dataSetResult.queryHash.d3Lookup.xGroupBy) else item.x
                   xType: dataSetResult.queryHash.d3Lookup.xType
                   xGroupBy: dataSetResult.queryHash.d3Lookup.xGroupBy
                   xMultiplex: dataSetResult.queryHash.d3Lookup.xMultiplex
