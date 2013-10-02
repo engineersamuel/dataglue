@@ -59,6 +59,7 @@
               schema: $scope.schema,
               table: $scope.table,
               fields: $scope.fields,
+              cache: true,
               limit: 1000
             });
             return dbService.cacheUpsert(function(data) {

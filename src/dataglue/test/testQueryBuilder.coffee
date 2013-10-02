@@ -4,6 +4,7 @@ should        = require 'should'
 _             = require 'lodash'
 logger        = require('tracer').colorConsole()
 prettyjson    = require 'prettyjson'
+moment        = require 'moment'
 
 describe 'queryBuilder', ->
 
@@ -99,7 +100,14 @@ describe 'queryBuilder', ->
       ref = _.cloneDeep simpleMongoDbReference
       ref.fields[1].groupBy = "year"
       expectedQuery = [
-        { '$match': {"created_date": {"$ne": null}} },
+        {
+          '$match': {
+            "created_date": {
+              "$exists": true,
+              "$ne": null
+            }
+          }
+        },
         { '$group': { "_id":  {"year": {"$year": "$created_date"}} } }
         { "$project": {"_id": 0, "x": "$_id.year"}}
       ]
@@ -113,7 +121,14 @@ describe 'queryBuilder', ->
       ref = _.cloneDeep simpleMongoDbReference
       ref.fields[1].groupBy = "month"
       expectedQuery = [
-        { '$match': {"created_date": {"$ne": null}} },
+        {
+          '$match': {
+            "created_date": {
+              "$exists": true,
+              "$ne": null
+            }
+          }
+        },
         { '$group': { "_id":  {"year": {"$year": "$created_date"}, "month": {"$month": "$created_date"}} } },
         {
           "$project": {
@@ -137,7 +152,14 @@ describe 'queryBuilder', ->
       ref = _.cloneDeep simpleMongoDbReference
       ref.fields[1].groupBy = "day"
       expectedQuery = [
-        { '$match': {"created_date": {"$ne": null}} },
+        {
+          '$match': {
+            "created_date": {
+              "$exists": true,
+              "$ne": null
+            }
+          }
+        },
         { '$group': { "_id":  {"year": {"$year": "$created_date"}, "month": {"$month": "$created_date"}, "day": {"$dayOfMonth": "$created_date"}} } },
         {
           "$project": {
@@ -163,7 +185,14 @@ describe 'queryBuilder', ->
       ref = _.cloneDeep simpleMongoDbReference
       ref.fields[1].groupBy = "hour"
       expectedQuery = [
-        { '$match': {"created_date": {"$ne": null}} },
+        {
+          '$match': {
+            "created_date": {
+              "$exists": true,
+              "$ne": null
+            }
+          }
+        },
         { '$group': { "_id":
           {"year": {"$year": "$created_date"}, "month": {"$month": "$created_date"}, "day": {"$dayOfMonth": "$created_date"}, "hour": {"$hour": "$created_date"}} }
         },
@@ -242,7 +271,14 @@ describe 'queryBuilder', ->
       ref.fields[0].aggregation = "count"
       ref.fields[1].groupBy = "month"
       expectedQuery = [
-        { "$match": {"created_date": {"$ne": null}} },
+        {
+          "$match": {
+            "created_date": {
+              "$exists": true,
+              "$ne": null
+            }
+          }
+        },
         {
           "$group": {
             "_id":  {"year": {"$year": "$created_date"}, "month": {"$month": "$created_date"}},
@@ -269,7 +305,10 @@ describe 'queryBuilder', ->
       expectedQuery = [
         {
           '$match': {
-            "created_date": {"$ne": null},
+            "created_date": {
+              "$exists": true,
+              "$ne": null
+            },
             "geo": {"$exists": true}
           }
         },
@@ -301,3 +340,39 @@ describe 'queryBuilder', ->
         output.query.should.eql expectedQuery
         done()
 
+    it 'group by month between 2013-09-01 and 2013-10-01', (done) ->
+      ref = _.cloneDeep simpleMongoDbReference
+      ref.fields[1].groupBy = "month"
+      ref.fields[1].beginDate = "2013-09-01"
+      ref.fields[1].endDate = "2013-10-01"
+      expectedQuery = [
+        {
+          '$match': {
+            "created_date": {
+              "$gt": moment.utc("2013-09-01").toDate(),
+              "$lte": moment.utc("2013-10-01").toDate(),
+              "$exists": true,
+              "$ne": null
+            }
+          }
+        },
+        { '$group': { "_id":  {"year": {"$year": "$created_date"}, "month": {"$month": "$created_date"}} } },
+        {
+          "$project": {
+            "_id": 0,
+            "x": {
+              "$concat": [
+                "$_id.year",
+                "-",
+                "$_id.month"
+              ]
+            }
+          }
+        }
+      ]
+      queryBuilder.buildQuery ref, (err, output) ->
+        if err then return done(err)
+        output.query.should.eql expectedQuery
+        # Optionally Compare the stingification if not specifying moment().toDate() above otherwise not equal
+        # JSON.stringify(output.query).should.eql JSON.stringify(expectedQuery)
+        done()

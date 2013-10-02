@@ -1,6 +1,5 @@
 define ['underscore', 'd3', 'customTooltip'], (_, d3, CustomTooltip) ->
   class DataGlueBubbleChart
-
     constructor: (container_id) ->
       console.log "D3 Bubble Chart Created!"
 
@@ -17,6 +16,11 @@ define ['underscore', 'd3', 'customTooltip'], (_, d3, CustomTooltip) ->
       @layout_gravity = -0.01
       @damper = 0.1
 
+#      myOperative = operative (a, b, c, callback) ->
+#        result = a + b + c
+#        callback(result)
+#      myOperative(1, 2, 3, (result) -> console.log(JSON.stringify(result)) )
+
 #      @origins = {
 #        "Search": {x: @width / 6, y: @height / 2, color: "#BFBFBF"}
 #        "Search;Suggestion": {x: (@width / 6) * 2, y: @height / 2, color: "#FFA200"}
@@ -24,7 +28,6 @@ define ['underscore', 'd3', 'customTooltip'], (_, d3, CustomTooltip) ->
 #        "From Case": {x: (@width / 6) * 4, y: @height / 2, color: "#F00202"}
 #        "Suggestion;From Case": {x: (@width / 6) * 5, y: @height / 2, color: "#00BD00"}
 #      }
-
 
 #      @linking_mechanisms = {
 #        "Suggestion": {x: (@width / 7) * 6, y: @height / 2}
@@ -75,7 +78,9 @@ define ['underscore', 'd3', 'customTooltip'], (_, d3, CustomTooltip) ->
       # Grab the unique x's as the domain
       #uniqueXs = _.unique _.map data, (stream) -> _.map stream.values, (item) -> item.x
       uniqueXs = _.unique _.map @data, (item) -> item.x
-      console.log "Discovered unique x values: #{uniqueXs}"
+      #console.debug "Discovered unique x values: #{uniqueXs}"
+      #console.debug "CustomTooltip: #{_.isObject(CustomTooltip)}"
+      #console.debug "operative: #{_.isObject(operative)}"
 
       # The fill color will be the unique groups of x's
       #@fill_color_x = d3.scale.linear()
@@ -149,18 +154,57 @@ define ['underscore', 'd3', 'customTooltip'], (_, d3, CustomTooltip) ->
         .size([@width, @height])
 
     display_group_all: () =>
+      # Non Web Workers
+#      @force.gravity(@layout_gravity)
+#        .charge(this.charge)
+#        .friction(0.9)
+#        .on "tick", (e) =>
+#          @circles.each(this.move_towards_center(e.alpha))
+#            .attr("cx", (d) -> d.x)
+#            .attr("cy", (d) -> d.y)
+
+
+
+      # Web Workified
       @force.gravity(@layout_gravity)
-      .charge(this.charge)
-      .friction(0.9)
-      .on "tick", (e) =>
+        .charge(this.charge)
+        .friction(0.9)
+        .on "tick", (e) =>
+          # This doesn't work since the function can't be serialized by web workeres
+#          myOperative e.alpha, (result) ->
+#            @circles.each(result)
+#              .attr("cx", (d) -> d.x)
+#              .attr("cy", (d) -> d.y)
+
+#          myOperative e.alpha, (result) ->
+#            @circles.each(result)
+#            .attr("cx", (d) -> d.x)
+#            .attr("cy", (d) -> d.y)
+
+          # Working reference
           @circles.each(this.move_towards_center(e.alpha))
-          .attr("cx", (d) -> d.x)
-          .attr("cy", (d) -> d.y)
+            .attr("cx", (d) -> d.x)
+            .attr("cy", (d) -> d.y)
       @force.start()
 
       @hide_groups()
 
+#    myOperativeX: operative (d, center, damper, alpha, callback) ->
+#      callback d.x = d.x + (center.x - d.x) * (damper + 0.02) * alpha
+#
+#    myOperativeY: operative (d, center, damper, alpha, callback) ->
+#      callback d.y + (center.y - d.y) * (damper + 0.02) * alpha
+
     move_towards_center: (alpha) =>
+      # This works but is NOT performant.  Chrome grinds hard on [program] so something up.
+      # Non web workers impl works fine for now.
+#      return (d) =>
+#        @myOperativeX d, @center, @damper, alpha, (result) ->
+#          d.x = result
+#        @myOperativeY d, @center, @damper, alpha, (result) ->
+#          d.y = result
+
+       # original
       (d) =>
         d.x = d.x + (@center.x - d.x) * (@damper + 0.02) * alpha
         d.y = d.y + (@center.y - d.y) * (@damper + 0.02) * alpha

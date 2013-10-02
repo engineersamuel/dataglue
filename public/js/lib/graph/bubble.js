@@ -44,7 +44,6 @@
         uniqueXs = _.unique(_.map(this.data, function(item) {
           return item.x;
         }));
-        console.log("Discovered unique x values: " + uniqueXs);
         this.fill_color_x = d3.scale.ordinal().domain(uniqueXs).range(d3.range(uniqueXs.length).map(d3.scale.linear().domain([0, uniqueXs.length - 1]).range(["yellow", "green"]).interpolate(d3.interpolateLab)));
         max_amount = d3.max(this.data, function(d) {
           return parseInt(d.y);

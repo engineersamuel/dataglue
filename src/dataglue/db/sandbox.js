@@ -345,7 +345,7 @@
       xType: 'datetime',
       xGroupBy: 'month',
       xMultiplex: 'x_multiplex',
-      xMultipleType: 'varchar',
+      xMultiplexType: 'varchar',
       y: 3.1585,
       yType: 'int'
     };

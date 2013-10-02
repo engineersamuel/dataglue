@@ -9,6 +9,51 @@
   should = require('should');
 
   describe('utils', function() {
+    describe('#testTruthy', function() {
+      it('undefined should be false', function() {
+        return utils.truthy(void 0).should.be["false"];
+      });
+      it('no input should be false', function() {
+        return utils.truthy().should.be["false"];
+      });
+      describe('#testTruthy - true values', function() {
+        it('YES should be true', function() {
+          return utils.truthy("YES").should.be["true"];
+        });
+        it('yes should be true', function() {
+          return utils.truthy("yes").should.be["true"];
+        });
+        it('Y should be true', function() {
+          return utils.truthy("Y").should.be["true"];
+        });
+        it('y should be true', function() {
+          return utils.truthy("y").should.be["true"];
+        });
+        it('y should be true', function() {
+          return utils.truthy("y").should.be["true"];
+        });
+        return it('1 should be true', function() {
+          return utils.truthy(1).should.be["true"];
+        });
+      });
+      return describe('#testTruthy - false values', function() {
+        it('NO should be false', function() {
+          return utils.truthy("NO").should.be["false"];
+        });
+        it('no should be false', function() {
+          return utils.truthy("no").should.be["false"];
+        });
+        it('N should be false', function() {
+          return utils.truthy("N").should.be["false"];
+        });
+        it('n should be false', function() {
+          return utils.truthy("n").should.be["false"];
+        });
+        return it('0 should be false', function() {
+          return utils.truthy(0).should.be["false"];
+        });
+      });
+    });
     describe('#stringify', function() {
       it('should return a string for a string', function() {
         return utils.stringify('Hello World!').should.equal('Hello World!');

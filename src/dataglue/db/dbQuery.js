@@ -48,13 +48,13 @@
     var dbRefCopy, mongoUrl, self;
 
     self = this;
-    dbRefCopy = _.clone(dbReference);
+    dbRefCopy = _.assign(dbReference, settings.db_refs[dbReference.connection || dbReference.name]);
     if (queryHash.command != null) {
       dbRefCopy.db = 'admin';
     } else {
-      dbRefCopy.db = dbRefCopy.schema;
+      dbRefCopy.db = dbReference.schema;
     }
-    mongoUrl = utils.generate_mongo_url(dbRefCopy);
+    mongoUrl = utils.generateMongoUrl(dbRefCopy);
     Db.connect(mongoUrl, function(err, db) {
       if (queryHash.command != null) {
         return async.waterfall([
@@ -90,9 +90,9 @@
     var dbRefCopy, mongoUrl, self;
 
     self = this;
-    dbRefCopy = _.clone(dbReference);
+    dbRefCopy = _.assign(dbReference, settings.db_refs[dbReference.connection || dbReference.name]);
     dbRefCopy.db = dbName;
-    mongoUrl = utils.generate_mongo_url(dbRefCopy);
+    mongoUrl = utils.generateMongoUrl(dbRefCopy);
     Db.connect(mongoUrl, function(err, db) {
       if (err) {
         return logger.error(err);
@@ -114,9 +114,9 @@
     var dbRefCopy, mongoUrl, self;
 
     self = this;
-    dbRefCopy = _.clone(dbReference);
+    dbRefCopy = _.assign(dbReference, settings.db_refs[dbReference.connection || dbReference.name]);
     dbRefCopy.db = dbName;
-    mongoUrl = utils.generate_mongo_url(dbRefCopy);
+    mongoUrl = utils.generateMongoUrl(dbRefCopy);
     Db.connect(mongoUrl, function(err, db) {
       if (err) {
         return callback(err);

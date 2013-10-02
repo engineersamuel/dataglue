@@ -1,6 +1,7 @@
-_         = require 'lodash'
-moment    = require 'moment'
-logger    = require('tracer').colorConsole(exports.logger_config)
+_           = require 'lodash'
+moment      = require 'moment'
+logger      = require('tracer').colorConsole(exports.logger_config)
+prettyjson  = require 'prettyjson'
 
 exports.logger_config =
   level: if process.env.OPENSHIFT_DATA_DIR is undefined then 'debug' else 'info'
@@ -19,24 +20,37 @@ exports.resolveEnvVar = (envVar) ->
 exports.verifyPropertyExists = (obj, field) ->
   if (_.has obj, field) and (obj[field] isnt undefined) and (obj[field] isnt '') then return true else return false
 
+exports.truthy = (obj) ->
+  if obj is undefined
+    return false
+  else if _.isBoolean obj
+    return obj
+  else if _.isString obj
+    return if _.contains ['YES', 'yes', 'Y', 'y', '1', 'true', 'TRUE', 'ok', 'OK'], obj then true else false
+  else if _.isNumber obj
+    return parseInt(obj) is 1
+  else
+    return false
 
-exports.generate_mongo_url = (obj) ->
-  obj.host = (exports.resolveEnvVar(obj.host) || '127.0.0.1')
-  obj.port = (exports.resolveEnvVar(obj.port) || 27017)
-  obj.db = (exports.resolveEnvVar(obj.db) || 'test')
+exports.generateMongoUrl = (obj) ->
+  o = _.cloneDeep obj
+  o.host = (exports.resolveEnvVar(obj.host) || obj.host || '127.0.0.1')
+  o.port = (exports.resolveEnvVar(obj.port) || obj.port || 27017)
+  o.db = (exports.resolveEnvVar(obj.db) || obj.db || 'test')
+  o.user = exports.resolveEnvVar(obj.user) || obj.user || undefined
+  o.pass = exports.resolveEnvVar(obj.user) || obj.pass || undefined
 
   mongourl = undefined
-  if (obj.user and obj.user isnt '') and (obj.pass and obj.pass isnt '')
-    mongourl = "mongodb://#{exports.resolveEnvVar(obj.user)}:#{exports.resolveEnvVar(obj.pass)}@#{exports.resolveEnvVar(obj.host) || '127.0.0.1'}:#{exports.resolveEnvVar(obj.port) || '27017'}/#{exports.resolveEnvVar(obj.db)}?auto_reconnect=true"
+  if (o.user and o.user isnt '') and (o.pass and o.pass isnt '')
+    mongourl = "mongodb://#{o.user}:#{o.pass}@#{o.host}:#{o.port}/#{o.db}" #"?auto_reconnect=true"
   else
-    mongourl = "mongodb://#{exports.resolveEnvVar(obj.host) || '127.0.0.1'}:#{exports.resolveEnvVar(obj.port) || '27017'}/#{exports.resolveEnvVar(obj.db) || 'dataglue'}?auto_reconnect=true"
+    mongourl = "mongodb://#{o.host}:#{o.port}/#{o.db}" #"?auto_reconnect=true"
 
   #logger.debug "Finished generating mongo url: #{mongourl}"
   return mongourl
 
 exports.isInteger = (f) -> f isnt undefined and typeof(f) is 'number' and Math.round(f) == f
 exports.isFloat = (f) -> f isnt undefined and typeof(f) is 'number' and !exports.isInteger(f)
-
 
 exports.setMongoFieldDataType = (obj) ->
   if _.isDate obj

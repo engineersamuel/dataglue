@@ -16,12 +16,11 @@ require.config({
         moment: 'bower_components/momentjs/moment',
         pnotify: 'bower_components/pines-notify/jquery.pnotify', // https://github.com/sciactive/pnotify
         d3: 'bower_components/d3/d3',
-//        d3: 'bower_components/nvd3/lib/d3.v3',
-//        d3: 'bower_components/nvd3/lib/d3.v2',
         nv: 'bower_components/nvd3/nv.d3',
         dbLogic: 'lib/db/dbLogic',
         bubble: 'lib/graph/bubble',
-        customTooltip: 'lib/graph/customTooltip'
+        customTooltip: 'lib/graph/customTooltip',
+        operative: 'bower_components/operative/dist/operative'
 
         //pnotify: 'https://raw.github.com/sciactive/pnotify/master/jquery.pnotify.min'
 
@@ -51,7 +50,9 @@ require.config({
         pnotify: ['jquery'],
         d3: { exports: 'd3' },
         nv: { deps:['d3'], exports: 'nv'},
-        bubble: ['d3']
+        operative: {exports: 'operative'},
+        bubble: ['d3', 'operative']
+
 
 
 //        masonry: ['jquery']

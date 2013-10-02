@@ -10,7 +10,7 @@ prettyjson    = require 'prettyjson'
 
 
 
-mongo_url = utils.generate_mongo_url(settings.master_ref)
+mongoUrl = utils.generateMongoUrl(settings.master_ref)
 
 #DataSetCache = new EventEmitter()
 DataSetCache = {}
@@ -18,7 +18,7 @@ DataSetCache = {}
 # https://github.com/mongodb/node-mongodb-native/blob/master/lib/mongodb/collection.js
 DataSetCache.refDelete = (_id, callback) ->
   self = @
-  mongodb.connect mongo_url, (err, conn) ->
+  mongodb.connect mongoUrl, (err, conn) ->
     if err
       callback err
     else
@@ -34,8 +34,8 @@ DataSetCache.refDelete = (_id, callback) ->
 
 DataSetCache.refGet = (_id, callback) ->
   self = @
-  logger.debug "Connecting to mongo on: #{mongo_url}"
-  mongodb.connect mongo_url, (err, conn) ->
+  logger.debug "Connecting to mongo on: #{mongoUrl}"
+  mongodb.connect mongoUrl, (err, conn) ->
     if err
       callback err
     else
@@ -65,7 +65,7 @@ DataSetCache.refUpsert = (doc, callback) ->
       if _.has field, '$$hashKey'
         delete field['$$hashKey']
 
-  mongodb.connect mongo_url, (err, conn) ->
+  mongodb.connect mongoUrl, (err, conn) ->
     if err
       callback err
     else
@@ -104,8 +104,8 @@ DataSetCache.refUpsert = (doc, callback) ->
 # Send query and see if the results are cached
 DataSetCache.statementCacheGet = (dbReference, queryHash, callback) ->
   self = @
-  logger.debug "Connecting to mongo on: #{mongo_url}"
-  mongodb.connect mongo_url, (err, conn) ->
+  logger.debug "Connecting to mongo on: #{mongoUrl}"
+  mongodb.connect mongoUrl, (err, conn) ->
     if err then return callback err
     #logger.debug "Attempting to lookup dataset results via the given query
     conn.collection settings.master_ref.cache, (err, coll) ->
@@ -113,15 +113,15 @@ DataSetCache.statementCacheGet = (dbReference, queryHash, callback) ->
         callback err
       else
         hash = md5("#{dbReference.key}#{utils.stringify(queryHash.query)}")
-        logger.debug "Cache made up of key: #{dbReference.key} query: #{queryHash.query}"
+        logger.debug "Cache made up of key: #{dbReference.key} query: #{JSON.stringify(queryHash.query)}"
         coll.findOne {_id: hash}, (err, doc) ->
           if err
             callback err
           else if not doc?
-            logger.debug "Cache miss for hash: #{hash}, query: #{queryHash.query}"
+            logger.debug "\tCache miss"
             callback null, null
           else
-            logger.debug "Cache hit for hash: #{hash}, query: #{queryHash.query}"
+            logger.debug "\tCache hit"
 
             zlib.unzip new Buffer(doc['data'], 'base64'), (err, results) ->
               if err?
@@ -138,8 +138,8 @@ DataSetCache.dataSetResultCachePut = (dataSetResult, callback) ->
 
 #  logger.debug "dataSetResult: #{prettyjson.render dataSetResult}"
   self = @
-  logger.debug "Connecting to mongo on: #{mongo_url}"
-  mongodb.connect mongo_url, (err, conn) ->
+  logger.debug "Connecting to mongo on: #{mongoUrl}"
+  mongodb.connect mongoUrl, (err, conn) ->
     if err
       logger.error prettyjson.render err
       callback err
@@ -149,8 +149,11 @@ DataSetCache.dataSetResultCachePut = (dataSetResult, callback) ->
         if err
           callback err
         else
+          #logger.debug "Caching dataSetResult: #{prettyjson.render dataSetResult}"
+          #logger.debug "Attempting to Hash dataSetResult: #{dataSetResult.dbRefKey}"
           hash = md5("#{dataSetResult.dbRefKey}#{utils.stringify(dataSetResult.queryHash.query)}")
-          logger.debug "Cache made up of key: #{dataSetResult.dbRefKey} query: #{dataSetResult.queryHash.query}"
+          logger.debug "Cache hash: #{hash}"
+          logger.debug "Cache made up of key: #{dataSetResult.dbRefKey} query: #{JSON.stringify(dataSetResult.queryHash.query)}"
           zlib.deflate JSON.stringify(dataSetResult.d3Data), (err, buffer) ->
             if err
               logger.error "Problem compressing data: #{err}"

@@ -4,6 +4,7 @@ squel         = require 'squel'
 _             = require 'lodash'
 logger        = require('tracer').colorConsole(utils.logger_config)
 prettyjson    = require 'prettyjson'
+moment        = require 'moment'
 
 
 QueryBuilder = {}
@@ -67,10 +68,10 @@ QueryBuilder.buildSqlQuery = (dbReference, callback) ->
       # See if a begin and end date are set
       ################################################################################################################
       if utils.verifyPropertyExists field, 'beginDate'
-        sql.where("#{fieldName} >= TIMESTAMP('#{field.beginDate}')")
+        sql.where("#{fieldName} >= TIMESTAMP('#{moment.utc(field.beginDate, 'YYYY-MM-DD').toISOString()}')")
 
       if utils.verifyPropertyExists field, 'endDate'
-        sql.where("#{fieldName} < TIMESTAMP('#{field.endDate}')")
+        sql.where("#{fieldName} < TIMESTAMP('#{moment.utc(field.endDate, 'YYYY-MM-DD').toISOString()}')")
 
       ################################################################################################################
       # Group By's require the group and the field
@@ -200,25 +201,41 @@ QueryBuilder.buildMongoQuery = (dbReference, callback) ->
   # This is set to true if a field is multiplexed, this will be the indicator to add the multiplex group to the pipeline
   multiplex = false
 
+  addObjToMatch = (fieldName, obj) ->
+    # Make sure that the $match.feldName exists and is initialized
+    if not utils.verifyPropertyExists theMatch['$match'], fieldName
+      theMatch['$match'][fieldName] = {}
+
+    # This implies an AND query, potentially need to rethink that in the future but for now it is fine
+    # Here we are assigning the object to the $match.fieldName.  A list of objects under $match implies $and unless $or
+    # is specificied.
+    _.assign theMatch['$match'][fieldName], obj
+
   # Iterate over the fields and build the aggregation pipeline based on the given field options
   _.each dbReference.fields, (field) ->
     if not field['excluded']?
       fieldName = field.COLUMN_NAME
 
       if utils.verifyPropertyExists field, 'beginDate'
-        theMatch['$match'][fieldName] = {'$gt': moment(field.beginDate)}
+        # The date localization can be tricky to control.  By simply reading in only the YYYY-MM-DD and UTC'ing it
+        # We have parity with Mongo
+        addObjToMatch fieldName, {'$gt': moment.utc(field.beginDate, 'YYYY-MM-DD').toDate()}
+        #theMatch['$match'][fieldName] =
 
       if utils.verifyPropertyExists field, 'endDate'
-        theMatch['$match'][fieldName] = {'$lte': moment(field.endDate)}
+        addObjToMatch fieldName, {'$lte': moment.utc(field.endDate, 'YYYY-MM-DD').toDate()}
+        #theMatch['$match'][fieldName] = {'$lte': moment(field.endDate)}
 
 
       if utils.verifyPropertyExists field, 'groupBy'
         # Mongo likes to always hae the field exist in the doc if grouping on
-        theMatch['$match'][fieldName] = {'$exists': true}
+        addObjToMatch fieldName, {'$exists': true}
+        #theMatch['$match'][fieldName] = {'$exists': true}
 
         # For any date specific groups, must ensure the field is not null
         if field.groupBy in ['year', 'month', 'day', 'hour']
-          theMatch['$match'][fieldName] = {'$ne': null}
+          addObjToMatch fieldName, {'$ne': null}
+          #theMatch['$match'][fieldName] = {'$ne': null}
 
         # Multiplexed mongo fields can be easily handled with an additional $group after the $project, love mongo
         if field.groupBy is 'multiplex'

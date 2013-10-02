@@ -69,6 +69,7 @@ define ['jquery', 'underscore'], ($, _) ->
 
           # Add the connection/schema/table combination to a hash to reference later
           key = [$scope.connection, $scope.schema, $scope.table].join('\u2980')
+
           #if not _.has(dbService.dataSet.dbReferences, key)
           # I did have it as setting a has as in key: obj, but moving to an array
           dbService.dataSet.dbReferences.push
@@ -77,6 +78,7 @@ define ['jquery', 'underscore'], ($, _) ->
             schema: $scope.schema,
             table: $scope.table,
             fields: $scope.fields,
+            cache: true, # Default to cache each dbReference
             limit: 1000
 
           # Now save the cache the dataSet object in the backend mongo instance for bookmarkable datasets

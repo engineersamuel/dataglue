@@ -3,6 +3,39 @@ assert  = require 'assert'
 should  = require 'should'
 
 describe 'utils', ->
+  describe '#testTruthy', ->
+    it 'undefined should be false', ->
+      utils.truthy(undefined).should.be.false
+    it 'no input should be false', ->
+      utils.truthy().should.be.false
+
+    describe '#testTruthy - true values', ->
+      it 'YES should be true', ->
+        utils.truthy("YES").should.be.true
+      it 'yes should be true', ->
+        utils.truthy("yes").should.be.true
+      it 'Y should be true', ->
+        utils.truthy("Y").should.be.true
+      it 'y should be true', ->
+        utils.truthy("y").should.be.true
+      it 'y should be true', ->
+        utils.truthy("y").should.be.true
+      it '1 should be true', ->
+        utils.truthy(1).should.be.true
+
+    describe '#testTruthy - false values', ->
+      it 'NO should be false', ->
+        utils.truthy("NO").should.be.false
+      it 'no should be false', ->
+        utils.truthy("no").should.be.false
+      it 'N should be false', ->
+        utils.truthy("N").should.be.false
+      it 'n should be false', ->
+        utils.truthy("n").should.be.false
+      it '0 should be false', ->
+        utils.truthy(0).should.be.false
+
+
   describe '#stringify', ->
     it 'should return a string for a string', ->
       utils.stringify('Hello World!').should.equal 'Hello World!'

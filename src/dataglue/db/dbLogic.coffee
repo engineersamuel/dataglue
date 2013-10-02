@@ -25,6 +25,7 @@ CachedDataSet.queryDynamic = (dbReference, callback) ->
     results: undefined
     d3Data: undefined
     queryHash: undefined
+    cache: dbReference.cache
 
   # logger.debug "queryDynamic, key: #{key}, dbReference: #{prettyjson.render dbReference}"
   QueryBuilder.buildQuery dbReference, (err, queryHash) ->
@@ -35,26 +36,35 @@ CachedDataSet.queryDynamic = (dbReference, callback) ->
       # To compute the query and transform to the d3 results requires an x or a y to be set, if not, do nothing
       if queryHash.d3Lookup.x isnt undefined and queryHash.d3Lookup.y isnt undefined
 
-        # The statementCacheGet will attempt to get the d3 data, not the results of the sql query
-        dataSetCache.statementCacheGet dbReference, queryHash, (err, cachedD3Data) ->
-          if err
-            callback err
-          else
-            output[key].queryHash = queryHash
-            # If results, place into a hash with the key and send back up the chain
-            if cachedD3Data?
-              output[key].d3Data = cachedD3Data
-              callback null, output
-            # Otherwise this is a cache miss, need to refetch the data
+        # If cache is true for this reference then attempt to lookup the cache first, falling back otherwise
+        if utils.truthy(dbReference.cache)
+          # The statementCacheGet will attempt to get the d3 data, not the results of the sql query
+          dataSetCache.statementCacheGet dbReference, queryHash, (err, cachedD3Data) ->
+            if err
+              callback err
             else
-              DbQuery.query dbReference, queryHash, (err, dbResults) ->
-                output[key].queryHash = queryHash
-                output[key].results = dbResults
-                # If a SQL result we must do further processing on the data to transform it to d3 streams
-#                if dbReference.type in utils.sqlDbTypes then output[key].results = dbResults
-#                # If a NoSQL result no further processing need due to pipelining ability
-#                if dbReference.type in utils.noSqlTypes then output[key].d3Data = dbResults
-                callback err, output
+              output[key].queryHash = queryHash
+              # If results, place into a hash with the key and send back up the chain
+              if cachedD3Data?
+                output[key].d3Data = cachedD3Data
+                callback null, output
+              # Otherwise this is a cache miss, need to refetch the data
+              else
+                DbQuery.query dbReference, queryHash, (err, dbResults) ->
+                  output[key].queryHash = queryHash
+                  output[key].results = dbResults
+                  # If a SQL result we must do further processing on the data to transform it to d3 streams
+  #                if dbReference.type in utils.sqlDbTypes then output[key].results = dbResults
+  #                # If a NoSQL result no further processing need due to pipelining ability
+  #                if dbReference.type in utils.noSqlTypes then output[key].d3Data = dbResults
+                  callback err, output
+        # If cache is false do a query immediately and don't even attempt to hit the cache.
+        else
+          DbQuery.query dbReference, queryHash, (err, dbResults) ->
+            output[key].queryHash = queryHash
+            output[key].results = dbResults
+            callback err, output
+
 
       # These are mainly convenience warnings to send to the user to indicate why the SQL couldn't be run
       else
@@ -117,11 +127,10 @@ CachedDataSet.loadDataSet = (doc, callback) ->
                   xOrig: item.x
                   # Converts x to a unix offset (ms) if x is a type date
 #                  x: if dataSetResult.queryHash.d3Lookup.xType in ['date', 'datetime'] then +moment.utc(item.x) else item.x
-#                  x: if dataSetResult.queryHash.d3Lookup.xType in ['date', 'datetime'] then utils.parseDateToOffset(item.x, dataSetResult.queryHash.d3Lookup.xGroupBy) else item.x
                   xType: dataSetResult.queryHash.d3Lookup.xType
                   xGroupBy: dataSetResult.queryHash.d3Lookup.xGroupBy
                   xMultiplex: dataSetResult.queryHash.d3Lookup.xMultiplex
-                  xMultipleType: dataSetResult.queryHash.d3Lookup.xMultiplexType
+                  xMultiplexType: dataSetResult.queryHash.d3Lookup.xMultiplexType
                   y: item.y || 0
                   yType: dataSetResult.queryHash.d3Lookup.yType
               ) # Each result, filtered by the multiplexed x is composed into a single stream
@@ -140,7 +149,7 @@ CachedDataSet.loadDataSet = (doc, callback) ->
 
             # Every Unique stream *must* contain a defined set of attributes.  I.e. If x is a datetime it is always a datetime in this unique stream or set of streams
             # Given that let's extract out a single object of types to apply below when filling in the data
-            refItem = _.first(_.first(streams).values)
+            refItem = _.first(_.first(streams)?.values)
 
             _.each uniqueXs, (uniqueX) ->
               _.each streams, (stream, streamIdx) ->
@@ -151,7 +160,7 @@ CachedDataSet.loadDataSet = (doc, callback) ->
                     xType: refItem.xType
                     xGroupBy: refItem.xGroupBy
                     xMultiplex: refItem.xMultiplex
-                    xMultipleType:  refItem.xMultiplexType
+                    xMultiplexType:  refItem.xMultiplexType
                     yType: refItem.yType
 
                   }
@@ -165,13 +174,15 @@ CachedDataSet.loadDataSet = (doc, callback) ->
             delete dataSetResult.results
 
             # Store the d3Data of the dataSetResult after the data has been successfully generated
-            if dataSetResult.queryHash.cache? and dataSetResult.d3Data? and dataSetResult.d3Data.length > 0
-              dataSetCache.dataSetResultCachePut doc, dataSetResult, (err, outcome) ->
+            if utils.truthy(dataSetResult.cache) and dataSetResult.d3Data? and dataSetResult.d3Data.length > 0
+              dataSetCache.dataSetResultCachePut dataSetResult, (err, outcome) ->
                 if err
                   logger.error "Failed to cache the dataSetResult due to: #{prettyjson.render err}"
                 else
                   # After the results have been cached go ahead and return the results from the above query
                   callback null, outcome
+            else
+              logger.warn "Not caching, either cache set to false or no d3Data"
 
           # else No mutliplex so just return a 1 stream for the array of results
           else
@@ -188,11 +199,10 @@ CachedDataSet.loadDataSet = (doc, callback) ->
                   x: utils.parseX(item.x, {xType: dataSetResult.queryHash.d3Lookup.xType, xGroupBy: dataSetResult.queryHash.d3Lookup.xGroupBy})
                   xOrig: item.x
                   #x: if dataSetResult.queryHash.d3Lookup.xType in ['date', 'datetime'] then +moment(item.x) else item.x
-                  #x: if dataSetResult.queryHash.d3Lookup.xType in ['date', 'datetime'] then utils.parseDateToOffset(item.x, dataSetResult.queryHash.d3Lookup.xGroupBy) else item.x
                   xType: dataSetResult.queryHash.d3Lookup.xType
                   xGroupBy: dataSetResult.queryHash.d3Lookup.xGroupBy
                   xMultiplex: dataSetResult.queryHash.d3Lookup.xMultiplex
-                  xMultipleType: dataSetResult.queryHash.d3Lookup.xMultiplexType
+                  xMultiplexType: dataSetResult.queryHash.d3Lookup.xMultiplexType
                   y: item.y
                   yType: dataSetResult.queryHash.d3Lookup.yType
 
@@ -206,7 +216,7 @@ CachedDataSet.loadDataSet = (doc, callback) ->
 
           # Store the d3Data of the dataSetResult after the data has been successfully generated
           # if dataSetResult.queryHash.cache?  # Maybe in the future I will allow it to be configurable
-          if dataSetResult.queryHash.cache? and dataSetResult.d3Data? and dataSetResult.d3Data.length > 0
+          if utils.truthy(dataSetResult.cache) and dataSetResult.d3Data? and dataSetResult.d3Data.length > 0
             dataSetCache.dataSetResultCachePut dataSetResult, (err, outcome) ->
               if err
                 logger.error "Failed to cache the dataSetResult due to: #{prettyjson.render err}"
@@ -214,8 +224,10 @@ CachedDataSet.loadDataSet = (doc, callback) ->
                 # After the results have been cached go ahead and return the results from the above query
                 logger.debug "Successfully cached d3Data."
                 callback null, outcome
+          else
+            logger.warn "Not caching, either cache set to false or no d3Data"
 
-      logger.debug prettyjson.render arrayOfDataSetResults
+      #logger.debug prettyjson.render arrayOfDataSetResults
       callback null, arrayOfDataSetResults
   return self
 

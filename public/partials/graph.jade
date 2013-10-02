@@ -62,6 +62,10 @@ div#dbReferenceModal.modal.fade(tabindex="-1",role="dialog",aria-labelledby="dbR
                 h4.modal-title {{ dataSet.name }}
                 div.clearfix
             div.modal-body
+                div.checkbox
+                    label
+                        input(type="checkbox", ng-model="dataSet.dbReferences[dbRefIndex].cache")
+                        | Cache
                 div.form-group
                     label(for="limit") Limit
                         select(ng-model="dataSet.dbReferences[dbRefIndex].limit", ng-options="x.value as x.label for x in limits")
@@ -149,24 +153,14 @@ div#graph_field_modal.modal.fade(tabindex="-1",role="dialog",aria-labelledby="gr
                                         i.icon-info-sign(tooltip="{{o.tooltip}}")
                             p.muted * Determines the X axis
                         div#where.tab-pane
-                            div.form-horizontal
-                                //input(type="text", datepicker-popup="MM-dd-yyyy", ng-model="beginDate", open="beginDateOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")
-                                input(type="text", datepicker-popup="MM-dd-yyyy", ng-change="resetOtherFields(dbRefIndex, fieldIndex, 'beginDate')", ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].beginDate", open="beginDateOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")
-                                span
-                                    | &nbsp;
-                                    i.icon-calendar(ng-click="openBeginDate()")
-                                    span(ng-if="o.tooltip != undefined")
-                                        | &nbsp;
-                                        i.icon-info-sign(tooltip="{{o.tooltip}}")
-                            div.form-horizontal
-                                //input(type="text", datepicker-popup="MM-dd-yyyy", ng-model="endDate", open="endDateOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")
-                                input(type="text", datepicker-popup="MM-dd-yyyy", ng-change="resetOtherFields(dbRefIndex, fieldIndex, 'beginDate')", ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].endDate", open="endDateOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")
-                                span
-                                    | &nbsp;
-                                    i.icon-calendar(ng-click="openEndDate()")
-                                    span(ng-if="o.tooltip != undefined")
-                                        | &nbsp;
-                                        i.icon-info-sign(tooltip="{{o.tooltip}}")
+
+                            div.animate-switch-container(ng-switch on="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].DATA_TYPE")
+                                div(ng-switch-when="datetime")
+                                    include templates/graph/fieldBeginEndDate
+                                div(ng-switch-when="varchar") Varchar
+                                div(ng-switch-when="int") Int
+                                div(ng-switch-default) default
+
                         div#info.tab-pane
                             table.table.table-condensed
                                 tr

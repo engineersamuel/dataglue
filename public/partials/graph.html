@@ -54,6 +54,11 @@
         <div class="clearfix"></div>
       </div>
       <div class="modal-body">
+        <div class="checkbox">
+          <label>
+            <input type="checkbox" ng-model="dataSet.dbReferences[dbRefIndex].cache"/>Cache
+          </label>
+        </div>
         <div class="form-group">
           <label for="limit">Limit
             <select ng-model="dataSet.dbReferences[dbRefIndex].limit" ng-options="x.value as x.label for x in limits"></select>
@@ -153,13 +158,20 @@
               <p class="muted">* Determines the X axis</p>
             </div>
             <div id="where" class="tab-pane">
-              <div class="form-horizontal">
-                <!--input(type="text", datepicker-popup="MM-dd-yyyy", ng-model="beginDate", open="beginDateOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")-->
-                <input type="text" datepicker-popup="MM-dd-yyyy" ng-change="resetOtherFields(dbRefIndex, fieldIndex, 'beginDate')" ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].beginDate" open="beginDateOpened" min="minDate" max="'2016-06-22'" datepicker-options="dateOptions" show-weeks="false" ng-required="true"/><span>&nbsp;<i ng-click="openBeginDate()" class="icon-calendar"></i><span ng-if="o.tooltip != undefined">&nbsp;<i tooltip="{{o.tooltip}}" class="icon-info-sign"></i></span></span>
-              </div>
-              <div class="form-horizontal">
-                <!--input(type="text", datepicker-popup="MM-dd-yyyy", ng-model="endDate", open="endDateOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")-->
-                <input type="text" datepicker-popup="MM-dd-yyyy" ng-change="resetOtherFields(dbRefIndex, fieldIndex, 'beginDate')" ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].endDate" open="endDateOpened" min="minDate" max="'2016-06-22'" datepicker-options="dateOptions" show-weeks="false" ng-required="true"/><span>&nbsp;<i ng-click="openEndDate()" class="icon-calendar"></i><span ng-if="o.tooltip != undefined">&nbsp;<i tooltip="{{o.tooltip}}" class="icon-info-sign"></i></span></span>
+              <div ng-switch on="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].DATA_TYPE" class="animate-switch-container">
+                <div ng-switch-when="datetime">
+                  <div class="form-horizontal">
+                    <!--input(type="text", datepicker-popup="MM-dd-yyyy", ng-model="beginDate", open="beginDateOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")-->
+                    <input type="text" datepicker-popup="MM-dd-yyyy" ng-change="resetOtherFields(dbRefIndex, fieldIndex, 'beginDate')" ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].beginDate" open="beginDateOpened" min="minDate" max="'2016-06-22'" datepicker-options="dateOptions" show-weeks="false" ng-required="true"/><span>&nbsp;<i ng-click="openBeginDate()" class="icon-calendar"></i><span ng-if="o.tooltip != undefined">&nbsp;<i tooltip="{{o.tooltip}}" class="icon-info-sign"></i></span>&nbsp;Begin Date</span>
+                  </div>
+                  <div class="form-horizontal">
+                    <!--input(type="text", datepicker-popup="MM-dd-yyyy", ng-model="endDate", open="endDateOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")-->
+                    <input type="text" datepicker-popup="MM-dd-yyyy" ng-change="resetOtherFields(dbRefIndex, fieldIndex, 'beginDate')" ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].endDate" open="endDateOpened" min="minDate" max="'2016-06-22'" datepicker-options="dateOptions" show-weeks="false" ng-required="true"/><span>&nbsp;<i ng-click="openEndDate()" class="icon-calendar"></i><span ng-if="o.tooltip != undefined">&nbsp;<i tooltip="{{o.tooltip}}" class="icon-info-sign"></i></span>&nbsp;End Date</span>
+                  </div>
+                </div>
+                <div ng-switch-when="varchar">Varchar</div>
+                <div ng-switch-when="int">Int</div>
+                <div ng-switch-default="ng-switch-default">default</div>
               </div>
             </div>
             <div id="info" class="tab-pane">

@@ -71,7 +71,7 @@ define ["angular", "services", "nv", "moment", "bubble"], (angular, services, nv
         console.debug "yAxisDataType: #{yAxisDataType}"
 
         # I may do some better logic in the future but for now float is the safe case
-        if yAxisDataType in ['int', 'float']
+        if _.contains ['int', 'float'], yAxisDataType
           chart.yAxis.tickFormat(d3.format(',.2f'))
         #if yAxisDataType in ['int']
         #  chart.yAxis.tickFormat((d) -> d3.format("d")(d))
@@ -79,7 +79,7 @@ define ["angular", "services", "nv", "moment", "bubble"], (angular, services, nv
         #  chart.yAxis.tickFormat(d3.format(',.1f'))
         #chart.yAxis.tickFormat((d) -> d3.format("d")(d))
 
-        if xAxisDataType in ['datetime']
+        if _.contains ['datetime', 'date'], xAxisDataType
           if xAxisGroupBy is 'hour'
             chart.xAxis.tickFormat((d) -> moment.utc(d).format('YYYY-MM-DD HH'))
           else if xAxisGroupBy is 'day'
@@ -91,6 +91,8 @@ define ["angular", "services", "nv", "moment", "bubble"], (angular, services, nv
           # Default
           else
             chart.xAxis.tickFormat((d) -> moment.utc(d).format('YYYY-MM-DD'))
+        else if xAxisDataType is 'varchar'
+          chart.xAxis.tickFormat((d) -> d)
 
       createChartByType = () ->
         if chartType is 'multiBarChart'

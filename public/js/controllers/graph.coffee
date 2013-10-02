@@ -59,8 +59,8 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
         theHtml = []
         if field?.groupBy? and field.groupBy not in [undefined, ''] then theHtml.push "Group by #{field.groupBy}"
         if field?.aggregation? and field.aggregation not in [undefined, ''] then theHtml.push "Aggregate by #{field.aggregation}"
-        if field?.beginDate? and field.beginDate not in [undefined, ''] then theHtml.push "Date > #{field.beginDate}"
-        if field?.endDate? and field.endDate not in [undefined, ''] then theHtml.push "Date <= #{field.endDate}"
+        if field?.beginDate? and field.beginDate not in [undefined, ''] then theHtml.push "Date > #{moment(field.beginDate).format('YYYY-MM-DD')}"
+        if field?.endDate? and field.endDate not in [undefined, ''] then theHtml.push "Date <= #{moment(field.endDate).format('YYYY-MM-DD')}"
 #        console.log JSON.stringify(field)
         if theHtml.length is 0
           return 'Field being used.'

@@ -34,10 +34,10 @@
             console.debug("xAxisDataType: " + xAxisDataType);
             console.debug("xAxisGroupBy: " + xAxisGroupBy);
             console.debug("yAxisDataType: " + yAxisDataType);
-            if (yAxisDataType === 'int' || yAxisDataType === 'float') {
+            if (_.contains(['int', 'float'], yAxisDataType)) {
               chart.yAxis.tickFormat(d3.format(',.2f'));
             }
-            if (xAxisDataType === 'datetime') {
+            if (_.contains(['datetime', 'date'], xAxisDataType)) {
               if (xAxisGroupBy === 'hour') {
                 return chart.xAxis.tickFormat(function(d) {
                   return moment.utc(d).format('YYYY-MM-DD HH');
@@ -59,6 +59,10 @@
                   return moment.utc(d).format('YYYY-MM-DD');
                 });
               }
+            } else if (xAxisDataType === 'varchar') {
+              return chart.xAxis.tickFormat(function(d) {
+                return d;
+              });
             }
           };
           createChartByType = function() {

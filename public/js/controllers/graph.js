@@ -64,10 +64,10 @@
             theHtml.push("Aggregate by " + field.aggregation);
           }
           if (((field != null ? field.beginDate : void 0) != null) && ((_ref2 = field.beginDate) !== (void 0) && _ref2 !== '')) {
-            theHtml.push("Date > " + field.beginDate);
+            theHtml.push("Date > " + (moment(field.beginDate).format('YYYY-MM-DD')));
           }
           if (((field != null ? field.endDate : void 0) != null) && ((_ref3 = field.endDate) !== (void 0) && _ref3 !== '')) {
-            theHtml.push("Date <= " + field.endDate);
+            theHtml.push("Date <= " + (moment(field.endDate).format('YYYY-MM-DD')));
           }
           if (theHtml.length === 0) {
             return 'Field being used.';

@@ -39,7 +39,8 @@
       dbRefKey: dbReference.key,
       results: void 0,
       d3Data: void 0,
-      queryHash: void 0
+      queryHash: void 0,
+      cache: dbReference.cache
     };
     QueryBuilder.buildQuery(dbReference, function(err, queryHash) {
       var warning;
@@ -49,23 +50,31 @@
         return callback(err);
       } else {
         if (queryHash.d3Lookup.x !== void 0 && queryHash.d3Lookup.y !== void 0) {
-          return dataSetCache.statementCacheGet(dbReference, queryHash, function(err, cachedD3Data) {
-            if (err) {
-              return callback(err);
-            } else {
-              output[key].queryHash = queryHash;
-              if (cachedD3Data != null) {
-                output[key].d3Data = cachedD3Data;
-                return callback(null, output);
+          if (utils.truthy(dbReference.cache)) {
+            return dataSetCache.statementCacheGet(dbReference, queryHash, function(err, cachedD3Data) {
+              if (err) {
+                return callback(err);
               } else {
-                return DbQuery.query(dbReference, queryHash, function(err, dbResults) {
-                  output[key].queryHash = queryHash;
-                  output[key].results = dbResults;
-                  return callback(err, output);
-                });
+                output[key].queryHash = queryHash;
+                if (cachedD3Data != null) {
+                  output[key].d3Data = cachedD3Data;
+                  return callback(null, output);
+                } else {
+                  return DbQuery.query(dbReference, queryHash, function(err, dbResults) {
+                    output[key].queryHash = queryHash;
+                    output[key].results = dbResults;
+                    return callback(err, output);
+                  });
+                }
               }
-            }
-          });
+            });
+          } else {
+            return DbQuery.query(dbReference, queryHash, function(err, dbResults) {
+              output[key].queryHash = queryHash;
+              output[key].results = dbResults;
+              return callback(err, output);
+            });
+          }
         } else {
           if (queryHash.d3Lookup.x === void 0) {
             warning = "Could not generate data for " + key + ", no x set. Please make sure to group on some field.";
@@ -96,7 +105,7 @@
         return callback(err);
       } else {
         _.each(arrayOfDataSetResults, function(dataSetResult, idx) {
-          var refItem, stream, streams, uniqueMutliplexedXs, uniqueXs;
+          var refItem, stream, streams, uniqueMutliplexedXs, uniqueXs, _ref;
 
           dataSetResult = _.values(dataSetResult)[0];
           if (dataSetResult.d3Data == null) {
@@ -125,7 +134,7 @@
                     xType: dataSetResult.queryHash.d3Lookup.xType,
                     xGroupBy: dataSetResult.queryHash.d3Lookup.xGroupBy,
                     xMultiplex: dataSetResult.queryHash.d3Lookup.xMultiplex,
-                    xMultipleType: dataSetResult.queryHash.d3Lookup.xMultiplexType,
+                    xMultiplexType: dataSetResult.queryHash.d3Lookup.xMultiplexType,
                     y: item.y || 0,
                     yType: dataSetResult.queryHash.d3Lookup.yType
                   };
@@ -138,7 +147,7 @@
                 return item.x;
               })), void 0);
               uniqueXs.sort();
-              refItem = _.first(_.first(streams).values);
+              refItem = _.first((_ref = _.first(streams)) != null ? _ref.values : void 0);
               _.each(uniqueXs, function(uniqueX) {
                 return _.each(streams, function(stream, streamIdx) {
                   var newItem;
@@ -152,7 +161,7 @@
                       xType: refItem.xType,
                       xGroupBy: refItem.xGroupBy,
                       xMultiplex: refItem.xMultiplex,
-                      xMultipleType: refItem.xMultiplexType,
+                      xMultiplexType: refItem.xMultiplexType,
                       yType: refItem.yType
                     };
                     return streams[streamIdx].values.push(newItem);
@@ -161,14 +170,16 @@
               });
               dataSetResult.d3Data = streams;
               delete dataSetResult.results;
-              if ((dataSetResult.queryHash.cache != null) && (dataSetResult.d3Data != null) && dataSetResult.d3Data.length > 0) {
-                dataSetCache.dataSetResultCachePut(doc, dataSetResult, function(err, outcome) {
+              if (utils.truthy(dataSetResult.cache) && (dataSetResult.d3Data != null) && dataSetResult.d3Data.length > 0) {
+                dataSetCache.dataSetResultCachePut(dataSetResult, function(err, outcome) {
                   if (err) {
                     return logger.error("Failed to cache the dataSetResult due to: " + (prettyjson.render(err)));
                   } else {
                     return callback(null, outcome);
                   }
                 });
+              } else {
+                logger.warn("Not caching, either cache set to false or no d3Data");
               }
             } else {
               if (dataSetResult.d3Data == null) {
@@ -187,7 +198,7 @@
                     xType: dataSetResult.queryHash.d3Lookup.xType,
                     xGroupBy: dataSetResult.queryHash.d3Lookup.xGroupBy,
                     xMultiplex: dataSetResult.queryHash.d3Lookup.xMultiplex,
-                    xMultipleType: dataSetResult.queryHash.d3Lookup.xMultiplexType,
+                    xMultiplexType: dataSetResult.queryHash.d3Lookup.xMultiplexType,
                     y: item.y,
                     yType: dataSetResult.queryHash.d3Lookup.yType
                   });
@@ -201,7 +212,7 @@
                 return a.x - b.x;
               });
             });
-            if ((dataSetResult.queryHash.cache != null) && (dataSetResult.d3Data != null) && dataSetResult.d3Data.length > 0) {
+            if (utils.truthy(dataSetResult.cache) && (dataSetResult.d3Data != null) && dataSetResult.d3Data.length > 0) {
               return dataSetCache.dataSetResultCachePut(dataSetResult, function(err, outcome) {
                 if (err) {
                   return logger.error("Failed to cache the dataSetResult due to: " + (prettyjson.render(err)));
@@ -210,10 +221,11 @@
                   return callback(null, outcome);
                 }
               });
+            } else {
+              return logger.warn("Not caching, either cache set to false or no d3Data");
             }
           }
         });
-        logger.debug(prettyjson.render(arrayOfDataSetResults));
         return callback(null, arrayOfDataSetResults);
       }
     });

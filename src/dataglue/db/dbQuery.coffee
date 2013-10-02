@@ -31,10 +31,10 @@ DbQuery.mongoQuery = (dbReference, queryHash, callback) ->
   self = @
 
   # Make a clone of the dbReference to override any necessary fields like the db
-  dbRefCopy = _.clone dbReference
+  dbRefCopy = _.assign dbReference, settings.db_refs[dbReference.connection || dbReference.name]
   # If a command is present, must run it against the admin database
-  if queryHash.command? then dbRefCopy.db = 'admin' else dbRefCopy.db = dbRefCopy.schema
-  mongoUrl = utils.generate_mongo_url(dbRefCopy)
+  if queryHash.command? then dbRefCopy.db = 'admin' else dbRefCopy.db = dbReference.schema
+  mongoUrl = utils.generateMongoUrl(dbRefCopy)
 
   #logger.info "Attempting to connect to: #{mongoUrl}"
   Db.connect mongoUrl, (err, db) ->
@@ -75,9 +75,9 @@ DbQuery.showCollections = (dbReference, dbName, callback) ->
   self = @
 
   # Make a clone of the dbReference to override any necessary fields like the db
-  dbRefCopy = _.clone dbReference
+  dbRefCopy = _.assign dbReference, settings.db_refs[dbReference.connection || dbReference.name]
   dbRefCopy.db = dbName
-  mongoUrl = utils.generate_mongo_url(dbRefCopy)
+  mongoUrl = utils.generateMongoUrl(dbRefCopy)
   Db.connect mongoUrl, (err, db) ->
     if err
       logger.error err
@@ -95,9 +95,9 @@ DbQuery.showFields = (dbReference, dbName, collectionName, callback) ->
   self = @
 
   # Make a clone of the dbReference to override any necessary fields like the db
-  dbRefCopy = _.clone dbReference
+  dbRefCopy = _.assign dbReference, settings.db_refs[dbReference.connection || dbReference.name]
   dbRefCopy.db = dbName
-  mongoUrl = utils.generate_mongo_url(dbRefCopy)
+  mongoUrl = utils.generateMongoUrl(dbRefCopy)
   Db.connect mongoUrl, (err, db) ->
     if err
       callback err
