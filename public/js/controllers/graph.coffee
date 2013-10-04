@@ -8,6 +8,9 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
     'dbService',
     ($scope, $rootScope, $location, $routeParams, $timeout, dbService) ->
 
+      # Bind LoDash to _ in the scope for {{}} view expressions
+      $scope._ = _
+
       # If the _id param exists in the url go ahead and load the cached data
       $scope._id = $routeParams['_id']
       if $routeParams['_id']?
@@ -43,6 +46,9 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
 
       # Sync in the limits from the service
       $scope.limits = dbService.limits
+
+      # Sync up the whereConds
+      $scope.whereConds = dbService.whereConds
 
       # Returns true if there is an aggregation, group by, or where set on the field
       $scope.optionsSetOnField = (dbRefIdx, fieldIdx) ->
@@ -123,7 +129,6 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
       ##################################################################################################################
       # Aggregation radio options
       ##################################################################################################################
-#      $scope.aggregation = undefined
       $scope.aggregationOptions = [
         {name: 'aggregation', value: undefined, label: 'No Selection'},
         {name: 'aggregation', value: 'count', label: 'Count', tooltip: "COUNT(field)"},
@@ -135,16 +140,19 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
       ##################################################################################################################
       # Group By radio options
       ##################################################################################################################
-#      $scope.groupBy = undefined
+      $scope.filterByFieldDataType = (opt) -> _.contains(opt.dataTypes, $scope.selectedField.DATA_TYPE)
+      multiplexDataTypes = []
+      fieldGroupByTypes = []
+      dateGroupByTypes = ['date', 'datetime']
       $scope.groupByOptions = [
         {name: 'groupBy', value: undefined, label: 'No Selection'},
         {name: 'groupBy', value: 'multiplex', label: 'Multiplex', tooltip: 'Multiplexes the x-axis over this field.'},
-        {name: 'groupBy', value: 'field', label: 'Field Itself', tooltip: 'Adds this field as the primary x axis group'},
-        {name: 'groupBy', value: 'year', label: 'Year', tooltip: "Groups on DATE_FORMAT(field, '%Y')"},
+        {name: 'groupBy', value: 'field', label: 'Field Itself', tooltip: 'Adds this field as the primary x axis group', dataTypes: ['int', 'varchar']},
+        {name: 'groupBy', value: 'year', label: 'Year', tooltip: "Groups on DATE_FORMAT(field, '%Y')", dataTypes: dateGroupByTypes},
 #        {name: 'groupBy', value: 'quarter', label: 'Quarter'},
-        {name: 'groupBy', value: 'month', label: 'Month', tooltip: "Groups on DATE_FORMAT(field, '%Y-%m')"},
-        {name: 'groupBy', value: 'day', label: 'Day', tooltip: "Groups on DATE_FORMAT(field, '%Y-%m-%d')"},
-        {name: 'groupBy', value: 'hour', label: 'Hour', tooltip: "Groups on DATE_FORMAT(field, '%Y-%m-%d %H')"},
+        {name: 'groupBy', value: 'month', label: 'Month', tooltip: "Groups on DATE_FORMAT(field, '%Y-%m')", dataTypes: dateGroupByTypes},
+        {name: 'groupBy', value: 'day', label: 'Day', tooltip: "Groups on DATE_FORMAT(field, '%Y-%m-%d')", dataTypes: dateGroupByTypes},
+        {name: 'groupBy', value: 'hour', label: 'Hour', tooltip: "Groups on DATE_FORMAT(field, '%Y-%m-%d %H')", dataTypes: dateGroupByTypes},
       ]
 
       ##################################################################################################################

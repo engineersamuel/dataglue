@@ -1,0 +1,9 @@
+div.radio(ng-repeat="o in aggregationOptions")
+    label
+        //input(type="radio", name="{{o.name}}", value="{{o.value}}", ng-model="$parent.aggregation")
+        input(type="radio", name="{{o.name}}", value="{{o.value}}", ng-change="$parent.resetOtherFields($parent.dbRefIndex, $parent.fieldIndex, o.name)", ng-model="$parent.dataSet.dbReferences[$parent.dbRefIndex].fields[$parent.fieldIndex].aggregation")
+        | {{o.label}}
+        span(ng-if="o.tooltip != undefined")
+            | &nbsp;
+            i.icon-info-sign(tooltip="{{o.tooltip}}")
+p.muted * Determines the Y axis

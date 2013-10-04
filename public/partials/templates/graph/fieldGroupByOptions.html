@@ -1,0 +1,7 @@
+
+<div ng-repeat="o in groupByOptions" class="radio">
+  <label>
+    <input type="radio" name="{{o.name}}" value="{{o.value}}" ng-change="$parent.resetOtherFields($parent.dbRefIndex, $parent.fieldIndex, o.name)" ng-model="$parent.dataSet.dbReferences[$parent.dbRefIndex].fields[$parent.fieldIndex].groupBy"/>{{o.label}}<span ng-if="o.tooltip != undefined">&nbsp;<i tooltip="{{o.tooltip}}" class="icon-info-sign"></i></span>
+  </label>
+</div>
+<p class="muted">* Determines the X axis</p>

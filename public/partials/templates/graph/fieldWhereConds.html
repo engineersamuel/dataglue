@@ -1,0 +1,36 @@
+
+<div ng-if="_.contains(['date', 'datetime'], dataSet.dbReferences[dbRefIndex].fields[fieldIndex].DATA_TYPE)">
+  <div class="form-horizontal">
+    <!--input(type="text", datepicker-popup="MM-dd-yyyy", ng-model="beginDate", open="beginDateOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")-->
+    <input type="text" datepicker-popup="MM-dd-yyyy" ng-change="resetOtherFields(dbRefIndex, fieldIndex, 'beginDate')" ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].beginDate" open="beginDateOpened" min="minDate" max="'2016-06-22'" datepicker-options="dateOptions" show-weeks="false" ng-required="true"/><span>&nbsp;<i ng-click="openBeginDate()" class="icon-calendar"></i><span ng-if="o.tooltip != undefined">&nbsp;<i tooltip="{{o.tooltip}}" class="icon-info-sign"></i></span>&nbsp;Begin Date</span>
+  </div>
+  <div class="form-horizontal">
+    <!--input(type="text", datepicker-popup="MM-dd-yyyy", ng-model="endDate", open="endDateOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")-->
+    <input type="text" datepicker-popup="MM-dd-yyyy" ng-change="resetOtherFields(dbRefIndex, fieldIndex, 'beginDate')" ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].endDate" open="endDateOpened" min="minDate" max="'2016-06-22'" datepicker-options="dateOptions" show-weeks="false" ng-required="true"/><span>&nbsp;<i ng-click="openEndDate()" class="icon-calendar"></i><span ng-if="o.tooltip != undefined">&nbsp;<i tooltip="{{o.tooltip}}" class="icon-info-sign"></i></span>&nbsp;End Date</span>
+  </div>
+</div>
+<div ng-if="_.contains(['int', 'float', 'decimal', 'number'], dataSet.dbReferences[dbRefIndex].fields[fieldIndex].DATA_TYPE)">
+  <div class="form-inline">
+    <div class="form-group">
+      <label>{{ dataSet.dbReferences[dbRefIndex].fields[fieldIndex].COLUMN_NAME }}&nbsp;</label>
+      <select ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].cond" ng-options="x.value as x.label for x in whereConds">
+        <option value=""></option>
+      </select>
+    </div>
+    <div class="form-group">&nbsp;
+      <input type="number" placeholder="Enter a number" ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].condValue" ng-disabled="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].cond === null" class="form-control"/>
+    </div>
+  </div>
+</div>
+<div ng-if="_.contains(['varchar', 'text', 'longtext'], dataSet.dbReferences[dbRefIndex].fields[fieldIndex].DATA_TYPE)">
+  <div class="form-inline">
+    <div class="form-group">
+      <label>{{ dataSet.dbReferences[dbRefIndex].fields[fieldIndex].COLUMN_NAME }}&nbsp;</label>
+      <select ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].cond" ng-options="x.value as x.label for x in whereConds">
+        <option value=""></option>
+      </select>&nbsp;
+      <input type="text" placeholder="Enter a string/text" ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].condValue" ng-disabled="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].cond === null" class="form-control"/>
+    </div><!--div.form-group&nbsp;
+    <input type="text" placeholder="Enter a string/text" ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].condValue" ng-disabled="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].cond === null" class="form-control"/>-->
+  </div>
+</div>

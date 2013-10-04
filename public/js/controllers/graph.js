@@ -3,6 +3,9 @@
   define(['jquery', 'underscore', 'moment', 'dbLogic'], function($, _, moment, dbLogic) {
     return [
       '$scope', '$rootScope', '$location', '$routeParams', '$timeout', 'dbService', function($scope, $rootScope, $location, $routeParams, $timeout, dbService) {
+        var dateGroupByTypes, fieldGroupByTypes, multiplexDataTypes;
+
+        $scope._ = _;
         $scope._id = $routeParams['_id'];
         if ($routeParams['_id'] != null) {
           dbService.cacheGet($routeParams['_id'], function(data) {
@@ -34,6 +37,7 @@
         };
         $scope.graphTypes = dbService.graphTypes;
         $scope.limits = dbService.limits;
+        $scope.whereConds = dbService.whereConds;
         $scope.optionsSetOnField = function(dbRefIdx, fieldIdx) {
           var field, _ref, _ref1, _ref2, _ref3;
 
@@ -138,6 +142,12 @@
             tooltip: "AVG(field)"
           }
         ];
+        $scope.filterByFieldDataType = function(opt) {
+          return _.contains(opt.dataTypes, $scope.selectedField.DATA_TYPE);
+        };
+        multiplexDataTypes = [];
+        fieldGroupByTypes = [];
+        dateGroupByTypes = ['date', 'datetime'];
         $scope.groupByOptions = [
           {
             name: 'groupBy',
@@ -152,27 +162,32 @@
             name: 'groupBy',
             value: 'field',
             label: 'Field Itself',
-            tooltip: 'Adds this field as the primary x axis group'
+            tooltip: 'Adds this field as the primary x axis group',
+            dataTypes: ['int', 'varchar']
           }, {
             name: 'groupBy',
             value: 'year',
             label: 'Year',
-            tooltip: "Groups on DATE_FORMAT(field, '%Y')"
+            tooltip: "Groups on DATE_FORMAT(field, '%Y')",
+            dataTypes: dateGroupByTypes
           }, {
             name: 'groupBy',
             value: 'month',
             label: 'Month',
-            tooltip: "Groups on DATE_FORMAT(field, '%Y-%m')"
+            tooltip: "Groups on DATE_FORMAT(field, '%Y-%m')",
+            dataTypes: dateGroupByTypes
           }, {
             name: 'groupBy',
             value: 'day',
             label: 'Day',
-            tooltip: "Groups on DATE_FORMAT(field, '%Y-%m-%d')"
+            tooltip: "Groups on DATE_FORMAT(field, '%Y-%m-%d')",
+            dataTypes: dateGroupByTypes
           }, {
             name: 'groupBy',
             value: 'hour',
             label: 'Hour',
-            tooltip: "Groups on DATE_FORMAT(field, '%Y-%m-%d %H')"
+            tooltip: "Groups on DATE_FORMAT(field, '%Y-%m-%d %H')",
+            dataTypes: dateGroupByTypes
           }
         ];
         $scope.selectedReference = void 0;

@@ -50,12 +50,44 @@ define(['angular', 'jquery', 'underscore', 'pnotify'], function (angular, $, _) 
             ];
 
             // Graph types
+            service.whereConds = [
+                {name: 'cond', value: 'equal', label: 'Equal'},
+                {name: 'cond', value: 'notEqual', label: 'Not Equal'},
+                {name: 'cond', value: 'like', label: 'Like'}
+            ];
+
+            // Graph types
             service.graphTypes = [
                 {name: 'graphType', value: 'multiBarChart', label: 'MultiBar (Default)'},
                 {name: 'graphType', value: 'stackedAreaChart', label: 'Stacked Area'},
                 {name: 'graphType', value: 'bubble', label: 'Bubble'},
                 {name: 'graphType', value: 'pie', label: 'Pie'}
             ];
+
+            // Eventually supporting changing to a specified datatype, but only a restricted set so don't have to
+            // Cover all database types.
+            // Field Data types
+            // Example mysql data types
+//            [   {'DATA_TYPE': 'varchar'},
+//                {'DATA_TYPE': 'bigint'},
+//                {'DATA_TYPE': 'longtext'},
+//                {'DATA_TYPE': 'datetime'},
+//                {'DATA_TYPE': 'int'},
+//                {'DATA_TYPE': 'decimal'},
+//                {'DATA_TYPE': 'tinyint'},
+//                {'DATA_TYPE': 'text'},
+//                {'DATA_TYPE': 'date'},
+//                {'DATA_TYPE': 'float'}]
+//            service.dataTypes = [
+//                {name: 'fieldDataType', value: 'bigint', label: 'Big int'},
+//                {name: 'fieldDataType', value: 'date', label: 'Date'},
+//                {name: 'fieldDataType', value: 'decimal', label: 'Decimal'},
+//                {name: 'fieldDataType', value: 'int', label: 'Int'},
+//                {name: 'fieldDataType', value: 'longtext', label: 'Long Text'},
+//                {name: 'fieldDataType', value: 'text', label: 'Text'},
+//                {name: 'fieldDataType', value: 'tinyint', label: 'Tiny int'},
+//                {name: 'fieldDataType', value: 'varchar', label: 'Varchar'}
+//            ];
 
             // Dataset represents the set of data that comprises the graph
             service.dataSet = {};
