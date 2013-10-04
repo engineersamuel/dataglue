@@ -55,8 +55,22 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
         field = $scope.dataSet.dbReferences[dbRefIdx].fields[fieldIdx]
         if field.groupBy? and field.groupBy not in [undefined, ''] then return true
         if field.aggregation? and field.aggregation not in [undefined, ''] then return true
-        if field.beginDate? and field.beginDate not in [undefined, ''] then return true
-        if field.endDate? and field.endDate not in [undefined, ''] then return true
+        if field.beginValue? and field.beginValue not in [undefined, ''] then return true
+        if field.endValue? and field.endValue not in [undefined, ''] then return true
+        return false
+
+      # Returns true if there is a group by set on the field
+      $scope.groupBySetOnField = (selectedField) ->
+        if selectedField? and selectedField.groupBy? and selectedField.groupBy not in [undefined, ''] then return true else return false
+
+      # Returns true if there is an aggregation  set on the field
+      $scope.aggregationSetOnField = (selectedField) ->
+        if selectedField? and selectedField.aggregation? and selectedField.aggregation not in [undefined, ''] then return true else return false
+
+      # Returns true if there is a where condition set on the field
+      $scope.whereSetOnField = (selectedField) ->
+        if selectedField? and selectedField.beginValue? and selectedField.beginValue not in [undefined, ''] then return true
+        if selectedField? and selectedField.endValue? and selectedField.endValue not in [undefined, ''] then return true
         return false
 
       # Returns the short display of the option set on a field
@@ -65,13 +79,12 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
         theHtml = []
         if field?.groupBy? and field.groupBy not in [undefined, ''] then theHtml.push "Group by #{field.groupBy}"
         if field?.aggregation? and field.aggregation not in [undefined, ''] then theHtml.push "Aggregate by #{field.aggregation}"
-        if field?.beginDate? and field.beginDate not in [undefined, ''] then theHtml.push "Date > #{moment(field.beginDate).format('YYYY-MM-DD')}"
-        if field?.endDate? and field.endDate not in [undefined, ''] then theHtml.push "Date <= #{moment(field.endDate).format('YYYY-MM-DD')}"
+        if field?.beginValue? and field.beginValue not in [undefined, ''] then theHtml.push "Date > #{moment(field.beginValue).format('YYYY-MM-DD')}"
+        if field?.endValue? and field.endValue not in [undefined, ''] then theHtml.push "Date <= #{moment(field.endValue).format('YYYY-MM-DD')}"
 #        console.log JSON.stringify(field)
         if theHtml.length is 0
           return 'Field being used.'
         else
-          console.log "theHtml: #{theHtml.join(' | ')}"
           return theHtml.join(' | ')
 
       # Clear All other fields except the specified field index where the varName is say aggregation or groupBy, ect..
@@ -130,29 +143,28 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
       # Aggregation radio options
       ##################################################################################################################
       $scope.aggregationOptions = [
-        {name: 'aggregation', value: undefined, label: 'No Selection'},
-        {name: 'aggregation', value: 'count', label: 'Count', tooltip: "COUNT(field)"},
-        {name: 'aggregation', value: 'distinctCount', label: 'Distinct Count', tooltip: "COUNT(DISTINCT field)"},
-        {name: 'aggregation', value: 'sum', label: 'Sum', tooltip: "SUM(field)"},
-        {name: 'aggregation', value: 'avg', label: 'Avg', tooltip: "AVG(field)"}
+        {name: 'aggregation', value: undefined, label: 'No Selection', dataTypes: ['*']},
+        {name: 'aggregation', value: 'count', label: 'Count', tooltip: "COUNT(field)", dataTypes: dbService.countAggregationDataTypes},
+        {name: 'aggregation', value: 'distinctCount', label: 'Distinct Count', tooltip: "COUNT(DISTINCT field)", dataTypes: dbService.countAggregationDataTypes},
+        {name: 'aggregation', value: 'sum', label: 'Sum', tooltip: "SUM(field)", dataTypes: dbService.sumAggregationDataTypes},
+        {name: 'aggregation', value: 'avg', label: 'Avg', tooltip: "AVG(field)", dataTypes: dbService.avgAggregationDataTypes}
       ]
 
       ##################################################################################################################
       # Group By radio options
       ##################################################################################################################
-      $scope.filterByFieldDataType = (opt) -> _.contains(opt.dataTypes, $scope.selectedField.DATA_TYPE)
-      multiplexDataTypes = []
-      fieldGroupByTypes = []
-      dateGroupByTypes = ['date', 'datetime']
+      # The filter of group by options will happen dynamically based on the DATA_TYPE of the field in relation to what
+      # dataTypes are set on the groupBy option itself.
+      $scope.filterByFieldDataType = (opt) -> _.contains(opt.dataTypes, $scope.selectedField?.DATA_TYPE) or _.contains(opt.dataTypes, '*')
       $scope.groupByOptions = [
-        {name: 'groupBy', value: undefined, label: 'No Selection'},
-        {name: 'groupBy', value: 'multiplex', label: 'Multiplex', tooltip: 'Multiplexes the x-axis over this field.'},
-        {name: 'groupBy', value: 'field', label: 'Field Itself', tooltip: 'Adds this field as the primary x axis group', dataTypes: ['int', 'varchar']},
-        {name: 'groupBy', value: 'year', label: 'Year', tooltip: "Groups on DATE_FORMAT(field, '%Y')", dataTypes: dateGroupByTypes},
+        {name: 'groupBy', value: undefined, label: 'No Selection', dataTypes: ['*']},
+        {name: 'groupBy', value: 'multiplex', label: 'Multiplex', tooltip: 'Multiplexes the x-axis over this field.', dataTypes: dbService.multiplexGroupByTypes},
+        {name: 'groupBy', value: 'field', label: 'Field Itself', tooltip: 'Adds this field as the primary x axis group', dataTypes: dbService.fieldGroupByTypes},
 #        {name: 'groupBy', value: 'quarter', label: 'Quarter'},
-        {name: 'groupBy', value: 'month', label: 'Month', tooltip: "Groups on DATE_FORMAT(field, '%Y-%m')", dataTypes: dateGroupByTypes},
-        {name: 'groupBy', value: 'day', label: 'Day', tooltip: "Groups on DATE_FORMAT(field, '%Y-%m-%d')", dataTypes: dateGroupByTypes},
-        {name: 'groupBy', value: 'hour', label: 'Hour', tooltip: "Groups on DATE_FORMAT(field, '%Y-%m-%d %H')", dataTypes: dateGroupByTypes},
+        {name: 'groupBy', value: 'year', label: 'Year', tooltip: "Groups on DATE_FORMAT(field, '%Y')", dataTypes: dbService.dateGroupByTypes},
+        {name: 'groupBy', value: 'month', label: 'Month', tooltip: "Groups on DATE_FORMAT(field, '%Y-%m')", dataTypes: dbService.dateGroupByTypes},
+        {name: 'groupBy', value: 'day', label: 'Day', tooltip: "Groups on DATE_FORMAT(field, '%Y-%m-%d')", dataTypes: dbService.dateGroupByTypes},
+        {name: 'groupBy', value: 'hour', label: 'Hour', tooltip: "Groups on DATE_FORMAT(field, '%Y-%m-%d %H')", dataTypes: dbService.dateGroupByTypes},
       ]
 
       ##################################################################################################################
@@ -185,7 +197,7 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
       # Update the dataset and by default re-graph the data
       $scope.updateDataSet = (graph=true) ->
         $('#graph_field_modal').modal('hide')
-        #variablesToUpdate = ['aggregation', 'groupBy', 'beginDate', 'endDate']
+        #variablesToUpdate = ['aggregation', 'groupBy', 'beginValue', 'endValue']
         #updateFields(variablesToUpdate)
         dbService.dataSet = $scope.dataSet
         dbService.cacheUpsert () ->
@@ -208,16 +220,16 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
       ##################################################################################################################
       # Where clause begin/end datepicker
       ##################################################################################################################
-      $scope.beginDateOpened = false
-      $scope.endDateOpened = false
+      $scope.beginValueOpened = false
+      $scope.endValueOpened = false
       $scope.dateOptions =
         'year-format': "'yyyy'",
         'starting-day': 1
       $scope.today = () -> $scope.dt = new Date()
-      $scope.clearBeginDate = () -> $scope.beginDate = undefined
-      $scope.clearEndDate = () -> $scope.endDate = undefined
-      $scope.openBeginDate = () -> $timeout () -> $scope.beginDateOpened = true
-      $scope.openEndDate = () -> $timeout () -> $scope.endDateOpened = true
+      $scope.clearBeginDate = () -> $scope.beginValue = undefined
+      $scope.clearEndDate = () -> $scope.endValue = undefined
+      $scope.openBeginDate = () -> $timeout () -> $scope.beginValueOpened = true
+      $scope.openEndDate = () -> $timeout () -> $scope.endValueOpened = true
       ##################################################################################################################
 
       $scope.testGraph = () ->

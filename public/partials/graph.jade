@@ -27,11 +27,9 @@ div.row
                         | {{ r.table }}
                     div.pull-right
                         i.icon-cog.pointer(ng-click="openModalForReference($index, r); $event.preventDefault(); $event.stopPropagation();")
-
                         //i.btn.icon-copy(tooltip="Duplicate this Table", ng-click="copyDbReference($index); $event.preventDefault();")
                         //i.btn.icon-remove(tooltip="Remove this Table", ng-click="removeDbReference($index); $event.preventDefault();")
                     div.clearfix
-
                     //| {{ r.connection }} / {{ r.schema }} / {{ r.table }}
 
             // If you'd like it to default open, add the additional class in
@@ -39,6 +37,7 @@ div.row
               div.panel-body
                 div.db-info-item.text-right(ng-repeat="f in r.fields")
                     i.icon-info-sign(ng-if="optionsSetOnField($parent.$index, $index)", tooltip="{{fieldOptionDisplay(r, $index)}}")
+                    // If there are any field options set glow the field green
                     span(ng-class="optionsSetOnField($parent.$index, $index) ? 'dataglue-green' : ''")
                         | &nbsp;{{f.COLUMN_NAME}}&nbsp;
                     i.icon-edit.pointer(ng-click="openModalForField($parent.$index, r, $index, f)")
@@ -125,11 +124,15 @@ div#graph_field_modal.modal.fade(tabindex="-1",role="dialog",aria-labelledby="gr
                 div#field_options_tabs.tabbable
                     ul.nav.nav-tabs
                         li.active
-                            a(href='#aggregation', data-toggle='tab') Aggregation
+                            a(href='#aggregation', data-toggle='tab')
+                                span(ng-class="aggregationSetOnField(selectedField) ? 'dataglue-green' : ''") Aggregation
                         li
-                            a(href='#fieldGroupBy', data-toggle='tab') Group by
+                            a(href='#fieldGroupBy', data-toggle='tab')
+                                // Group by
+                                span(ng-class="groupBySetOnField(selectedField) ? 'dataglue-green' : ''") Group By
                         li
-                            a(href='#where', data-toggle='tab') Where
+                            a(href='#where', data-toggle='tab')
+                                span(ng-class="whereSetOnField(selectedField) ? 'dataglue-green' : ''") Where
                         li
                             a(href='#info', data-toggle='tab') Info
                     div.tab-content

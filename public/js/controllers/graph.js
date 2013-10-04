@@ -3,8 +3,6 @@
   define(['jquery', 'underscore', 'moment', 'dbLogic'], function($, _, moment, dbLogic) {
     return [
       '$scope', '$rootScope', '$location', '$routeParams', '$timeout', 'dbService', function($scope, $rootScope, $location, $routeParams, $timeout, dbService) {
-        var dateGroupByTypes, fieldGroupByTypes, multiplexDataTypes;
-
         $scope._ = _;
         $scope._id = $routeParams['_id'];
         if ($routeParams['_id'] != null) {
@@ -48,10 +46,39 @@
           if ((field.aggregation != null) && ((_ref1 = field.aggregation) !== (void 0) && _ref1 !== '')) {
             return true;
           }
-          if ((field.beginDate != null) && ((_ref2 = field.beginDate) !== (void 0) && _ref2 !== '')) {
+          if ((field.beginValue != null) && ((_ref2 = field.beginValue) !== (void 0) && _ref2 !== '')) {
             return true;
           }
-          if ((field.endDate != null) && ((_ref3 = field.endDate) !== (void 0) && _ref3 !== '')) {
+          if ((field.endValue != null) && ((_ref3 = field.endValue) !== (void 0) && _ref3 !== '')) {
+            return true;
+          }
+          return false;
+        };
+        $scope.groupBySetOnField = function(selectedField) {
+          var _ref;
+
+          if ((selectedField != null) && (selectedField.groupBy != null) && ((_ref = selectedField.groupBy) !== (void 0) && _ref !== '')) {
+            return true;
+          } else {
+            return false;
+          }
+        };
+        $scope.aggregationSetOnField = function(selectedField) {
+          var _ref;
+
+          if ((selectedField != null) && (selectedField.aggregation != null) && ((_ref = selectedField.aggregation) !== (void 0) && _ref !== '')) {
+            return true;
+          } else {
+            return false;
+          }
+        };
+        $scope.whereSetOnField = function(selectedField) {
+          var _ref, _ref1;
+
+          if ((selectedField != null) && (selectedField.beginValue != null) && ((_ref = selectedField.beginValue) !== (void 0) && _ref !== '')) {
+            return true;
+          }
+          if ((selectedField != null) && (selectedField.endValue != null) && ((_ref1 = selectedField.endValue) !== (void 0) && _ref1 !== '')) {
             return true;
           }
           return false;
@@ -67,16 +94,15 @@
           if (((field != null ? field.aggregation : void 0) != null) && ((_ref1 = field.aggregation) !== (void 0) && _ref1 !== '')) {
             theHtml.push("Aggregate by " + field.aggregation);
           }
-          if (((field != null ? field.beginDate : void 0) != null) && ((_ref2 = field.beginDate) !== (void 0) && _ref2 !== '')) {
-            theHtml.push("Date > " + (moment(field.beginDate).format('YYYY-MM-DD')));
+          if (((field != null ? field.beginValue : void 0) != null) && ((_ref2 = field.beginValue) !== (void 0) && _ref2 !== '')) {
+            theHtml.push("Date > " + (moment(field.beginValue).format('YYYY-MM-DD')));
           }
-          if (((field != null ? field.endDate : void 0) != null) && ((_ref3 = field.endDate) !== (void 0) && _ref3 !== '')) {
-            theHtml.push("Date <= " + (moment(field.endDate).format('YYYY-MM-DD')));
+          if (((field != null ? field.endValue : void 0) != null) && ((_ref3 = field.endValue) !== (void 0) && _ref3 !== '')) {
+            theHtml.push("Date <= " + (moment(field.endValue).format('YYYY-MM-DD')));
           }
           if (theHtml.length === 0) {
             return 'Field being used.';
           } else {
-            console.log("theHtml: " + (theHtml.join(' | ')));
             return theHtml.join(' | ');
           }
         };
@@ -119,75 +145,81 @@
           {
             name: 'aggregation',
             value: void 0,
-            label: 'No Selection'
+            label: 'No Selection',
+            dataTypes: ['*']
           }, {
             name: 'aggregation',
             value: 'count',
             label: 'Count',
-            tooltip: "COUNT(field)"
+            tooltip: "COUNT(field)",
+            dataTypes: dbService.countAggregationDataTypes
           }, {
             name: 'aggregation',
             value: 'distinctCount',
             label: 'Distinct Count',
-            tooltip: "COUNT(DISTINCT field)"
+            tooltip: "COUNT(DISTINCT field)",
+            dataTypes: dbService.countAggregationDataTypes
           }, {
             name: 'aggregation',
             value: 'sum',
             label: 'Sum',
-            tooltip: "SUM(field)"
+            tooltip: "SUM(field)",
+            dataTypes: dbService.sumAggregationDataTypes
           }, {
             name: 'aggregation',
             value: 'avg',
             label: 'Avg',
-            tooltip: "AVG(field)"
+            tooltip: "AVG(field)",
+            dataTypes: dbService.avgAggregationDataTypes
           }
         ];
         $scope.filterByFieldDataType = function(opt) {
-          return _.contains(opt.dataTypes, $scope.selectedField.DATA_TYPE);
+          var _ref;
+
+          return _.contains(opt.dataTypes, (_ref = $scope.selectedField) != null ? _ref.DATA_TYPE : void 0) || _.contains(opt.dataTypes, '*');
         };
-        multiplexDataTypes = [];
-        fieldGroupByTypes = [];
-        dateGroupByTypes = ['date', 'datetime'];
         $scope.groupByOptions = [
           {
             name: 'groupBy',
             value: void 0,
-            label: 'No Selection'
+            label: 'No Selection',
+            dataTypes: ['*']
           }, {
             name: 'groupBy',
             value: 'multiplex',
             label: 'Multiplex',
-            tooltip: 'Multiplexes the x-axis over this field.'
+            tooltip: 'Multiplexes the x-axis over this field.',
+            dataTypes: dbService.multiplexGroupByTypes
           }, {
             name: 'groupBy',
             value: 'field',
             label: 'Field Itself',
             tooltip: 'Adds this field as the primary x axis group',
-            dataTypes: ['int', 'varchar']
+            dataTypes: dbService.fieldGroupByTypes
           }, {
             name: 'groupBy',
             value: 'year',
             label: 'Year',
             tooltip: "Groups on DATE_FORMAT(field, '%Y')",
-            dataTypes: dateGroupByTypes
+            dataTypes: dbService.dateGroupByTypes
           }, {
             name: 'groupBy',
             value: 'month',
             label: 'Month',
             tooltip: "Groups on DATE_FORMAT(field, '%Y-%m')",
-            dataTypes: dateGroupByTypes
+            dataTypes: dbService.dateGroupByTypes
           }, {
             name: 'groupBy',
             value: 'day',
             label: 'Day',
             tooltip: "Groups on DATE_FORMAT(field, '%Y-%m-%d')",
-            dataTypes: dateGroupByTypes
+            dataTypes: dbService.dateGroupByTypes
           }, {
             name: 'groupBy',
             value: 'hour',
             label: 'Hour',
             tooltip: "Groups on DATE_FORMAT(field, '%Y-%m-%d %H')",
-            dataTypes: dateGroupByTypes
+            dataTypes: dbService.dateGroupByTypes
           }
         ];
         $scope.selectedReference = void 0;
@@ -243,8 +275,8 @@
             }
           });
         };
-        $scope.beginDateOpened = false;
-        $scope.endDateOpened = false;
+        $scope.beginValueOpened = false;
+        $scope.endValueOpened = false;
         $scope.dateOptions = {
           'year-format': "'yyyy'",
           'starting-day': 1
@@ -253,19 +285,19 @@
           return $scope.dt = new Date();
         };
         $scope.clearBeginDate = function() {
-          return $scope.beginDate = void 0;
+          return $scope.beginValue = void 0;
         };
         $scope.clearEndDate = function() {
-          return $scope.endDate = void 0;
+          return $scope.endValue = void 0;
         };
         $scope.openBeginDate = function() {
           return $timeout(function() {
-            return $scope.beginDateOpened = true;
+            return $scope.beginValueOpened = true;
           });
         };
         $scope.openEndDate = function() {
           return $timeout(function() {
-            return $scope.endDateOpened = true;
+            return $scope.endValueOpened = true;
           });
         };
         $scope.testGraph = function() {

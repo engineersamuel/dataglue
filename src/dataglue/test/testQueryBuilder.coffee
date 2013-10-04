@@ -72,6 +72,42 @@ describe 'queryBuilder', ->
         output.query.should.equal expectedSql
         done()
 
+    it 'build a simple mysql query id = 1', (done) ->
+      ref = _.cloneDeep simpleMysqlDbReference
+      ref.fields[0].aggregation = "count"
+      ref.fields[0].cond = 'equal'
+      ref.fields[0].condValue = 1
+      ref.fields[1].groupBy = "month"
+      expectedSql = 'SELECT COUNT(id) AS "y", created_date, DATE_FORMAT(created_date, \'%Y-%m\') AS "x" FROM some_schema.some_table WHERE (id = 1) GROUP BY x LIMIT 1000'
+      queryBuilder.buildQuery ref, (err, output) ->
+        if err then return done(err)
+        output.query.should.equal expectedSql
+        done()
+
+    it 'build a simple mysql query id != 1', (done) ->
+      ref = _.cloneDeep simpleMysqlDbReference
+      ref.fields[0].aggregation = "count"
+      ref.fields[0].cond = 'notEqual'
+      ref.fields[0].condValue = 1
+      ref.fields[1].groupBy = "month"
+      expectedSql = 'SELECT COUNT(id) AS "y", created_date, DATE_FORMAT(created_date, \'%Y-%m\') AS "x" FROM some_schema.some_table WHERE (id != 1) GROUP BY x LIMIT 1000'
+      queryBuilder.buildQuery ref, (err, output) ->
+        if err then return done(err)
+        output.query.should.equal expectedSql
+        done()
+
+    it 'build a simple mysql query id > 1', (done) ->
+      ref = _.cloneDeep simpleMysqlDbReference
+      ref.fields[0].aggregation = "count"
+      ref.fields[0].cond = 'gt'
+      ref.fields[0].condValue = 1
+      ref.fields[1].groupBy = "month"
+      expectedSql = 'SELECT COUNT(id) AS "y", created_date, DATE_FORMAT(created_date, \'%Y-%m\') AS "x" FROM some_schema.some_table WHERE (id > 1) GROUP BY x LIMIT 1000'
+      queryBuilder.buildQuery ref, (err, output) ->
+        if err then return done(err)
+        output.query.should.equal expectedSql
+        done()
+
     it 'build a simple multiplexed mysql query', (done) ->
       ref = _.cloneDeep simpleMysqlDbReference
       ref.fields[0].aggregation = "count"
@@ -343,8 +379,8 @@ describe 'queryBuilder', ->
     it 'group by month between 2013-09-01 and 2013-10-01', (done) ->
       ref = _.cloneDeep simpleMongoDbReference
       ref.fields[1].groupBy = "month"
-      ref.fields[1].beginDate = "2013-09-01"
-      ref.fields[1].endDate = "2013-10-01"
+      ref.fields[1].beginValue = "2013-09-01"
+      ref.fields[1].endValue = "2013-10-01"
       expectedQuery = [
         {
           '$match': {

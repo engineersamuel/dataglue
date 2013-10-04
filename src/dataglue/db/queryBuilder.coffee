@@ -67,11 +67,26 @@ QueryBuilder.buildSqlQuery = (dbReference, callback) ->
       ################################################################################################################
       # See if a begin and end date are set
       ################################################################################################################
-      if utils.verifyPropertyExists field, 'beginDate'
-        sql.where("#{fieldName} >= TIMESTAMP('#{moment.utc(field.beginDate, 'YYYY-MM-DD').toISOString()}')")
+      # Handle the beginValue and endValue as dates for dates
+      if _.contains ['date', 'datetime'], field.DATA_TYPE
+        if utils.verifyPropertyExists field, 'beginValue'
+          sql.where("#{fieldName} >= TIMESTAMP(#{utils.formatFieldValue(field, field.beginValue, 'sql')})")
+        if utils.verifyPropertyExists field, 'endValue'
+#          sql.where("#{fieldName} < TIMESTAMP('#{moment.utc(field.endValue, 'YYYY-MM-DD').toISOString()}')")
+          sql.where("#{fieldName} >= TIMESTAMP(#{utils.formatFieldValue(field, field.endValue, 'sql')})")
 
-      if utils.verifyPropertyExists field, 'endDate'
-        sql.where("#{fieldName} < TIMESTAMP('#{moment.utc(field.endDate, 'YYYY-MM-DD').toISOString()}')")
+      ################################################################################################################
+      # See if a where condition is set
+      ################################################################################################################
+      if utils.verifyPropertyExists field, 'cond'
+        if field.cond is 'equal'
+          sql.where("#{fieldName} = ?", field.condValue)
+        if field.cond is 'notEqual'
+          sql.where("#{fieldName} != ?", field.condValue)
+        if field.cond is 'like'
+          sql.where("#{fieldName} LIKE ?", field.condValue)
+        if field.cond is 'between'
+          sql.where("#{fieldName} >= ? AND #{fieldName} < ?", field.beginValue, field.endValue)
 
       ################################################################################################################
       # Group By's require the group and the field
@@ -216,15 +231,18 @@ QueryBuilder.buildMongoQuery = (dbReference, callback) ->
     if not field['excluded']?
       fieldName = field.COLUMN_NAME
 
-      if utils.verifyPropertyExists field, 'beginDate'
-        # The date localization can be tricky to control.  By simply reading in only the YYYY-MM-DD and UTC'ing it
-        # We have parity with Mongo
-        addObjToMatch fieldName, {'$gt': moment.utc(field.beginDate, 'YYYY-MM-DD').toDate()}
-        #theMatch['$match'][fieldName] =
+      # Handle the beginValue and endValue as dates for dates
+      if _.contains ['date', 'datetime'], field.DATA_TYPE
+        if utils.verifyPropertyExists field, 'beginValue'
+          # The date localization can be tricky to control.  By simply reading in only the YYYY-MM-DD and UTC'ing it
+          # We have parity with Mongo
+          #addObjToMatch fieldName, {'$gt': moment.utc(field.beginValue, 'YYYY-MM-DD').toDate()}
+          addObjToMatch fieldName, {'$gt': utils.formatFieldValue(field, field.beginValue, 'mongo')}
+          #theMatch['$match'][fieldName] =
 
-      if utils.verifyPropertyExists field, 'endDate'
-        addObjToMatch fieldName, {'$lte': moment.utc(field.endDate, 'YYYY-MM-DD').toDate()}
-        #theMatch['$match'][fieldName] = {'$lte': moment(field.endDate)}
+        if utils.verifyPropertyExists field, 'endValue'
+          addObjToMatch fieldName, {'$lte': utils.formatFieldValue(field, field.endValue, 'mongo')}
+          #theMatch['$match'][fieldName] = {'$lte': moment(field.endValue)}
 
 
       if utils.verifyPropertyExists field, 'groupBy'

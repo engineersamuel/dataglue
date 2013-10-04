@@ -41,6 +41,25 @@ define(['angular', 'jquery', 'underscore', 'pnotify'], function (angular, $, _) 
                 });
             };
             var service = {};
+            //----------------------------------------------------------------------------------------------------------
+            // Define data types to filter the various group by options
+            //----------------------------------------------------------------------------------------------------------
+            // Date group by types -- Data types that can be grouped by date
+            service.dateGroupByTypes = ['date', 'datetime'];
+            // Field group by types -- Data types that can be grouped by field
+            service.fieldGroupByTypes = ['int', 'varchar', 'text'];
+            // Multiplex group by types -- Data types that can be multiplexed
+            service.multiplexGroupByTypes = ['int', 'varchar', 'text'];
+
+            //----------------------------------------------------------------------------------------------------------
+            // Define data types to filter the aggregation options
+            //----------------------------------------------------------------------------------------------------------
+            // This says that any field can be counted over
+            service.countAggregationDataTypes = ['*'];
+            // Sum/avg only numerical fields
+            service.avgAggregationDataTypes = ['numerical', 'number', 'int', 'tinyint', 'float', 'decimal', 'double'];
+            service.sumAggregationDataTypes = service.avgAggregationDataTypes;
+
             // Graph types
             service.limits = [
                 {name: 'limit', value: null, label: 'No Limit'},
@@ -53,7 +72,11 @@ define(['angular', 'jquery', 'underscore', 'pnotify'], function (angular, $, _) 
             service.whereConds = [
                 {name: 'cond', value: 'equal', label: 'Equal'},
                 {name: 'cond', value: 'notEqual', label: 'Not Equal'},
-                {name: 'cond', value: 'like', label: 'Like'}
+                {name: 'cond', value: 'like', label: 'Like'},
+                {name: 'cond', value: 'gt', label: 'Greater Than'},
+                {name: 'cond', value: 'gte', label: 'Greater Than Equal'},
+                {name: 'cond', value: 'lt', label: 'Less Than'},
+                {name: 'cond', value: 'lte', label: 'Less Than Equal'}
             ];
 
             // Graph types

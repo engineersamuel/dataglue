@@ -63,11 +63,27 @@
         } else {
           sql.field(fieldName);
         }
-        if (utils.verifyPropertyExists(field, 'beginDate')) {
-          sql.where("" + fieldName + " >= TIMESTAMP('" + (moment.utc(field.beginDate, 'YYYY-MM-DD').toISOString()) + "')");
+        if (_.contains(['date', 'datetime'], field.DATA_TYPE)) {
+          if (utils.verifyPropertyExists(field, 'beginValue')) {
+            sql.where("" + fieldName + " >= TIMESTAMP(" + (utils.formatFieldValue(field, field.beginValue, 'sql')) + ")");
+          }
+          if (utils.verifyPropertyExists(field, 'endValue')) {
+            sql.where("" + fieldName + " >= TIMESTAMP(" + (utils.formatFieldValue(field, field.endValue, 'sql')) + ")");
+          }
         }
-        if (utils.verifyPropertyExists(field, 'endDate')) {
-          sql.where("" + fieldName + " < TIMESTAMP('" + (moment.utc(field.endDate, 'YYYY-MM-DD').toISOString()) + "')");
+        if (utils.verifyPropertyExists(field, 'cond')) {
+          if (field.cond === 'equal') {
+            sql.where("" + fieldName + " = ?", field.condValue);
+          }
+          if (field.cond === 'notEqual') {
+            sql.where("" + fieldName + " != ?", field.condValue);
+          }
+          if (field.cond === 'like') {
+            sql.where("" + fieldName + " LIKE ?", field.condValue);
+          }
+          if (field.cond === 'between') {
+            sql.where("" + fieldName + " >= ? AND " + fieldName + " < ?", field.beginValue, field.endValue);
+          }
         }
         addX = function(field, fieldAlias, multiplex) {
           if (multiplex == null) {
@@ -182,15 +198,17 @@
 
       if (field['excluded'] == null) {
         fieldName = field.COLUMN_NAME;
-        if (utils.verifyPropertyExists(field, 'beginDate')) {
-          addObjToMatch(fieldName, {
-            '$gt': moment.utc(field.beginDate, 'YYYY-MM-DD').toDate()
-          });
-        }
-        if (utils.verifyPropertyExists(field, 'endDate')) {
-          addObjToMatch(fieldName, {
-            '$lte': moment.utc(field.endDate, 'YYYY-MM-DD').toDate()
-          });
+        if (_.contains(['date', 'datetime'], field.DATA_TYPE)) {
+          if (utils.verifyPropertyExists(field, 'beginValue')) {
+            addObjToMatch(fieldName, {
+              '$gt': utils.formatFieldValue(field, field.beginValue, 'mongo')
+            });
+          }
+          if (utils.verifyPropertyExists(field, 'endValue')) {
+            addObjToMatch(fieldName, {
+              '$lte': utils.formatFieldValue(field, field.endValue, 'mongo')
+            });
+          }
         }
         if (utils.verifyPropertyExists(field, 'groupBy')) {
           addObjToMatch(fieldName, {

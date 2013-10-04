@@ -1,8 +1,8 @@
 
 div(ng-if="_.contains(['date', 'datetime'], dataSet.dbReferences[dbRefIndex].fields[fieldIndex].DATA_TYPE)")
     div.form-horizontal
-        //input(type="text", datepicker-popup="MM-dd-yyyy", ng-model="beginDate", open="beginDateOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")
-        input(type="text", datepicker-popup="MM-dd-yyyy", ng-change="resetOtherFields(dbRefIndex, fieldIndex, 'beginDate')", ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].beginDate", open="beginDateOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")
+        //input(type="text", datepicker-popup="MM-dd-yyyy", ng-model="beginValue", open="beginValueOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")
+        input(type="text", datepicker-popup="MM-dd-yyyy", ng-change="resetOtherFields(dbRefIndex, fieldIndex, 'beginValue')", ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].beginValue", open="beginValueOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")
         span
             | &nbsp;
             i.icon-calendar(ng-click="openBeginDate()")
@@ -11,8 +11,8 @@ div(ng-if="_.contains(['date', 'datetime'], dataSet.dbReferences[dbRefIndex].fie
                 i.icon-info-sign(tooltip="{{o.tooltip}}")
             | &nbsp;Begin Date
     div.form-horizontal
-        //input(type="text", datepicker-popup="MM-dd-yyyy", ng-model="endDate", open="endDateOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")
-        input(type="text", datepicker-popup="MM-dd-yyyy", ng-change="resetOtherFields(dbRefIndex, fieldIndex, 'beginDate')", ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].endDate", open="endDateOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")
+        //input(type="text", datepicker-popup="MM-dd-yyyy", ng-model="endValue", open="endValueOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")
+        input(type="text", datepicker-popup="MM-dd-yyyy", ng-change="resetOtherFields(dbRefIndex, fieldIndex, 'beginValue')", ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].endValue", open="endValueOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")
         span
             | &nbsp;
             i.icon-calendar(ng-click="openEndDate()")

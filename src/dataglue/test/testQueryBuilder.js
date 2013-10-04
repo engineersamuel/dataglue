@@ -90,6 +90,57 @@
           return done();
         });
       });
+      it('build a simple mysql query id = 1', function(done) {
+        var expectedSql, ref;
+
+        ref = _.cloneDeep(simpleMysqlDbReference);
+        ref.fields[0].aggregation = "count";
+        ref.fields[0].cond = 'equal';
+        ref.fields[0].condValue = 1;
+        ref.fields[1].groupBy = "month";
+        expectedSql = 'SELECT COUNT(id) AS "y", created_date, DATE_FORMAT(created_date, \'%Y-%m\') AS "x" FROM some_schema.some_table WHERE (id = 1) GROUP BY x LIMIT 1000';
+        return queryBuilder.buildQuery(ref, function(err, output) {
+          if (err) {
+            return done(err);
+          }
+          output.query.should.equal(expectedSql);
+          return done();
+        });
+      });
+      it('build a simple mysql query id != 1', function(done) {
+        var expectedSql, ref;
+
+        ref = _.cloneDeep(simpleMysqlDbReference);
+        ref.fields[0].aggregation = "count";
+        ref.fields[0].cond = 'notEqual';
+        ref.fields[0].condValue = 1;
+        ref.fields[1].groupBy = "month";
+        expectedSql = 'SELECT COUNT(id) AS "y", created_date, DATE_FORMAT(created_date, \'%Y-%m\') AS "x" FROM some_schema.some_table WHERE (id != 1) GROUP BY x LIMIT 1000';
+        return queryBuilder.buildQuery(ref, function(err, output) {
+          if (err) {
+            return done(err);
+          }
+          output.query.should.equal(expectedSql);
+          return done();
+        });
+      });
+      it('build a simple mysql query id > 1', function(done) {
+        var expectedSql, ref;
+
+        ref = _.cloneDeep(simpleMysqlDbReference);
+        ref.fields[0].aggregation = "count";
+        ref.fields[0].cond = 'gt';
+        ref.fields[0].condValue = 1;
+        ref.fields[1].groupBy = "month";
+        expectedSql = 'SELECT COUNT(id) AS "y", created_date, DATE_FORMAT(created_date, \'%Y-%m\') AS "x" FROM some_schema.some_table WHERE (id > 1) GROUP BY x LIMIT 1000';
+        return queryBuilder.buildQuery(ref, function(err, output) {
+          if (err) {
+            return done(err);
+          }
+          output.query.should.equal(expectedSql);
+          return done();
+        });
+      });
       return it('build a simple multiplexed mysql query', function(done) {
         var expectedSql, ref;
 
@@ -517,8 +568,8 @@
 
         ref = _.cloneDeep(simpleMongoDbReference);
         ref.fields[1].groupBy = "month";
-        ref.fields[1].beginDate = "2013-09-01";
-        ref.fields[1].endDate = "2013-10-01";
+        ref.fields[1].beginValue = "2013-09-01";
+        ref.fields[1].endValue = "2013-10-01";
         expectedQuery = [
           {
             '$match': {

@@ -107,3 +107,53 @@ describe 'utils', ->
       utils.isUnixTimestamp().should.be.false
     it 'parse a string of length 13', ->
       utils.isUnixTimestamp('aaaaaaaaaaaaa').should.be.false
+
+  describe '#formatFieldValue ', ->
+    describe 'SQL Injection', ->
+      it "parse anything' OR 'x'='x", ->
+        utils.formatFieldValue({DATA_TYPE: 'varchar'}, "anything' OR 'x'='x").should.equal "'anything\\' OR \\'x\\'=\\'x'"
+    it 'parse undefined', ->
+      (() ->
+        utils.formatFieldValue({COLUMN_NAME: 'a', DATA_TYPE: 'int'}, undefined)
+      ).should.throw "Could not format undefined value for field a!"
+    it 'parse null', ->
+      utils.formatFieldValue({DATA_TYPE: 'dosntmatter'}, "null").should.equal 'NULL'
+    it 'parse NULL', ->
+      utils.formatFieldValue({DATA_TYPE: 'dosntmatter'}, "NULL").should.equal 'NULL'
+    describe '#nonPrecision ', ->
+      it 'parse actual int', ->
+        utils.formatFieldValue({DATA_TYPE: 'int'}, 1.0).should.equal 1
+      it 'parse int that is a float', ->
+        utils.formatFieldValue({DATA_TYPE: 'int'}, 1.1).should.equal 1
+      it 'parse int that is a string', ->
+        utils.formatFieldValue({DATA_TYPE: 'int'}, "1").should.equal 1
+      it 'parse int that is a string but not parsable', ->
+        (() ->
+          utils.formatFieldValue({DATA_TYPE: 'int'}, "({a: 1})")
+        ).should.throw "You said ({a: 1}) was a numeric type but it couldn't be parsed as a string and it wasn't a number!"
+    describe '#precision ', ->
+      it 'parse actual float', ->
+        utils.formatFieldValue({DATA_TYPE: 'float'}, 1.1).should.equal 1.1
+      it 'parse float that is an int', ->
+        utils.formatFieldValue({DATA_TYPE: 'float'}, 1).should.equal 1
+      it 'parse float that is a string', ->
+        utils.formatFieldValue({DATA_TYPE: 'float'}, "1.3").should.equal 1.3
+    describe '#dateTypes', ->
+      it 'parse actual datetime', ->
+        utils.formatFieldValue({DATA_TYPE: 'datetime'}, '2013-09-01 00:00:00', 'sql').should.equal '2013-09-01T00:00:00.000Z'
+    describe '#stringTypes', ->
+      it 'parse actual string', ->
+        utils.formatFieldValue({DATA_TYPE: 'varchar'}, 'Hello World').should.equal "'Hello World'"
+    describe '#booleanTypes', ->
+      it 'parse 1', ->
+        utils.formatFieldValue({DATA_TYPE: 'bool'}, 1).should.equal 'TRUE'
+      it 'parse yes', ->
+        utils.formatFieldValue({DATA_TYPE: 'bool'}, 'yes').should.equal 'TRUE'
+      it 'parse true', ->
+        utils.formatFieldValue({DATA_TYPE: 'bool'}, true).should.equal 'TRUE'
+      it 'parse 0', ->
+        utils.formatFieldValue({DATA_TYPE: 'bool'}, 0).should.equal 'FALSE'
+      it 'parse n', ->
+        utils.formatFieldValue({DATA_TYPE: 'bool'}, 'n').should.equal 'FALSE'
+      it 'parse false', ->
+        utils.formatFieldValue({DATA_TYPE: 'bool'}, false).should.equal 'FALSE'

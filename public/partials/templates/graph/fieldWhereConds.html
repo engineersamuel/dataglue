@@ -1,12 +1,12 @@
 
 <div ng-if="_.contains(['date', 'datetime'], dataSet.dbReferences[dbRefIndex].fields[fieldIndex].DATA_TYPE)">
   <div class="form-horizontal">
-    <!--input(type="text", datepicker-popup="MM-dd-yyyy", ng-model="beginDate", open="beginDateOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")-->
-    <input type="text" datepicker-popup="MM-dd-yyyy" ng-change="resetOtherFields(dbRefIndex, fieldIndex, 'beginDate')" ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].beginDate" open="beginDateOpened" min="minDate" max="'2016-06-22'" datepicker-options="dateOptions" show-weeks="false" ng-required="true"/><span>&nbsp;<i ng-click="openBeginDate()" class="icon-calendar"></i><span ng-if="o.tooltip != undefined">&nbsp;<i tooltip="{{o.tooltip}}" class="icon-info-sign"></i></span>&nbsp;Begin Date</span>
+    <!--input(type="text", datepicker-popup="MM-dd-yyyy", ng-model="beginValue", open="beginValueOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")-->
+    <input type="text" datepicker-popup="MM-dd-yyyy" ng-change="resetOtherFields(dbRefIndex, fieldIndex, 'beginValue')" ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].beginValue" open="beginValueOpened" min="minDate" max="'2016-06-22'" datepicker-options="dateOptions" show-weeks="false" ng-required="true"/><span>&nbsp;<i ng-click="openBeginDate()" class="icon-calendar"></i><span ng-if="o.tooltip != undefined">&nbsp;<i tooltip="{{o.tooltip}}" class="icon-info-sign"></i></span>&nbsp;Begin Date</span>
   </div>
   <div class="form-horizontal">
-    <!--input(type="text", datepicker-popup="MM-dd-yyyy", ng-model="endDate", open="endDateOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")-->
-    <input type="text" datepicker-popup="MM-dd-yyyy" ng-change="resetOtherFields(dbRefIndex, fieldIndex, 'beginDate')" ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].endDate" open="endDateOpened" min="minDate" max="'2016-06-22'" datepicker-options="dateOptions" show-weeks="false" ng-required="true"/><span>&nbsp;<i ng-click="openEndDate()" class="icon-calendar"></i><span ng-if="o.tooltip != undefined">&nbsp;<i tooltip="{{o.tooltip}}" class="icon-info-sign"></i></span>&nbsp;End Date</span>
+    <!--input(type="text", datepicker-popup="MM-dd-yyyy", ng-model="endValue", open="endValueOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")-->
+    <input type="text" datepicker-popup="MM-dd-yyyy" ng-change="resetOtherFields(dbRefIndex, fieldIndex, 'beginValue')" ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].endValue" open="endValueOpened" min="minDate" max="'2016-06-22'" datepicker-options="dateOptions" show-weeks="false" ng-required="true"/><span>&nbsp;<i ng-click="openEndDate()" class="icon-calendar"></i><span ng-if="o.tooltip != undefined">&nbsp;<i tooltip="{{o.tooltip}}" class="icon-info-sign"></i></span>&nbsp;End Date</span>
   </div>
 </div>
 <div ng-if="_.contains(['int', 'float', 'decimal', 'number'], dataSet.dbReferences[dbRefIndex].fields[fieldIndex].DATA_TYPE)">

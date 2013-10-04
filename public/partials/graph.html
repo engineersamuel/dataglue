@@ -27,7 +27,9 @@
         <!-- If you'd like it to default open, add the additional class in-->
         <div id="{{$index}}" ng-class="{in: $index == 0}" class="panel-collapse collapse">
           <div class="panel-body">
-            <div ng-repeat="f in r.fields" class="db-info-item text-right"><i ng-if="optionsSetOnField($parent.$index, $index)" tooltip="{{fieldOptionDisplay(r, $index)}}" class="icon-info-sign"></i><span ng-class="optionsSetOnField($parent.$index, $index) ? 'dataglue-green' : ''">&nbsp;{{f.COLUMN_NAME}}&nbsp;</span><i ng-click="openModalForField($parent.$index, r, $index, f)" class="icon-edit pointer"></i></div>
+            <div ng-repeat="f in r.fields" class="db-info-item text-right"><i ng-if="optionsSetOnField($parent.$index, $index)" tooltip="{{fieldOptionDisplay(r, $index)}}" class="icon-info-sign"></i>
+              <!-- If there are any field options set glow the field green--><span ng-class="optionsSetOnField($parent.$index, $index) ? 'dataglue-green' : ''">&nbsp;{{f.COLUMN_NAME}}&nbsp;</span><i ng-click="openModalForField($parent.$index, r, $index, f)" class="icon-edit pointer"></i>
+            </div>
           </div>
         </div>
       </div>
@@ -134,14 +136,15 @@
       <div class="modal-body">
         <div id="field_options_tabs" class="tabbable">
           <ul class="nav nav-tabs">
-            <li class="active"><a href="#aggregation" data-toggle="tab">Aggregation</a></li>
-            <li><a href="#fieldGroupBy" data-toggle="tab">Group by</a></li>
-            <li><a href="#where" data-toggle="tab">Where</a></li>
+            <li class="active"><a href="#aggregation" data-toggle="tab"><span ng-class="aggregationSetOnField(selectedField) ? 'dataglue-green' : ''">Aggregation</span></a></li>
+            <li><a href="#fieldGroupBy" data-toggle="tab">
+                <!-- Group by--><span ng-class="groupBySetOnField(selectedField) ? 'dataglue-green' : ''">Group By</span></a></li>
+            <li><a href="#where" data-toggle="tab"><span ng-class="whereSetOnField(selectedField) ? 'dataglue-green' : ''">Where</span></a></li>
             <li><a href="#info" data-toggle="tab">Info</a></li>
           </ul>
           <div class="tab-content">
             <div id="aggregation" class="tab-pane active"><br/>
-              <div ng-repeat="o in aggregationOptions" class="radio">
+              <div ng-repeat="o in aggregationOptions | filter:filterByFieldDataType" class="radio">
                 <label>
                   <!--input(type="radio", name="{{o.name}}", value="{{o.value}}", ng-model="$parent.aggregation")-->
                   <input type="radio" name="{{o.name}}" value="{{o.value}}" ng-change="$parent.resetOtherFields($parent.dbRefIndex, $parent.fieldIndex, o.name)" ng-model="$parent.dataSet.dbReferences[$parent.dbRefIndex].fields[$parent.fieldIndex].aggregation"/>{{o.label}}<span ng-if="o.tooltip != undefined">&nbsp;<i tooltip="{{o.tooltip}}" class="icon-info-sign"></i></span>
@@ -150,7 +153,7 @@
               <p class="muted">* Determines the Y axis</p>
             </div>
             <div id="fieldGroupBy" class="tab-pane"><br/>
-              <div ng-repeat="o in groupByOptions" class="radio">
+              <div ng-repeat="o in groupByOptions | filter:filterByFieldDataType" class="radio">
                 <label>
                   <input type="radio" name="{{o.name}}" value="{{o.value}}" ng-change="$parent.resetOtherFields($parent.dbRefIndex, $parent.fieldIndex, o.name)" ng-model="$parent.dataSet.dbReferences[$parent.dbRefIndex].fields[$parent.fieldIndex].groupBy"/>{{o.label}}<span ng-if="o.tooltip != undefined">&nbsp;<i tooltip="{{o.tooltip}}" class="icon-info-sign"></i></span>
                 </label>
@@ -160,12 +163,12 @@
             <div id="where" class="tab-pane"><br/>
               <div ng-if="_.contains(['date', 'datetime'], dataSet.dbReferences[dbRefIndex].fields[fieldIndex].DATA_TYPE)">
                 <div class="form-horizontal">
-                  <!--input(type="text", datepicker-popup="MM-dd-yyyy", ng-model="beginDate", open="beginDateOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")-->
-                  <input type="text" datepicker-popup="MM-dd-yyyy" ng-change="resetOtherFields(dbRefIndex, fieldIndex, 'beginDate')" ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].beginDate" open="beginDateOpened" min="minDate" max="'2016-06-22'" datepicker-options="dateOptions" show-weeks="false" ng-required="true"/><span>&nbsp;<i ng-click="openBeginDate()" class="icon-calendar"></i><span ng-if="o.tooltip != undefined">&nbsp;<i tooltip="{{o.tooltip}}" class="icon-info-sign"></i></span>&nbsp;Begin Date</span>
+                  <!--input(type="text", datepicker-popup="MM-dd-yyyy", ng-model="beginValue", open="beginValueOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")-->
+                  <input type="text" datepicker-popup="MM-dd-yyyy" ng-change="resetOtherFields(dbRefIndex, fieldIndex, 'beginValue')" ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].beginValue" open="beginValueOpened" min="minDate" max="'2016-06-22'" datepicker-options="dateOptions" show-weeks="false" ng-required="true"/><span>&nbsp;<i ng-click="openBeginDate()" class="icon-calendar"></i><span ng-if="o.tooltip != undefined">&nbsp;<i tooltip="{{o.tooltip}}" class="icon-info-sign"></i></span>&nbsp;Begin Date</span>
                 </div>
                 <div class="form-horizontal">
-                  <!--input(type="text", datepicker-popup="MM-dd-yyyy", ng-model="endDate", open="endDateOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")-->
-                  <input type="text" datepicker-popup="MM-dd-yyyy" ng-change="resetOtherFields(dbRefIndex, fieldIndex, 'beginDate')" ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].endDate" open="endDateOpened" min="minDate" max="'2016-06-22'" datepicker-options="dateOptions" show-weeks="false" ng-required="true"/><span>&nbsp;<i ng-click="openEndDate()" class="icon-calendar"></i><span ng-if="o.tooltip != undefined">&nbsp;<i tooltip="{{o.tooltip}}" class="icon-info-sign"></i></span>&nbsp;End Date</span>
+                  <!--input(type="text", datepicker-popup="MM-dd-yyyy", ng-model="endValue", open="endValueOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")-->
+                  <input type="text" datepicker-popup="MM-dd-yyyy" ng-change="resetOtherFields(dbRefIndex, fieldIndex, 'beginValue')" ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].endValue" open="endValueOpened" min="minDate" max="'2016-06-22'" datepicker-options="dateOptions" show-weeks="false" ng-required="true"/><span>&nbsp;<i ng-click="openEndDate()" class="icon-calendar"></i><span ng-if="o.tooltip != undefined">&nbsp;<i tooltip="{{o.tooltip}}" class="icon-info-sign"></i></span>&nbsp;End Date</span>
                 </div>
               </div>
               <div ng-if="_.contains(['int', 'float', 'decimal', 'number'], dataSet.dbReferences[dbRefIndex].fields[fieldIndex].DATA_TYPE)">

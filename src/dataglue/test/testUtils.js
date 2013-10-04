@@ -148,7 +148,7 @@
         return utils.isUnixOffset('aaaaaaaaaaaaa').should.be["false"];
       });
     });
-    return describe('#isUnixTimestamp ', function() {
+    describe('#isUnixTimestamp ', function() {
       it('parse a unix timestamp', function() {
         return utils.isUnixTimestamp(1230768000).should.be["true"];
       });
@@ -163,6 +163,120 @@
       });
       return it('parse a string of length 13', function() {
         return utils.isUnixTimestamp('aaaaaaaaaaaaa').should.be["false"];
+      });
+    });
+    return describe('#formatFieldValue ', function() {
+      describe('SQL Injection', function() {
+        return it("parse anything' OR 'x'='x", function() {
+          return utils.formatFieldValue({
+            DATA_TYPE: 'varchar'
+          }, "anything' OR 'x'='x").should.equal("'anything\\' OR \\'x\\'=\\'x'");
+        });
+      });
+      it('parse undefined', function() {
+        return (function() {
+          return utils.formatFieldValue({
+            COLUMN_NAME: 'a',
+            DATA_TYPE: 'int'
+          }, void 0);
+        }).should["throw"]("Could not format undefined value for field a!");
+      });
+      it('parse null', function() {
+        return utils.formatFieldValue({
+          DATA_TYPE: 'dosntmatter'
+        }, "null").should.equal('NULL');
+      });
+      it('parse NULL', function() {
+        return utils.formatFieldValue({
+          DATA_TYPE: 'dosntmatter'
+        }, "NULL").should.equal('NULL');
+      });
+      describe('#nonPrecision ', function() {
+        it('parse actual int', function() {
+          return utils.formatFieldValue({
+            DATA_TYPE: 'int'
+          }, 1.0).should.equal(1);
+        });
+        it('parse int that is a float', function() {
+          return utils.formatFieldValue({
+            DATA_TYPE: 'int'
+          }, 1.1).should.equal(1);
+        });
+        it('parse int that is a string', function() {
+          return utils.formatFieldValue({
+            DATA_TYPE: 'int'
+          }, "1").should.equal(1);
+        });
+        return it('parse int that is a string but not parsable', function() {
+          return (function() {
+            return utils.formatFieldValue({
+              DATA_TYPE: 'int'
+            }, "({a: 1})");
+          }).should["throw"]("You said ({a: 1}) was a numeric type but it couldn't be parsed as a string and it wasn't a number!");
+        });
+      });
+      describe('#precision ', function() {
+        it('parse actual float', function() {
+          return utils.formatFieldValue({
+            DATA_TYPE: 'float'
+          }, 1.1).should.equal(1.1);
+        });
+        it('parse float that is an int', function() {
+          return utils.formatFieldValue({
+            DATA_TYPE: 'float'
+          }, 1).should.equal(1);
+        });
+        return it('parse float that is a string', function() {
+          return utils.formatFieldValue({
+            DATA_TYPE: 'float'
+          }, "1.3").should.equal(1.3);
+        });
+      });
+      describe('#dateTypes', function() {
+        return it('parse actual datetime', function() {
+          return utils.formatFieldValue({
+            DATA_TYPE: 'datetime'
+          }, '2013-09-01 00:00:00', 'sql').should.equal('2013-09-01T00:00:00.000Z');
+        });
+      });
+      describe('#stringTypes', function() {
+        return it('parse actual string', function() {
+          return utils.formatFieldValue({
+            DATA_TYPE: 'varchar'
+          }, 'Hello World').should.equal("'Hello World'");
+        });
+      });
+      return describe('#booleanTypes', function() {
+        it('parse 1', function() {
+          return utils.formatFieldValue({
+            DATA_TYPE: 'bool'
+          }, 1).should.equal('TRUE');
+        });
+        it('parse yes', function() {
+          return utils.formatFieldValue({
+            DATA_TYPE: 'bool'
+          }, 'yes').should.equal('TRUE');
+        });
+        it('parse true', function() {
+          return utils.formatFieldValue({
+            DATA_TYPE: 'bool'
+          }, true).should.equal('TRUE');
+        });
+        it('parse 0', function() {
+          return utils.formatFieldValue({
+            DATA_TYPE: 'bool'
+          }, 0).should.equal('FALSE');
+        });
+        it('parse n', function() {
+          return utils.formatFieldValue({
+            DATA_TYPE: 'bool'
+          }, 'n').should.equal('FALSE');
+        });
+        return it('parse false', function() {
+          return utils.formatFieldValue({
+            DATA_TYPE: 'bool'
+          }, false).should.equal('FALSE');
+        });
       });
     });
   });

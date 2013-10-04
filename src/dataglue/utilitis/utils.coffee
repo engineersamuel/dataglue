@@ -2,6 +2,7 @@ _           = require 'lodash'
 moment      = require 'moment'
 logger      = require('tracer').colorConsole(exports.logger_config)
 prettyjson  = require 'prettyjson'
+mysql       = require('mysql')
 
 exports.logger_config =
   level: if process.env.OPENSHIFT_DATA_DIR is undefined then 'debug' else 'info'
@@ -19,6 +20,59 @@ exports.resolveEnvVar = (envVar) ->
 # Convenience method to verify a field exists and has a valid value
 exports.verifyPropertyExists = (obj, field) ->
   if (_.has obj, field) and (obj[field] isnt undefined) and (obj[field] isnt '') then return true else return false
+
+exports.dateDateTypes = ['date', 'datetime']
+exports.numericalDataTypes = ['numerical', 'number', 'int', 'tinyint', 'float', 'decimal', 'double']
+exports.integerDataTypes = ['int', 'smallint', 'bigint', 'tinyint', 'integer']
+exports.stringDataTypes = ['varchar', 'string', 'text']
+exports.booleanDataTypes = ['bool', 'boolean']
+
+# Field is {COLUMN_NAME: xyz, DATA_TYPE, xzy}, type is ['sql', 'mongo']
+exports.formatFieldValue = (field, value, type) ->
+  if not value? then throw Error("Could not format undefined value for field #{field.COLUMN_NAME}!")
+  if /^null$/i.test value then return 'NULL'
+
+  output = field.COLUMN_NAME
+  # Dates
+  if _.contains exports.dateDateTypes, field.DATA_TYPE
+    if type is 'sql'
+      #output = "TIMESTAMP('#{moment.utc(value, 'YYYY-MM-DD').toISOString()}')"
+      output = moment.utc(value, 'YYYY-MM-DD').toISOString()
+    else if type is 'mongo'
+      output = moment.utc(value, 'YYYY-MM-DD').toDate()
+
+  # Numbers
+  else if _.contains exports.numericalDataTypes, field.DATA_TYPE
+    # If a String see if the data type is an int or float and parse accordingly
+    if _.isString value
+      # If in an integer data type then just parseInt
+      if _.contains exports.integerDataTypes, field.DATA_TYPE
+        output = parseInt(value)
+      # Otherwise treat this as a precision value
+      else
+        output = parseFloat(value)
+    else if _.isNumber value
+      if _.contains exports.integerDataTypes, field.DATA_TYPE
+        output = parseInt(value)
+        # Otherwise treat this as a precision value
+      else
+        output = parseFloat(value)
+
+    if _.isNaN output
+      throw Error("You said #{value} was a numeric type but it couldn't be parsed as a string and it wasn't a number!")
+
+  # Strings
+  else if _.contains exports.stringDataTypes, field.DATA_TYPE
+    # Piggy back on the work already done to prevent SQL injection in the node-mysql package
+    # https://github.com/felixge/node-mysql/blob/89a993040f115efc1c00aa117d3ff6eb9d419c5c/lib/protocol/SqlString.js
+    return mysql.escape value
+
+  # Boolean values as defined in truth
+  else if _.contains exports.booleanDataTypes, field.DATA_TYPE
+    return if exports.truthy value then 'TRUE' else 'FALSE'
+
+
+  return output
 
 exports.truthy = (obj) ->
   if obj is undefined
