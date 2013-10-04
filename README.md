@@ -57,13 +57,63 @@ Every time you push, everything in your remote application path gets recreated
 please store long term items like an sqlite database in data which will
 persist between pushes of your repo.
 
+### Starting with this git repo and pushing to Openshift
+* Clone dataglue from github
+* Create the openshift project in a seperate directory so Openshift will create the app on the server
+    `rhc create-app -g <gear size name> dataglue "http://cartreflect-claytondev.rhcloud.com/reflect?github=wshearn/openshift-origin-cartridge-nodejs"`
+* Add the mongo cartridge:
+    `rhc cartridge add mongodb-2.2 -a dataglue`
+* SSH into openshift mongo and add the master ref pointing to ENV creds for the mongo cartridge
+~~~
+rhc ssh dataglue
+vim $OPENSHIFT_DATA_DIR/.dataglue-settings.yml
+
+    env: 'dev'
+
+    master_database:
+        dev:
+            type: 'mongo'
+            host: "127.0.0.1"
+            port: "27017"
+            user: ""
+            pass: ""
+            db: "dataglue"
+            collection: "refs"
+            cache: "cache"
+        prod:
+            type: 'mongo'
+            host: "$OPENSHIFT_MONGODB_DB_HOST"
+            port: "$OPENSHIFT_MONGODB_DB_PORT"
+            user: "$OPENSHIFT_MONGODB_DB_USERNAME"
+            pass: "$OPENSHIFT_MONGODB_DB_PASSWORD"
+            db: "$OPENSHIFT_APP_NAME"
+            collection: "ref"
+            cache: "cache"
+~~~
+* Go to the directory you cloned dataglue to and open the .git/config and add the openshift remote
+~~~
+[remote "openshift"]
+    fetch = +refs/heads/*:refs/remotes/origin/*
+    url = ssh://<hash>@<path to openshift>.com/~/git/dataglue.git/
+~~~
+* Force push to openshift
+~~~
+
+~~~
+
+
+
 ### Project creation and internals
 To create this github project which is also pushed to openshift:
 
+* Cartridge https://github.com/wshearn/openshift-origin-cartridge-nodejs
 * Create the github project and do the intial push
 * Create the openshift project in a seperate directory so Openshift will create the app on the server
-* Add the mongo cartridge: `rhc cartridge add mongodb-2.2 -a dataglue`
-* In your project directory: git pull ssh://<hash>@<path to openshift>.com/~/git/dataglue.git/
+    `rhc create-app -g <gear size name> dataglue "http://cartreflect-claytondev.rhcloud.com/reflect?github=wshearn/openshift-origin-cartridge-nodejs"`
+* Add the mongo cartridge:
+    `rhc cartridge add mongodb-2.2 -a dataglue`
+* In your project directory:
+    `git pull ssh://<hash>@<path to openshift>.com/~/git/dataglue.git/`
 * git commit -a -m "fixing OpenShift merge"
 * git push ssh://<hash>@<path to openshift>.com/~/git/dataglue.git/ master
 * Edit the .git/config and add
