@@ -36,6 +36,9 @@
         $scope.graphTypes = dbService.graphTypes;
         $scope.limits = dbService.limits;
         $scope.whereConds = dbService.whereConds;
+        $scope.rangeConds = dbService.rangeConds;
+        $scope.beginRangeConds = dbService.beginRangeConds;
+        $scope.endRangeConds = dbService.endRangeConds;
         $scope.optionsSetOnField = function(dbRefIdx, fieldIdx) {
           var field, _ref, _ref1, _ref2, _ref3;
 

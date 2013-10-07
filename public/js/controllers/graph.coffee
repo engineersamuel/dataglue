@@ -49,6 +49,9 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
 
       # Sync up the whereConds
       $scope.whereConds = dbService.whereConds
+      $scope.rangeConds = dbService.rangeConds
+      $scope.beginRangeConds = dbService.beginRangeConds
+      $scope.endRangeConds = dbService.endRangeConds
 
       # Returns true if there is an aggregation, group by, or where set on the field
       $scope.optionsSetOnField = (dbRefIdx, fieldIdx) ->

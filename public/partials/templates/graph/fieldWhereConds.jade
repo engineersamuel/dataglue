@@ -1,3 +1,30 @@
+mixin singleCondRestrictHeader()
+    h4
+        span
+            | Restrict
+            span.dataglue-green &nbsp;{{dataSet.dbReferences[dbRefIndex].fields[fieldIndex].COLUMN_NAME}}
+            | &nbsp;by a specific condition
+
+mixin rangeCondRestrictHeader()
+    h4 Or by a range of values
+
+// Not putting dates in here yet since it gets a bit messy, regular inputs work best
+mixin valueForm(optionsName, condName, condValue, type, optionalText)
+    div.form-horizontal
+        span
+            //beginCond -- beginRangeConds
+            select(ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].#{condName}", ng-options="x.value as x.label for x in #{optionsName}")
+                option(value="")
+            | &nbsp;
+            if type == 'number'
+                input(type="number", placeholder="Enter a number", ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].condValue", ng-disabled="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].cond === null")
+            else if type == 'text'
+                input(type="text", placeholder="Enter a string/text", ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].#{condValue}", ng-disabled="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].#{condName} === null")
+            | &nbsp;
+            span(ng-if="o.tooltip != undefined")
+                | &nbsp;
+                i.icon-info-sign(tooltip="{{o.tooltip}}")
+            | &nbsp;#{optionalText}
 
 div(ng-if="_.contains(['date', 'datetime'], dataSet.dbReferences[dbRefIndex].fields[fieldIndex].DATA_TYPE)")
     div.form-horizontal
@@ -22,23 +49,12 @@ div(ng-if="_.contains(['date', 'datetime'], dataSet.dbReferences[dbRefIndex].fie
             | &nbsp;End Date
 
 div(ng-if="_.contains(['int', 'float', 'decimal', 'number'], dataSet.dbReferences[dbRefIndex].fields[fieldIndex].DATA_TYPE)")
-    div.form-inline
-        div.form-group
-            label {{ dataSet.dbReferences[dbRefIndex].fields[fieldIndex].COLUMN_NAME }}&nbsp;
-            select(ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].cond", ng-options="x.value as x.label for x in whereConds")
-                option(value="")
-        div.form-group
-            | &nbsp;
-            input.form-control(type="number", placeholder="Enter a number", ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].condValue", ng-disabled="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].cond === null")
-
+    +singleCondRestrictHeader
+    +valueForm('whereConds', 'cond', 'condValue', 'number', '')
 div(ng-if="_.contains(['varchar', 'text', 'longtext'], dataSet.dbReferences[dbRefIndex].fields[fieldIndex].DATA_TYPE)")
-    div.form-inline
-        div.form-group
-            label {{ dataSet.dbReferences[dbRefIndex].fields[fieldIndex].COLUMN_NAME }}&nbsp;
-            select(ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].cond", ng-options="x.value as x.label for x in whereConds")
-                option(value="")
-            | &nbsp;
-            input.form-control(type="text", placeholder="Enter a string/text", ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].condValue", ng-disabled="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].cond === null")
-        //div.form-group
-            | &nbsp;
-            input.form-control(type="text", placeholder="Enter a string/text", ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].condValue", ng-disabled="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].cond === null")
+    +singleCondRestrictHeader
+    +valueForm('whereConds', 'cond', 'condValue', 'text', '')
+    hr
+    +rangeCondRestrictHeader
+    +valueForm('beginRangeConds', 'beginCond', 'beginCondValue', 'text', 'Begin')
+    +valueForm('endRangeConds', 'endCond', 'endCondValue', 'text', 'End')

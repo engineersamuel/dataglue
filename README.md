@@ -139,9 +139,7 @@ To create this github project which is also pushed to openshift:
  * For zsh, to ~/.zshrc add alias bower='noglob bower'
 
 * Testing
-`npm install -g karma`
-`npm install mocha --save-dev`
-`npm install should --save-dev`
+`npm install`
 `mocha --require should --compilers coffee:coffee-script -R spec src/dataglue/test/*.coffee`
 
 ### References
