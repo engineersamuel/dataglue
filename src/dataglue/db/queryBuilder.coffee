@@ -5,7 +5,7 @@ _             = require 'lodash'
 logger        = require('tracer').colorConsole(utils.logger_config)
 prettyjson    = require 'prettyjson'
 moment        = require 'moment'
-
+mysql         = require 'mysql'  # Primarily for the mysql.escape function
 
 QueryBuilder = {}
 
@@ -65,28 +65,34 @@ QueryBuilder.buildSqlQuery = (dbReference, callback) ->
         sql.field(fieldName)
 
       ################################################################################################################
-      # See if a begin and end date are set
-      ################################################################################################################
-      # Handle the beginValue and endValue as dates for dates
-      if _.contains ['date', 'datetime'], field.DATA_TYPE
-        if utils.verifyPropertyExists field, 'beginValue'
-          sql.where("#{fieldName} >= TIMESTAMP(#{utils.formatFieldValue(field, field.beginValue, 'sql')})")
-        if utils.verifyPropertyExists field, 'endValue'
-#          sql.where("#{fieldName} < TIMESTAMP('#{moment.utc(field.endValue, 'YYYY-MM-DD').toISOString()}')")
-          sql.where("#{fieldName} >= TIMESTAMP(#{utils.formatFieldValue(field, field.endValue, 'sql')})")
-
-      ################################################################################################################
-      # See if a where condition is set
+      # See if a single value condition is set
       ################################################################################################################
       if utils.verifyPropertyExists field, 'cond'
-        if field.cond is 'equal'
-          sql.where("#{fieldName} = ?", field.condValue)
-        if field.cond is 'notEqual'
-          sql.where("#{fieldName} != ?", field.condValue)
-        if field.cond is 'like'
-          sql.where("#{fieldName} LIKE ?", field.condValue)
-        if field.cond is 'between'
-          sql.where("#{fieldName} >= ? AND #{fieldName} < ?", field.beginValue, field.endValue)
+        # Escape the cond to prevent malicious input, but replace the ' with nothing
+        cond = mysql.escape(field.cond).replace /'/g, ""
+        # Since the field.cond is an operator like =, !=, LIKE, ect.. escape that value and insert it right in
+        sql.where("#{fieldName} #{cond} ?", field.condValue)
+
+      ################################################################################################################
+      # See if a range value condition is set
+      ################################################################################################################
+      # Since the field.cond is an operator like =, !=, LIKE, ect.. escape that value and insert it right in
+      if utils.verifyPropertyExists field, 'beginCond'
+        # Escape the cond to prevent malicious input, but replace the ' with nothing
+        beginCond = mysql.escape(field.beginCond).replace /'/g, ""
+        if _.contains ['date', 'datetime'], field.DATA_TYPE
+          sql.where("#{fieldName} #{beginCond} TIMESTAMP(#{utils.formatFieldValue(field, field.beginValue, 'sql')})")
+        else
+          sql.where("#{fieldName} #{beginCond} ?", utils.formatFieldValue(field, field.beginValue, 'sql'))
+
+      if utils.verifyPropertyExists field, 'endCond'
+        # Escape the cond to prevent malicious input, but replace the ' with nothing
+        endCond = mysql.escape(field.endCond).replace /'/g, ""
+        if _.contains ['date', 'datetime'], field.DATA_TYPE
+          sql.where("#{fieldName} #{endCond} TIMESTAMP(#{utils.formatFieldValue(field, field.endValue, 'sql')})")
+        else
+          sql.where("#{fieldName} #{endCond} ?", utils.formatFieldValue(field, field.endValue, 'sql'))
+
 
       ################################################################################################################
       # Group By's require the group and the field
@@ -230,20 +236,26 @@ QueryBuilder.buildMongoQuery = (dbReference, callback) ->
   _.each dbReference.fields, (field) ->
     if not field['excluded']?
       fieldName = field.COLUMN_NAME
+      ################################################################################################################
+      # See if a single value condition is set
+      ################################################################################################################
+      if utils.verifyPropertyExists field, 'cond'
+        hash = {}
+        hash[utils.sqlToMongoOperand(field.cond)] = utils.formatFieldValue(field, field.condValue, 'mongo', {regex: /LIKE/i.test(field.cond)})
+        addObjToMatch fieldName, hash
 
-      # Handle the beginValue and endValue as dates for dates
-      if _.contains ['date', 'datetime'], field.DATA_TYPE
-        if utils.verifyPropertyExists field, 'beginValue'
-          # The date localization can be tricky to control.  By simply reading in only the YYYY-MM-DD and UTC'ing it
-          # We have parity with Mongo
-          #addObjToMatch fieldName, {'$gt': moment.utc(field.beginValue, 'YYYY-MM-DD').toDate()}
-          addObjToMatch fieldName, {'$gt': utils.formatFieldValue(field, field.beginValue, 'mongo')}
-          #theMatch['$match'][fieldName] =
+      ################################################################################################################
+      # See if a range value condition is set
+      ################################################################################################################
+      if utils.verifyPropertyExists field, 'beginCond'
+        hash = {}
+        hash[utils.sqlToMongoOperand(field.beginCond)] = utils.formatFieldValue(field, field.beginValue, 'mongo')
+        addObjToMatch fieldName, hash
 
-        if utils.verifyPropertyExists field, 'endValue'
-          addObjToMatch fieldName, {'$lte': utils.formatFieldValue(field, field.endValue, 'mongo')}
-          #theMatch['$match'][fieldName] = {'$lte': moment(field.endValue)}
-
+      if utils.verifyPropertyExists field, 'endCond'
+        hash = {}
+        hash[utils.sqlToMongoOperand(field.endCond)] = utils.formatFieldValue(field, field.endValue, 'mongo')
+        addObjToMatch fieldName, hash
 
       if utils.verifyPropertyExists field, 'groupBy'
         # Mongo likes to always hae the field exist in the doc if grouping on

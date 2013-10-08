@@ -95,7 +95,7 @@
 
         ref = _.cloneDeep(simpleMysqlDbReference);
         ref.fields[0].aggregation = "count";
-        ref.fields[0].cond = 'equal';
+        ref.fields[0].cond = '=';
         ref.fields[0].condValue = 1;
         ref.fields[1].groupBy = "month";
         expectedSql = 'SELECT COUNT(id) AS "y", created_date, DATE_FORMAT(created_date, \'%Y-%m\') AS "x" FROM some_schema.some_table WHERE (id = 1) GROUP BY x LIMIT 1000';
@@ -112,7 +112,7 @@
 
         ref = _.cloneDeep(simpleMysqlDbReference);
         ref.fields[0].aggregation = "count";
-        ref.fields[0].cond = 'notEqual';
+        ref.fields[0].cond = '!=';
         ref.fields[0].condValue = 1;
         ref.fields[1].groupBy = "month";
         expectedSql = 'SELECT COUNT(id) AS "y", created_date, DATE_FORMAT(created_date, \'%Y-%m\') AS "x" FROM some_schema.some_table WHERE (id != 1) GROUP BY x LIMIT 1000';
@@ -129,10 +129,29 @@
 
         ref = _.cloneDeep(simpleMysqlDbReference);
         ref.fields[0].aggregation = "count";
-        ref.fields[0].cond = 'gt';
+        ref.fields[0].cond = '>';
         ref.fields[0].condValue = 1;
         ref.fields[1].groupBy = "month";
         expectedSql = 'SELECT COUNT(id) AS "y", created_date, DATE_FORMAT(created_date, \'%Y-%m\') AS "x" FROM some_schema.some_table WHERE (id > 1) GROUP BY x LIMIT 1000';
+        return queryBuilder.buildQuery(ref, function(err, output) {
+          if (err) {
+            return done(err);
+          }
+          output.query.should.equal(expectedSql);
+          return done();
+        });
+      });
+      it('build a mysql query where 1 < id <= 10', function(done) {
+        var expectedSql, ref;
+
+        ref = _.cloneDeep(simpleMysqlDbReference);
+        ref.fields[0].aggregation = "count";
+        ref.fields[0].beginCond = '>';
+        ref.fields[0].beginValue = 1;
+        ref.fields[0].endCond = '<=';
+        ref.fields[0].endValue = 10;
+        ref.fields[1].groupBy = "month";
+        expectedSql = 'SELECT COUNT(id) AS "y", created_date, DATE_FORMAT(created_date, \'%Y-%m\') AS "x" FROM some_schema.some_table WHERE (id > \'1\') AND (id <= \'10\') GROUP BY x LIMIT 1000';
         return queryBuilder.buildQuery(ref, function(err, output) {
           if (err) {
             return done(err);
@@ -563,12 +582,14 @@
           return done();
         });
       });
-      return it('group by month between 2013-09-01 and 2013-10-01', function(done) {
+      it('group by month between 2013-09-01 and 2013-10-01', function(done) {
         var expectedQuery, ref;
 
         ref = _.cloneDeep(simpleMongoDbReference);
         ref.fields[1].groupBy = "month";
+        ref.fields[1].beginCond = ">";
         ref.fields[1].beginValue = "2013-09-01";
+        ref.fields[1].endCond = "<=";
         ref.fields[1].endValue = "2013-10-01";
         expectedQuery = [
           {
@@ -597,6 +618,104 @@
               "x": {
                 "$concat": ["$_id.year", "-", "$_id.month"]
               }
+            }
+          }
+        ];
+        return queryBuilder.buildQuery(ref, function(err, output) {
+          if (err) {
+            return done(err);
+          }
+          output.query.should.eql(expectedQuery);
+          return done();
+        });
+      });
+      it('mongo query where 1 <= id < 10', function(done) {
+        var expectedQuery, ref;
+
+        ref = _.cloneDeep(simpleMongoDbReference);
+        ref.fields[0].aggregation = 'count';
+        ref.fields[0].beginCond = '>=';
+        ref.fields[0].beginValue = 1;
+        ref.fields[0].endCond = '<';
+        ref.fields[0].endValue = 10;
+        ref.fields.push({
+          COLUMN_NAME: "geo",
+          DATA_TYPE: "varchar",
+          groupBy: 'field'
+        });
+        expectedQuery = [
+          {
+            '$match': {
+              "id": {
+                "$gte": "1",
+                "$lt": "10"
+              },
+              "geo": {
+                "$exists": true
+              }
+            }
+          }, {
+            '$group': {
+              "_id": {
+                "x": "$geo"
+              },
+              "count": {
+                "$sum": 1
+              }
+            }
+          }, {
+            "$project": {
+              "_id": 0,
+              "x": "$_id.x",
+              "y": "$count"
+            }
+          }
+        ];
+        return queryBuilder.buildQuery(ref, function(err, output) {
+          if (err) {
+            return done(err);
+          }
+          output.query.should.eql(expectedQuery);
+          return done();
+        });
+      });
+      return it('mongo query regex id like ^1$', function(done) {
+        var expectedQuery, ref, regx;
+
+        ref = _.cloneDeep(simpleMongoDbReference);
+        ref.fields[0].aggregation = 'count';
+        ref.fields[0].cond = 'LIKE';
+        ref.fields[0].condValue = '^1$';
+        ref.fields.push({
+          COLUMN_NAME: "geo",
+          DATA_TYPE: "varchar",
+          groupBy: 'field'
+        });
+        regx = new RegExp(ref.fields[0].condValue);
+        expectedQuery = [
+          {
+            '$match': {
+              "id": {
+                "$regex": "" + (regx.toString()) + "i"
+              },
+              "geo": {
+                "$exists": true
+              }
+            }
+          }, {
+            '$group': {
+              "_id": {
+                "x": "$geo"
+              },
+              "count": {
+                "$sum": 1
+              }
+            }
+          }, {
+            "$project": {
+              "_id": 0,
+              "x": "$_id.x",
+              "y": "$count"
             }
           }
         ];

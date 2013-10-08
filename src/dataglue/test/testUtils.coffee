@@ -144,16 +144,20 @@ describe 'utils', ->
     describe '#stringTypes', ->
       it 'parse actual string', ->
         utils.formatFieldValue({DATA_TYPE: 'varchar'}, 'Hello World').should.equal "'Hello World'"
+      it 'parse a regex mongo string', ->
+        utils.formatFieldValue({DATA_TYPE: 'varchar'}, '^1$', 'mongo', {regex: true}).toString().should.equal '/^1$/i'
     describe '#booleanTypes', ->
       it 'parse 1', ->
-        utils.formatFieldValue({DATA_TYPE: 'bool'}, 1).should.equal 'TRUE'
+        utils.formatFieldValue({DATA_TYPE: 'bool'}, 1, 'sql').should.equal 'TRUE'
       it 'parse yes', ->
-        utils.formatFieldValue({DATA_TYPE: 'bool'}, 'yes').should.equal 'TRUE'
+        utils.formatFieldValue({DATA_TYPE: 'bool'}, 'yes', 'sql').should.equal 'TRUE'
       it 'parse true', ->
-        utils.formatFieldValue({DATA_TYPE: 'bool'}, true).should.equal 'TRUE'
+        utils.formatFieldValue({DATA_TYPE: 'bool'}, true, 'sql').should.equal 'TRUE'
       it 'parse 0', ->
-        utils.formatFieldValue({DATA_TYPE: 'bool'}, 0).should.equal 'FALSE'
+        utils.formatFieldValue({DATA_TYPE: 'bool'}, 0, 'sql').should.equal 'FALSE'
       it 'parse n', ->
-        utils.formatFieldValue({DATA_TYPE: 'bool'}, 'n').should.equal 'FALSE'
+        utils.formatFieldValue({DATA_TYPE: 'bool'}, 'n', 'sql').should.equal 'FALSE'
       it 'parse false', ->
-        utils.formatFieldValue({DATA_TYPE: 'bool'}, false).should.equal 'FALSE'
+        utils.formatFieldValue({DATA_TYPE: 'bool'}, false, 'sql').should.equal 'FALSE'
+      it 'parse false', ->
+        utils.formatFieldValue({DATA_TYPE: 'bool'}, false, 'mongo').should.be.false

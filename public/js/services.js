@@ -70,8 +70,8 @@ define(['angular', 'jquery', 'underscore', 'pnotify'], function (angular, $, _) 
 
             // Graph types -- range: true allows for filtering if the condition is specific just to a range
             service.whereConds = [
-                {name: 'cond', value: 'equal', label: '='},
-                {name: 'cond', value: 'notEqual', label: '!='},
+                {name: 'cond', value: '=', label: '='},
+                {name: 'cond', value: '!=', label: '!='},
                 {name: 'cond', value: 'like', label: 'Like'},
                 {name: 'cond', value: 'gt', label: '>', range: true, begin: true},
                 {name: 'cond', value: 'gte', label: '>=', range: true, begin: true},

@@ -11,6 +11,7 @@ mongodb       = require 'mongodb'
 _             = require 'lodash'
 assert        = require('assert')
 async         = require 'async'
+mysql         = require 'mysql'
 
 sandbox = {}
 sandbox.hashEach = () ->
@@ -227,6 +228,11 @@ sandbox.test_array_concat = () ->
   a = [1, 2]
   b = a.concat [3, 4]
   logger.info prettyjson.render b
+
+sandbox.test_mysql_escape = () ->
+  beginCond = mysql.escape("!=").replace /'/g, ""
+  logger.debug beginCond
+
 #sandbox.hashEach()
 #sandbox.test_compress('Hello World!')
 #sandbox.test_decompress('eJzzSM3JyVcIzy/KSVEEABxJBD4=')
@@ -248,4 +254,5 @@ sandbox.test_array_concat = () ->
 #sandbox.test_collections()
 #sandbox.test_substring()
 #sandbox.test_fields()
-sandbox.test_array_concat()
+#sandbox.test_array_concat()
+sandbox.test_mysql_escape()

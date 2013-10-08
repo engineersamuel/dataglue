@@ -46,9 +46,10 @@
 
   exports.booleanDataTypes = ['bool', 'boolean'];
 
-  exports.formatFieldValue = function(field, value, type) {
-    var output;
+  exports.formatFieldValue = function(field, value, type, opts) {
+    var output, regex;
 
+    regex = exports.truthy(opts != null ? opts.regex : void 0);
     if (value == null) {
       throw Error("Could not format undefined value for field " + field.COLUMN_NAME + "!");
     }
@@ -56,7 +57,10 @@
       return 'NULL';
     }
     output = field.COLUMN_NAME;
-    if (_.contains(exports.dateDateTypes, field.DATA_TYPE)) {
+    if (regex) {
+      output = new RegExp("" + value, 'i');
+      output = output.toString();
+    } else if (_.contains(exports.dateDateTypes, field.DATA_TYPE)) {
       if (type === 'sql') {
         output = moment.utc(value, 'YYYY-MM-DD').toISOString();
       } else if (type === 'mongo') {
@@ -82,10 +86,14 @@
     } else if (_.contains(exports.stringDataTypes, field.DATA_TYPE)) {
       return mysql.escape(value);
     } else if (_.contains(exports.booleanDataTypes, field.DATA_TYPE)) {
-      if (exports.truthy(value)) {
-        return 'TRUE';
-      } else {
-        return 'FALSE';
+      if (type === 'sql') {
+        if (exports.truthy(value)) {
+          return 'TRUE';
+        } else {
+          return 'FALSE';
+        }
+      } else if (type === 'mongo') {
+        return exports.truthy(value);
       }
     }
     return output;
@@ -238,6 +246,27 @@
       });
     }
     return item;
+  };
+
+  exports.sqlToMongoOperand = function(op) {
+    switch (op.toLowerCase()) {
+      case '<':
+        return '$lt';
+      case '<=':
+        return '$lte';
+      case '>':
+        return '$gt';
+      case '>=':
+        return '$gte';
+      case '=':
+        return '$eq';
+      case '!=':
+        return '$ne';
+      case 'like':
+        return '$regex';
+      default:
+        return raise(Error("op: " + op + " could not be translated"));
+    }
   };
 
 }).call(this);

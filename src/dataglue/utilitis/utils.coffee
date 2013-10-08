@@ -28,13 +28,22 @@ exports.stringDataTypes = ['varchar', 'string', 'text']
 exports.booleanDataTypes = ['bool', 'boolean']
 
 # Field is {COLUMN_NAME: xyz, DATA_TYPE, xzy}, type is ['sql', 'mongo']
-exports.formatFieldValue = (field, value, type) ->
+exports.formatFieldValue = (field, value, type, opts) ->
+
+  # Pass in {regex: true} to indicate the value is a regex
+  regex = exports.truthy opts?.regex
+
   if not value? then throw Error("Could not format undefined value for field #{field.COLUMN_NAME}!")
   if /^null$/i.test value then return 'NULL'
 
   output = field.COLUMN_NAME
+  if regex
+    output = new RegExp("#{value}", 'i')
+    output = output.toString()
+#    logger.debug output
+#    logger.debug JSON.stringify(output)
   # Dates
-  if _.contains exports.dateDateTypes, field.DATA_TYPE
+  else if _.contains exports.dateDateTypes, field.DATA_TYPE
     if type is 'sql'
       #output = "TIMESTAMP('#{moment.utc(value, 'YYYY-MM-DD').toISOString()}')"
       output = moment.utc(value, 'YYYY-MM-DD').toISOString()
@@ -69,7 +78,10 @@ exports.formatFieldValue = (field, value, type) ->
 
   # Boolean values as defined in truth
   else if _.contains exports.booleanDataTypes, field.DATA_TYPE
-    return if exports.truthy value then 'TRUE' else 'FALSE'
+    if type is 'sql'
+      return if exports.truthy value then 'TRUE' else 'FALSE'
+    else if type is 'mongo'
+      return exports.truthy value
 
 
   return output
@@ -176,3 +188,14 @@ exports.parseX = (item, opts={}) ->
 
   #logger.debug "returning: #{item}"
   return item
+
+exports.sqlToMongoOperand = (op) ->
+  switch op.toLowerCase()
+    when '<' then '$lt'
+    when '<=' then '$lte'
+    when '>' then '$gt'
+    when '>=' then '$gte'
+    when '=' then '$eq'
+    when '!=' then '$ne'
+    when 'like' then '$regex'
+    else raise Error("op: #{op} could not be translated")

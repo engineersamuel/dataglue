@@ -140,7 +140,7 @@ To create this github project which is also pushed to openshift:
 
 * Testing
 `npm install`
-`mocha --require should --compilers coffee:coffee-script -R spec src/dataglue/test/*.coffee`
+`grunt mochaTest`
 
 ### References
 * [Getting Started with Openshift](https://www.openshift.com/get-started)

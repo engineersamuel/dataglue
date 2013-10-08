@@ -240,42 +240,54 @@
         });
       });
       describe('#stringTypes', function() {
-        return it('parse actual string', function() {
+        it('parse actual string', function() {
           return utils.formatFieldValue({
             DATA_TYPE: 'varchar'
           }, 'Hello World').should.equal("'Hello World'");
+        });
+        return it('parse a regex mongo string', function() {
+          return utils.formatFieldValue({
+            DATA_TYPE: 'varchar'
+          }, '^1$', 'mongo', {
+            regex: true
+          }).toString().should.equal('/^1$/i');
         });
       });
       return describe('#booleanTypes', function() {
         it('parse 1', function() {
           return utils.formatFieldValue({
             DATA_TYPE: 'bool'
-          }, 1).should.equal('TRUE');
+          }, 1, 'sql').should.equal('TRUE');
         });
         it('parse yes', function() {
           return utils.formatFieldValue({
             DATA_TYPE: 'bool'
-          }, 'yes').should.equal('TRUE');
+          }, 'yes', 'sql').should.equal('TRUE');
         });
         it('parse true', function() {
           return utils.formatFieldValue({
             DATA_TYPE: 'bool'
-          }, true).should.equal('TRUE');
+          }, true, 'sql').should.equal('TRUE');
         });
         it('parse 0', function() {
           return utils.formatFieldValue({
             DATA_TYPE: 'bool'
-          }, 0).should.equal('FALSE');
+          }, 0, 'sql').should.equal('FALSE');
         });
         it('parse n', function() {
           return utils.formatFieldValue({
             DATA_TYPE: 'bool'
-          }, 'n').should.equal('FALSE');
+          }, 'n', 'sql').should.equal('FALSE');
+        });
+        it('parse false', function() {
+          return utils.formatFieldValue({
+            DATA_TYPE: 'bool'
+          }, false, 'sql').should.equal('FALSE');
         });
         return it('parse false', function() {
           return utils.formatFieldValue({
             DATA_TYPE: 'bool'
-          }, false).should.equal('FALSE');
+          }, false, 'mongo').should.be["false"];
         });
       });
     });
