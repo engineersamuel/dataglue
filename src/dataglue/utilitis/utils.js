@@ -66,7 +66,11 @@
         output = moment.utc(value, 'YYYY-MM-DD').toDate();
       }
     } else if (_.contains(exports.numericalDataTypes, field.DATA_TYPE)) {
-      if (_.isString(value)) {
+      if (value === true) {
+        output = 1;
+      } else if (value === false) {
+        output = 0;
+      } else if (_.isString(value)) {
         if (_.contains(exports.integerDataTypes, field.DATA_TYPE)) {
           output = parseInt(value);
         } else {

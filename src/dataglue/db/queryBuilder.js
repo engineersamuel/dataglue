@@ -67,7 +67,7 @@
         }
         if (utils.verifyPropertyExists(field, 'cond') && (field.cond != null)) {
           cond = mysql.escape(field.cond).replace(/'/g, "");
-          sql.where("" + fieldName + " " + cond + " ?", field.condValue);
+          sql.where("" + fieldName + " " + cond + " ?", utils.formatFieldValue(field, field.condValue, 'sql'));
         }
         if (utils.verifyPropertyExists(field, 'beginCond') && (field.beginCond != null)) {
           beginCond = mysql.escape(field.beginCond).replace(/'/g, "");

@@ -51,8 +51,13 @@ exports.formatFieldValue = (field, value, type, opts) ->
 
   # Numbers
   else if _.contains exports.numericalDataTypes, field.DATA_TYPE
+    # First see the the input is an actual true or an actual false if so translate to 1 or 0
+    if value is true
+      output = 1
+    else if value is false
+      output = 0
     # If a String see if the data type is an int or float and parse accordingly
-    if _.isString value
+    else if _.isString value
       # If in an integer data type then just parseInt
       if _.contains exports.integerDataTypes, field.DATA_TYPE
         output = parseInt(value)

@@ -52,6 +52,8 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
       $scope.rangeConds = dbService.rangeConds
       $scope.beginRangeConds = dbService.beginRangeConds
       $scope.endRangeConds = dbService.endRangeConds
+      $scope.booleanConds = dbService.booleanConds
+      $scope.booleanOptions = dbService.booleanOptions
 
       # Returns true if there is an aggregation, group by, or where set on the field
       $scope.optionsSetOnField = (dbRefIdx, fieldIdx) ->

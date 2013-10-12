@@ -10,6 +10,17 @@
     <input type="text" datepicker-popup="MM-dd-yyyy" ng-change="resetOtherFields(dbRefIndex, fieldIndex, 'beginValue')" ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].endValue" open="endValueOpened" min="minDate" max="'2016-06-22'" datepicker-options="dateOptions" show-weeks="false" ng-required="true"/><span>&nbsp;<i ng-click="openEndDate()" class="icon-calendar"></i><span ng-if="o.tooltip != undefined">&nbsp;<i tooltip="{{o.tooltip}}" class="icon-info-sign"></i></span>&nbsp;End Date</span>
   </div>
 </div>
+<div ng-if="_.contains(['tinyint', 'boolean'], dataSet.dbReferences[dbRefIndex].fields[fieldIndex].DATA_TYPE)">
+  <h4><span>Restrict<span class="dataglue-green">&nbsp;{{dataSet.dbReferences[dbRefIndex].fields[fieldIndex].COLUMN_NAME}}</span>&nbsp;by a specific condition</span></h4>
+  <div class="form-horizontal"><span>
+      <!--beginCond -- beginRangeConds-->
+      <select ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].cond" ng-options="x.value as x.label for x in booleanConds">
+        <option value=""></option>
+      </select>&nbsp;
+      <select ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].condValue" ng-options="x.value as x.label for x in booleanOptions">
+        <option value=""></option>
+      </select>&nbsp;<span ng-if="o.tooltip != undefined">&nbsp;<i tooltip="{{o.tooltip}}" class="icon-info-sign"></i></span>&nbsp;</span></div>
+</div>
 <div ng-if="_.contains(['int', 'float', 'decimal', 'number'], dataSet.dbReferences[dbRefIndex].fields[fieldIndex].DATA_TYPE)">
   <h4><span>Restrict<span class="dataglue-green">&nbsp;{{dataSet.dbReferences[dbRefIndex].fields[fieldIndex].COLUMN_NAME}}</span>&nbsp;by a specific condition</span></h4>
   <div class="form-horizontal"><span>

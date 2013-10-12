@@ -71,7 +71,7 @@ QueryBuilder.buildSqlQuery = (dbReference, callback) ->
         # Escape the cond to prevent malicious input, but replace the ' with nothing
         cond = mysql.escape(field.cond).replace /'/g, ""
         # Since the field.cond is an operator like =, !=, LIKE, ect.. escape that value and insert it right in
-        sql.where("#{fieldName} #{cond} ?", field.condValue)
+        sql.where("#{fieldName} #{cond} ?", utils.formatFieldValue(field, field.condValue, 'sql'))
 
       ################################################################################################################
       # See if a range value condition is set

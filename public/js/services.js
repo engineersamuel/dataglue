@@ -70,7 +70,7 @@ define(['angular', 'jquery', 'underscore', 'base64', 'pnotify'], function (angul
 
             // Graph types -- range: true allows for filtering if the condition is specific just to a range
             service.whereConds = [
-                {name: 'cond', value: '=', label: '='},
+                {name: 'cond', value: '=', label: '=', boolean: true},
                 {name: 'cond', value: '!=', label: '!='},
                 {name: 'cond', value: 'like', label: 'Like'},
                 {name: 'cond', value: 'gt', label: '>', range: true, begin: true},
@@ -81,6 +81,8 @@ define(['angular', 'jquery', 'underscore', 'base64', 'pnotify'], function (angul
             service.rangeConds = _.where(service.whereConds, {range: true});
             service.beginRangeConds = _.where(service.whereConds, {range: true, begin: true});
             service.endRangeConds = _.where(service.whereConds, {range: true, end: true});
+            service.booleanConds = _.where(service.whereConds, {boolean: true});
+            service.booleanOptions = [{value: true, label: 'True'}, {value: false, label: 'False'}];
 
             // Graph types
             service.graphTypes = [

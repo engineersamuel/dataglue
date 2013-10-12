@@ -90,6 +90,48 @@
           return done();
         });
       });
+      it('sql where where tinyint is \'1\', translate to 1', function(done) {
+        var expectedSql, ref;
+
+        ref = _.cloneDeep(simpleMysqlDbReference);
+        ref.fields[0].aggregation = "count";
+        ref.fields[1].groupBy = "month";
+        ref.fields.push({
+          COLUMN_NAME: "is_active",
+          DATA_TYPE: "tinyint",
+          cond: '=',
+          condValue: '1'
+        });
+        expectedSql = 'SELECT COUNT(id) AS "y", created_date, DATE_FORMAT(created_date, \'%Y-%m\') AS "x", is_active FROM some_schema.some_table WHERE (is_active = 1) GROUP BY x LIMIT 1000';
+        return queryBuilder.buildQuery(ref, function(err, output) {
+          if (err) {
+            return done(err);
+          }
+          output.query.should.equal(expectedSql);
+          return done();
+        });
+      });
+      it('sql where where tinyint is true, translate to 1', function(done) {
+        var expectedSql, ref;
+
+        ref = _.cloneDeep(simpleMysqlDbReference);
+        ref.fields[0].aggregation = "count";
+        ref.fields[1].groupBy = "month";
+        ref.fields.push({
+          COLUMN_NAME: "is_active",
+          DATA_TYPE: "tinyint",
+          cond: '=',
+          condValue: true
+        });
+        expectedSql = 'SELECT COUNT(id) AS "y", created_date, DATE_FORMAT(created_date, \'%Y-%m\') AS "x", is_active FROM some_schema.some_table WHERE (is_active = 1) GROUP BY x LIMIT 1000';
+        return queryBuilder.buildQuery(ref, function(err, output) {
+          if (err) {
+            return done(err);
+          }
+          output.query.should.equal(expectedSql);
+          return done();
+        });
+      });
       it('build a simple mysql query id = 1', function(done) {
         var expectedSql, ref;
 
@@ -98,7 +140,7 @@
         ref.fields[0].cond = '=';
         ref.fields[0].condValue = 1;
         ref.fields[1].groupBy = "month";
-        expectedSql = 'SELECT COUNT(id) AS "y", created_date, DATE_FORMAT(created_date, \'%Y-%m\') AS "x" FROM some_schema.some_table WHERE (id = 1) GROUP BY x LIMIT 1000';
+        expectedSql = 'SELECT COUNT(id) AS "y", created_date, DATE_FORMAT(created_date, \'%Y-%m\') AS "x" FROM some_schema.some_table WHERE (id = \'1\') GROUP BY x LIMIT 1000';
         return queryBuilder.buildQuery(ref, function(err, output) {
           if (err) {
             return done(err);
@@ -115,7 +157,7 @@
         ref.fields[0].cond = '!=';
         ref.fields[0].condValue = 1;
         ref.fields[1].groupBy = "month";
-        expectedSql = 'SELECT COUNT(id) AS "y", created_date, DATE_FORMAT(created_date, \'%Y-%m\') AS "x" FROM some_schema.some_table WHERE (id != 1) GROUP BY x LIMIT 1000';
+        expectedSql = 'SELECT COUNT(id) AS "y", created_date, DATE_FORMAT(created_date, \'%Y-%m\') AS "x" FROM some_schema.some_table WHERE (id != \'1\') GROUP BY x LIMIT 1000';
         return queryBuilder.buildQuery(ref, function(err, output) {
           if (err) {
             return done(err);
@@ -129,6 +171,7 @@
 
         ref = _.cloneDeep(simpleMysqlDbReference);
         ref.fields[0].aggregation = "count";
+        ref.fields[0].DATA_TYPE = "int";
         ref.fields[0].cond = '>';
         ref.fields[0].condValue = 1;
         ref.fields[1].groupBy = "month";
@@ -679,7 +722,7 @@
           return done();
         });
       });
-      return it('mongo query regex id like ^1$', function(done) {
+      it('mongo query regex id like ^1$', function(done) {
         var expectedQuery, ref, regx;
 
         ref = _.cloneDeep(simpleMongoDbReference);
@@ -698,6 +741,55 @@
               "id": {
                 "$regex": {}
               },
+              "geo": {
+                "$exists": true
+              }
+            }
+          }, {
+            '$group': {
+              "_id": {
+                "x": "$geo"
+              },
+              "count": {
+                "$sum": 1
+              }
+            }
+          }, {
+            "$project": {
+              "_id": 0,
+              "x": "$_id.x",
+              "y": "$count"
+            }
+          }
+        ];
+        return queryBuilder.buildQuery(ref, function(err, output) {
+          if (err) {
+            return done(err);
+          }
+          output.query.should.eql(expectedQuery);
+          return done();
+        });
+      });
+      return it('mongo query with boolean', function(done) {
+        var expectedQuery, ref;
+
+        ref = _.cloneDeep(simpleMongoDbReference);
+        ref.fields[0].aggregation = 'count';
+        ref.fields.push({
+          COLUMN_NAME: "geo",
+          DATA_TYPE: "varchar",
+          groupBy: 'field'
+        });
+        ref.fields.push({
+          COLUMN_NAME: "is_active",
+          DATA_TYPE: "boolean",
+          cond: '=',
+          condValue: true
+        });
+        expectedQuery = [
+          {
+            '$match': {
+              "is_active": true,
               "geo": {
                 "$exists": true
               }

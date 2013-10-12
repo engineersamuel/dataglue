@@ -20,6 +20,9 @@ mixin valueForm(optionsName, condName, condValue, type, optionalText)
                 input(type="number", placeholder="Enter a number", ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].condValue", ng-disabled="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].cond === null")
             else if type == 'text'
                 input(type="text", placeholder="Enter a string/text", ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].#{condValue}", ng-disabled="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].#{condName} === null")
+            else if type == 'boolean'
+                select(ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].#{condValue}", ng-options="x.value as x.label for x in booleanOptions")
+                    option(value="")
             | &nbsp;
             span(ng-if="o.tooltip != undefined")
                 | &nbsp;
@@ -48,6 +51,9 @@ div(ng-if="_.contains(['date', 'datetime'], dataSet.dbReferences[dbRefIndex].fie
                 i.icon-info-sign(tooltip="{{o.tooltip}}")
             | &nbsp;End Date
 
+div(ng-if="_.contains(['tinyint', 'boolean'], dataSet.dbReferences[dbRefIndex].fields[fieldIndex].DATA_TYPE)")
+    +singleCondRestrictHeader
+    +valueForm('booleanConds', 'cond', 'condValue', 'boolean', '')
 div(ng-if="_.contains(['int', 'float', 'decimal', 'number'], dataSet.dbReferences[dbRefIndex].fields[fieldIndex].DATA_TYPE)")
     +singleCondRestrictHeader
     +valueForm('whereConds', 'cond', 'condValue', 'number', '')

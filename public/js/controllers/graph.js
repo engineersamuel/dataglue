@@ -39,6 +39,8 @@
         $scope.rangeConds = dbService.rangeConds;
         $scope.beginRangeConds = dbService.beginRangeConds;
         $scope.endRangeConds = dbService.endRangeConds;
+        $scope.booleanConds = dbService.booleanConds;
+        $scope.booleanOptions = dbService.booleanOptions;
         $scope.optionsSetOnField = function(dbRefIdx, fieldIdx) {
           var field, _ref, _ref1, _ref2, _ref3, _ref4;
 
