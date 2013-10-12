@@ -65,11 +65,11 @@
         } else {
           sql.field(fieldName);
         }
-        if (utils.verifyPropertyExists(field, 'cond')) {
+        if (utils.verifyPropertyExists(field, 'cond') && (field.cond != null)) {
           cond = mysql.escape(field.cond).replace(/'/g, "");
           sql.where("" + fieldName + " " + cond + " ?", field.condValue);
         }
-        if (utils.verifyPropertyExists(field, 'beginCond')) {
+        if (utils.verifyPropertyExists(field, 'beginCond') && (field.beginCond != null)) {
           beginCond = mysql.escape(field.beginCond).replace(/'/g, "");
           if (_.contains(['date', 'datetime'], field.DATA_TYPE)) {
             sql.where("" + fieldName + " " + beginCond + " TIMESTAMP(" + (utils.formatFieldValue(field, field.beginValue, 'sql')) + ")");
@@ -77,7 +77,7 @@
             sql.where("" + fieldName + " " + beginCond + " ?", utils.formatFieldValue(field, field.beginValue, 'sql'));
           }
         }
-        if (utils.verifyPropertyExists(field, 'endCond')) {
+        if (utils.verifyPropertyExists(field, 'endCond') && (field.endCond != null)) {
           endCond = mysql.escape(field.endCond).replace(/'/g, "");
           if (_.contains(['date', 'datetime'], field.DATA_TYPE)) {
             sql.where("" + fieldName + " " + endCond + " TIMESTAMP(" + (utils.formatFieldValue(field, field.endValue, 'sql')) + ")");
@@ -111,7 +111,11 @@
             return addX(field, fieldAlias, true);
           } else {
             fieldAlias = 'x';
-            if (field.groupBy === 'hour') {
+            if (field.groupBy === 'second') {
+              return addGroupByDate(sql, field, fieldAlias, "%Y-%m-%d %H:%M:%S");
+            } else if (field.groupBy === 'minute') {
+              return addGroupByDate(sql, field, fieldAlias, "%Y-%m-%d %H:%M");
+            } else if (field.groupBy === 'hour') {
               return addGroupByDate(sql, field, fieldAlias, "%Y-%m-%d %H");
             } else if (field.groupBy === "day") {
               return addGroupByDate(sql, field, fieldAlias, "%Y-%m-%d");
@@ -187,39 +191,50 @@
       return d3Lookup.yType = field.DATA_TYPE;
     };
     multiplex = false;
-    addObjToMatch = function(fieldName, obj) {
+    addObjToMatch = function(fieldName, obj, op) {
+      if (op == null) {
+        op = null;
+      }
       if (!utils.verifyPropertyExists(theMatch['$match'], fieldName)) {
         theMatch['$match'][fieldName] = {};
       }
-      return _.assign(theMatch['$match'][fieldName], obj);
+      if ((op != null) && op === '=') {
+        return theMatch['$match'][fieldName] = obj;
+      } else {
+        return _.assign(theMatch['$match'][fieldName], obj);
+      }
     };
     _.each(dbReference.fields, function(field) {
-      var fieldAlias, fieldName, hash, _ref;
+      var fieldAlias, fieldName, hash, obj, _ref;
 
       if (field['excluded'] == null) {
         fieldName = field.COLUMN_NAME;
-        if (utils.verifyPropertyExists(field, 'cond')) {
-          hash = {};
-          hash[utils.sqlToMongoOperand(field.cond)] = utils.formatFieldValue(field, field.condValue, 'mongo', {
-            regex: /LIKE/i.test(field.cond)
-          });
-          addObjToMatch(fieldName, hash);
+        if (utils.verifyPropertyExists(field, 'cond') && (field.cond != null)) {
+          obj = {};
+          if (field.cond === '=') {
+            obj = utils.formatFieldValue(field, field.condValue, 'mongo');
+          } else {
+            obj[utils.sqlToMongoOperand(field.cond)] = utils.formatFieldValue(field, field.condValue, 'mongo', {
+              regex: /LIKE/i.test(field.cond)
+            });
+          }
+          addObjToMatch(fieldName, obj, field.cond);
         }
-        if (utils.verifyPropertyExists(field, 'beginCond')) {
+        if (utils.verifyPropertyExists(field, 'beginCond') && (field.beginCond != null)) {
           hash = {};
           hash[utils.sqlToMongoOperand(field.beginCond)] = utils.formatFieldValue(field, field.beginValue, 'mongo');
           addObjToMatch(fieldName, hash);
         }
-        if (utils.verifyPropertyExists(field, 'endCond')) {
+        if (utils.verifyPropertyExists(field, 'endCond') && (field.endCond != null)) {
           hash = {};
           hash[utils.sqlToMongoOperand(field.endCond)] = utils.formatFieldValue(field, field.endValue, 'mongo');
           addObjToMatch(fieldName, hash);
         }
-        if (utils.verifyPropertyExists(field, 'groupBy')) {
+        if (utils.verifyPropertyExists(field, 'groupBy') && (field.groupBy != null)) {
           addObjToMatch(fieldName, {
             '$exists': true
           });
-          if ((_ref = field.groupBy) === 'year' || _ref === 'month' || _ref === 'day' || _ref === 'hour') {
+          if ((_ref = field.groupBy) === 'year' || _ref === 'month' || _ref === 'day' || _ref === 'hour' || _ref === 'minute' || _ref === 'second') {
             addObjToMatch(fieldName, {
               '$ne': null
             });
@@ -277,7 +292,50 @@
                 '$hour': "$" + fieldName
               };
               theProject['$project'].x = {
-                '$concat': ['$_id.year', '-', '$_id.month', '-', '$_id.day', '-', '$_id.hour']
+                '$concat': ['$_id.year', '-', '$_id.month', '-', '$_id.day', ' ', '$_id.hour']
+              };
+              addX(field, 'x');
+            } else if (field.groupBy === 'minute') {
+              theGroup['$group']['_id'].year = {
+                '$year': "$" + fieldName
+              };
+              theGroup['$group']['_id'].month = {
+                '$month': "$" + fieldName
+              };
+              theGroup['$group']['_id'].day = {
+                '$dayOfMonth': "$" + fieldName
+              };
+              theGroup['$group']['_id'].hour = {
+                '$hour': "$" + fieldName
+              };
+              theGroup['$group']['_id'].minute = {
+                '$minute': "$" + fieldName
+              };
+              theProject['$project'].x = {
+                '$concat': ['$_id.year', '-', '$_id.month', '-', '$_id.day', ' ', '$_id.hour', '-', '$_id.minute']
+              };
+              addX(field, 'x');
+            } else if (field.groupBy === 'second') {
+              theGroup['$group']['_id'].year = {
+                '$year': "$" + fieldName
+              };
+              theGroup['$group']['_id'].month = {
+                '$month': "$" + fieldName
+              };
+              theGroup['$group']['_id'].day = {
+                '$dayOfMonth': "$" + fieldName
+              };
+              theGroup['$group']['_id'].hour = {
+                '$hour': "$" + fieldName
+              };
+              theGroup['$group']['_id'].minute = {
+                '$minute': "$" + fieldName
+              };
+              theGroup['$group']['_id'].second = {
+                '$second': "$" + fieldName
+              };
+              theProject['$project'].x = {
+                '$concat': ['$_id.year', '-', '$_id.month', '-', '$_id.day', ' ', '$_id.hour', '-', '$_id.minute', '-', '$_id.second']
               };
               addX(field, 'x');
             } else if (field.groupBy === 'field') {

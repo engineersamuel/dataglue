@@ -5,6 +5,27 @@ define ["angular", "services", "nv", "moment", "bubble"], (angular, services, nv
     (scope, elm, attrs) ->
       elm.text version
   ])
+  # Validates that the string input is valid json
+  # TODO figure out how to conditionally parse based on required or not required
+  .directive 'json', () ->
+    require: 'ngModel',
+    link: (scope, elm, attrs, ctrl) ->
+      ctrl.$parsers.unshift (viewValue) ->
+        # For not if no value or '' return true.  This should not return true if required but no docs on that I can find
+        if viewValue is undefined or viewValue is ''
+          ctrl.$setValidity('json', true)
+          return viewValue
+
+        # Otherwise attempt to parse the string as json return false if error
+        try
+          JSON.parse(viewValue)
+          ctrl.$setValidity('json', true)
+          return viewValue
+        catch e
+          ctrl.$setValidity('json', false)
+          return undefined
+        return true
+
 #  .directive "dirTableVis", ->
 #    restrict: "E"
 #    scope:
@@ -80,7 +101,11 @@ define ["angular", "services", "nv", "moment", "bubble"], (angular, services, nv
         #chart.yAxis.tickFormat((d) -> d3.format("d")(d))
 
         if _.contains ['datetime', 'date'], xAxisDataType
-          if xAxisGroupBy is 'hour'
+          if xAxisGroupBy is 'second'
+            chart.xAxis.tickFormat((d) -> moment.utc(d).format('YYYY-MM-DD HH:mm:ss'))
+          else if xAxisGroupBy is 'minute'
+            chart.xAxis.tickFormat((d) -> moment.utc(d).format('YYYY-MM-DD HH:mm'))
+          else if xAxisGroupBy is 'hour'
             chart.xAxis.tickFormat((d) -> moment.utc(d).format('YYYY-MM-DD HH'))
           else if xAxisGroupBy is 'day'
             chart.xAxis.tickFormat((d) -> moment.utc(d).format('YYYY-MM-DD'))
@@ -114,10 +139,26 @@ define ["angular", "services", "nv", "moment", "bubble"], (angular, services, nv
             .tooltip((key, x, y, e, graph) ->
                 return "<h3>#{key}</h3><p>#{y} on #{x}</p>"
             )
+        else if chartType is 'line'
+#          chart = nv.models.lineChart()
+          chart = nv.models.lineChart()
+            .margin({top: 10, right: 30, bottom: 150, left: 60})
+            #.staggerLabels(true)
+            .x((d) -> d.x)
+            .y((d) -> d.y)
+#            .clipEdge(true)
+#            .tooltip((key, x, y, e, graph) -> "<h3>#{key}</h3><p>#{y} on #{x}</p>")
+        else if chartType is 'lineWithFocusChart'
+#          chart = nv.models.lineChart()
+          chart = nv.models.lineWithFocusChart()
+            .margin({top: 10, right: 30, bottom: 150, left: 60})
+            #.staggerLabels(true)
+            .x((d) -> d.x)
+            .y((d) -> d.y)
         return undefined
 
       updateChartByType = () ->
-        if chartType in ['multiBarChart', 'stackedAreaChart']
+        if chartType in ['multiBarChart', 'stackedAreaChart', 'line', 'lineWithFocusChart']
           console.log "Updating the d3 graph with: #{JSON.stringify(dataSet)}"
 
           setAxisFormatting(dataSet)
@@ -187,7 +228,7 @@ define ["angular", "services", "nv", "moment", "bubble"], (angular, services, nv
 
       handleOptionsChanges = () ->
         if dataSet?.length > 0
-          if chartType in ['multiBarChart', 'stackedAreaChart']
+          if chartType in ['multiBarChart', 'stackedAreaChart', 'line', 'lineWithFocusChart']
             handleChart()
           else if chartType is 'bubble'
             handleBubble()

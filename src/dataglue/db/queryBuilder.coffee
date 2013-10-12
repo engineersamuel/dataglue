@@ -67,7 +67,7 @@ QueryBuilder.buildSqlQuery = (dbReference, callback) ->
       ################################################################################################################
       # See if a single value condition is set
       ################################################################################################################
-      if utils.verifyPropertyExists field, 'cond'
+      if utils.verifyPropertyExists(field, 'cond') and field.cond?
         # Escape the cond to prevent malicious input, but replace the ' with nothing
         cond = mysql.escape(field.cond).replace /'/g, ""
         # Since the field.cond is an operator like =, !=, LIKE, ect.. escape that value and insert it right in
@@ -77,7 +77,7 @@ QueryBuilder.buildSqlQuery = (dbReference, callback) ->
       # See if a range value condition is set
       ################################################################################################################
       # Since the field.cond is an operator like =, !=, LIKE, ect.. escape that value and insert it right in
-      if utils.verifyPropertyExists field, 'beginCond'
+      if utils.verifyPropertyExists(field, 'beginCond') and field.beginCond?
         # Escape the cond to prevent malicious input, but replace the ' with nothing
         beginCond = mysql.escape(field.beginCond).replace /'/g, ""
         if _.contains ['date', 'datetime'], field.DATA_TYPE
@@ -85,7 +85,7 @@ QueryBuilder.buildSqlQuery = (dbReference, callback) ->
         else
           sql.where("#{fieldName} #{beginCond} ?", utils.formatFieldValue(field, field.beginValue, 'sql'))
 
-      if utils.verifyPropertyExists field, 'endCond'
+      if utils.verifyPropertyExists(field, 'endCond') and field.endCond?
         # Escape the cond to prevent malicious input, but replace the ' with nothing
         endCond = mysql.escape(field.endCond).replace /'/g, ""
         if _.contains ['date', 'datetime'], field.DATA_TYPE
@@ -119,9 +119,14 @@ QueryBuilder.buildSqlQuery = (dbReference, callback) ->
           sql.group(fieldAlias)
           addX field, fieldAlias, true
 
+        #
         else
           fieldAlias = 'x'
-          if field.groupBy is 'hour'
+          if field.groupBy is 'second'
+            addGroupByDate sql, field, fieldAlias, "%Y-%m-%d %H:%M:%S"
+          else if field.groupBy is 'minute'
+            addGroupByDate sql, field, fieldAlias, "%Y-%m-%d %H:%M"
+          else if field.groupBy is 'hour'
             addGroupByDate sql, field, fieldAlias, "%Y-%m-%d %H"
           else if field.groupBy is "day"
             addGroupByDate sql, field, fieldAlias, "%Y-%m-%d"
@@ -222,15 +227,20 @@ QueryBuilder.buildMongoQuery = (dbReference, callback) ->
   # This is set to true if a field is multiplexed, this will be the indicator to add the multiplex group to the pipeline
   multiplex = false
 
-  addObjToMatch = (fieldName, obj) ->
+  addObjToMatch = (fieldName, obj, op=null) ->
     # Make sure that the $match.feldName exists and is initialized
     if not utils.verifyPropertyExists theMatch['$match'], fieldName
       theMatch['$match'][fieldName] = {}
 
+    # With mongo if the op is =/$eq then the assignment is direct and not through a hash
+    if op? and op is '='
+      theMatch['$match'][fieldName] = obj
+
     # This implies an AND query, potentially need to rethink that in the future but for now it is fine
     # Here we are assigning the object to the $match.fieldName.  A list of objects under $match implies $and unless $or
     # is specificied.
-    _.assign theMatch['$match'][fieldName], obj
+    else
+      _.assign theMatch['$match'][fieldName], obj
 
   # Iterate over the fields and build the aggregation pipeline based on the given field options
   _.each dbReference.fields, (field) ->
@@ -239,31 +249,36 @@ QueryBuilder.buildMongoQuery = (dbReference, callback) ->
       ################################################################################################################
       # See if a single value condition is set
       ################################################################################################################
-      if utils.verifyPropertyExists field, 'cond'
-        hash = {}
-        hash[utils.sqlToMongoOperand(field.cond)] = utils.formatFieldValue(field, field.condValue, 'mongo', {regex: /LIKE/i.test(field.cond)})
-        addObjToMatch fieldName, hash
+      if utils.verifyPropertyExists(field, 'cond') and field.cond?
+        obj = {}
+        # If = then mongo just wants a simple {field: value} and not {field: {$op: value}}
+        if field.cond is '='
+          obj = utils.formatFieldValue(field, field.condValue, 'mongo')
+        else
+          obj[utils.sqlToMongoOperand(field.cond)] = utils.formatFieldValue(field, field.condValue, 'mongo', {regex: /LIKE/i.test(field.cond)})
+
+        addObjToMatch fieldName, obj, field.cond
 
       ################################################################################################################
       # See if a range value condition is set
       ################################################################################################################
-      if utils.verifyPropertyExists field, 'beginCond'
+      if utils.verifyPropertyExists(field, 'beginCond') and field.beginCond?
         hash = {}
         hash[utils.sqlToMongoOperand(field.beginCond)] = utils.formatFieldValue(field, field.beginValue, 'mongo')
         addObjToMatch fieldName, hash
 
-      if utils.verifyPropertyExists field, 'endCond'
+      if utils.verifyPropertyExists(field, 'endCond') and field.endCond?
         hash = {}
         hash[utils.sqlToMongoOperand(field.endCond)] = utils.formatFieldValue(field, field.endValue, 'mongo')
         addObjToMatch fieldName, hash
 
-      if utils.verifyPropertyExists field, 'groupBy'
+      if utils.verifyPropertyExists(field, 'groupBy') and field.groupBy?
         # Mongo likes to always hae the field exist in the doc if grouping on
         addObjToMatch fieldName, {'$exists': true}
         #theMatch['$match'][fieldName] = {'$exists': true}
 
         # For any date specific groups, must ensure the field is not null
-        if field.groupBy in ['year', 'month', 'day', 'hour']
+        if field.groupBy in ['year', 'month', 'day', 'hour', 'minute', 'second']
           addObjToMatch fieldName, {'$ne': null}
           #theMatch['$match'][fieldName] = {'$ne': null}
 
@@ -305,7 +320,24 @@ QueryBuilder.buildMongoQuery = (dbReference, callback) ->
             theGroup['$group']['_id'].month = {'$month': "$#{fieldName}"}
             theGroup['$group']['_id'].day = {'$dayOfMonth': "$#{fieldName}"}
             theGroup['$group']['_id'].hour = {'$hour': "$#{fieldName}"}
-            theProject['$project'].x = {'$concat': ['$_id.year', '-', '$_id.month', '-', '$_id.day', '-', '$_id.hour']}
+            theProject['$project'].x = {'$concat': ['$_id.year', '-', '$_id.month', '-', '$_id.day', ' ', '$_id.hour']}
+            addX field, 'x'
+          else if field.groupBy is 'minute'
+            theGroup['$group']['_id'].year = {'$year': "$#{fieldName}"}
+            theGroup['$group']['_id'].month = {'$month': "$#{fieldName}"}
+            theGroup['$group']['_id'].day = {'$dayOfMonth': "$#{fieldName}"}
+            theGroup['$group']['_id'].hour = {'$hour': "$#{fieldName}"}
+            theGroup['$group']['_id'].minute = {'$minute': "$#{fieldName}"}
+            theProject['$project'].x = {'$concat': ['$_id.year', '-', '$_id.month', '-', '$_id.day', ' ', '$_id.hour', '-', '$_id.minute']}
+            addX field, 'x'
+          else if field.groupBy is 'second'
+            theGroup['$group']['_id'].year = {'$year': "$#{fieldName}"}
+            theGroup['$group']['_id'].month = {'$month': "$#{fieldName}"}
+            theGroup['$group']['_id'].day = {'$dayOfMonth': "$#{fieldName}"}
+            theGroup['$group']['_id'].hour = {'$hour': "$#{fieldName}"}
+            theGroup['$group']['_id'].minute = {'$minute': "$#{fieldName}"}
+            theGroup['$group']['_id'].second = {'$second': "$#{fieldName}"}
+            theProject['$project'].x = {'$concat': ['$_id.year', '-', '$_id.month', '-', '$_id.day', ' ', '$_id.hour', '-', '$_id.minute', '-', '$_id.second']}
             addX field, 'x'
           else if field.groupBy is 'field'
             theGroup['$group']['_id'] = {'x': "$#{fieldName}"}
@@ -354,7 +386,6 @@ QueryBuilder.buildQuery = (dbReference, callback) ->
     # Note that this is a mongo Aggregation Query
     QueryBuilder.buildMongoQuery dbReference, (err, output) ->
       callback err, output
-
 
   return self
 

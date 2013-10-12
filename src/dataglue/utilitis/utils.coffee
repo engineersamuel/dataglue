@@ -39,7 +39,6 @@ exports.formatFieldValue = (field, value, type, opts) ->
   output = field.COLUMN_NAME
   if regex
     output = new RegExp("#{value}", 'i')
-    output = output.toString()
 #    logger.debug output
 #    logger.debug JSON.stringify(output)
   # Dates
@@ -162,6 +161,8 @@ exports.parseDateToOffset = (theDate, opts = {}) ->
     when 'month' then 'YYYY-MM'
     when 'day'   then 'YYYY-MM-DD'
     when 'hour'  then 'YYYY-MM-DD HH'
+    when 'minute'  then 'YYYY-MM-DD HH:mm'
+    when 'second'  then 'YYYY-MM-DD HH:mm:ss'
     else  undefined
 
   if exports.isUnixOffset(theDate)
@@ -190,12 +191,12 @@ exports.parseX = (item, opts={}) ->
   return item
 
 exports.sqlToMongoOperand = (op) ->
-  switch op.toLowerCase()
+  switch op?.toLowerCase()
     when '<' then '$lt'
     when '<=' then '$lte'
     when '>' then '$gt'
     when '>=' then '$gte'
-    when '=' then '$eq'
+    when '=' then '$eq' # $eq is not a valid mongo command, but leaving it here for completeness
     when '!=' then '$ne'
     when 'like' then '$regex'
-    else raise Error("op: #{op} could not be translated")
+    else throw Error("op: #{op} could not be translated")

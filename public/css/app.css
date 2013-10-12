@@ -6261,3 +6261,6 @@ body {
 .vistooltip .name {
   font-weight: bold;
 }
+.css-form input.ng-invalid.ng-dirty {
+  background-color: rgba(240, 31, 0, 0.45);
+}

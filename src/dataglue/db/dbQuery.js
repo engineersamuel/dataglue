@@ -110,7 +110,7 @@
     return self;
   };
 
-  DbQuery.showFields = function(dbReference, dbName, collectionName, callback) {
+  DbQuery.showFields = function(dbReference, dbName, collectionName, fieldRestrictionQuery, callback) {
     var dbRefCopy, mongoUrl, self;
 
     self = this;
@@ -125,7 +125,9 @@
           if (err) {
             return callback(err);
           } else {
-            return coll.findOne({}, function(err, doc) {
+            return coll.findOne(fieldRestrictionQuery || {}, function(err, doc) {
+              logger.debug("showFields dbName: " + dbName + ", collectionName: " + collectionName);
+              logger.debug(prettyjson.render(doc));
               callback(null, _.map(_.keys(doc), function(f) {
                 return {
                   COLUMN_NAME: f,

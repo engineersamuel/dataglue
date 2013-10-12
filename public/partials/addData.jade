@@ -11,7 +11,7 @@ div.container
         div.col-xs-12.col-sm-4.col-md-4
             h4.db-info-header Connections
             div.db-info-item(ng-repeat="c in connections", ng-click="select_connection(c)")
-                span {{ c }}
+                span {{ c.name }}
         div.col-xs-12.col-sm-4.col-md-4
             h4.db-info-header Schemas/Databases
             //div.db-info-item(ng-repeat="s in schemas", ng-click="select_schema(s.schema)")
@@ -38,13 +38,21 @@ div#graph_options_modal.modal.fade(tabindex="-1",role="dialog",aria-labelledby="
                 h4.modal-title {{ dataSetName }}
                 div.clearfix
             div.modal-body
-                form(role="form")
+                form.css-form(name="form",role="form",novalidate)
                     div.form-group
                         label(for="dataSetName") Name
-                        input#dataSetName.form-control(type="text", placeholder="Enter Graph name", ng-model="dataSetName")
+                        input.form-control(name="dataSetName",type="text", placeholder="Enter Graph name", ng-model="dataSetName")
                     div.form-group
                         label(for="dataSetDescription") Description
-                        textarea#dataSetDescription.form-control(rows="3", ng-model="dataSetDescription", placeholder="Describe the Graph")
+                        textarea.form-control(name="dataSetDescription", rows="3", ng-model="dataSetDescription", placeholder="Describe the Graph")
+
+                    // Must use ng-show and not ng-if here since there is a break.  I assume the break is due to ng-if
+                    // being evaluated after the angular bindings therefore the ng-model is no longer watched
+                    div.form-group(ng-show="connection.type == 'mongo'")
+                        label(for="optionalRestrictionQuery") Query to restrict Fields&nbsp;
+                        i.icon-info-sign(tooltip="If your collection has mixed documents, you may want to set a query here to make sure the right doc format is read.  Ex. {key: 'server_log'} or {key: 'access_log'}")
+                        input.form-control(type="text", name="restrictionQuery", placeholder='{"somefield": "somevalue"}', ng-model="restrictionQuery", json)
+                        span(ng-show="form.restrictionQuery.$error.json") Not valid Json. Make sure fields are quoted.
 
             div.modal-footer
                 div.pull-right

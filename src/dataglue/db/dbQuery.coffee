@@ -91,7 +91,7 @@ DbQuery.showCollections = (dbReference, dbName, callback) ->
   return self
 
 # Since the mongodb native drive has no native showCollections, easiest just to create a separate function for this
-DbQuery.showFields = (dbReference, dbName, collectionName, callback) ->
+DbQuery.showFields = (dbReference, dbName, collectionName, fieldRestrictionQuery, callback) ->
   self = @
 
   # Make a clone of the dbReference to override any necessary fields like the db
@@ -106,7 +106,10 @@ DbQuery.showFields = (dbReference, dbName, collectionName, callback) ->
         if err
           callback err
         else
-          coll.findOne {}, (err, doc) ->
+          # Either restrict on the given fieldRestrictionQuery or restrict on nothing
+          coll.findOne fieldRestrictionQuery || {}, (err, doc) ->
+            logger.debug "showFields dbName: #{dbName}, collectionName: #{collectionName}"
+            logger.debug prettyjson.render doc
             callback null, _.map(_.keys(doc), (f) -> {COLUMN_NAME: f, DATA_TYPE: utils.setMongoFieldDataType(doc[f]), COLUMN_TYPE: undefined, COLUMN_KEY: undefined})
             db.close()
 

@@ -1,7 +1,7 @@
 // http://iffycan.blogspot.com/2013/05/angular-service-or-factory.html
 //If you want your function to be called like a normal function, use factory. If you want your function to be instantiated with the new operator, use service. If you don't know the difference, use factory.
 
-define(['angular', 'jquery', 'underscore', 'pnotify'], function (angular, $, _) {
+define(['angular', 'jquery', 'underscore', 'base64', 'pnotify'], function (angular, $, _, base64) {
     'use strict';
 
     angular.module('dataGlue.services', [])
@@ -85,6 +85,8 @@ define(['angular', 'jquery', 'underscore', 'pnotify'], function (angular, $, _) 
             // Graph types
             service.graphTypes = [
                 {name: 'graphType', value: 'multiBarChart', label: 'MultiBar (Default)'},
+                {name: 'graphType', value: 'line', label: 'Line'},
+                {name: 'graphType', value: 'lineWithFocusChart', label: 'Line + Focus Chart'},
                 {name: 'graphType', value: 'stackedAreaChart', label: 'Stacked Area'},
                 {name: 'graphType', value: 'bubble', label: 'Bubble'},
                 {name: 'graphType', value: 'pie', label: 'Pie'}
@@ -156,8 +158,11 @@ define(['angular', 'jquery', 'underscore', 'pnotify'], function (angular, $, _) 
                     .success(function(data) { callback(data); })
                     .error(onError)
             };
-            service.getFields = function(ref, schema, table, callback) {
-                $http.get('/db/info/' + ref + '/' + schema + '/' + table)
+            service.getFields = function(ref, schema, table, restrictionQuery, callback) {
+                // The fieldRestrictionQuery says to restrict the NoSQL docs by this query where the limit is 1
+                var queryParam = (restrictionQuery != null && restrictionQuery !='' && _.isString(restrictionQuery)) ? '?fieldRestrictionQuery=' + base64.encode(restrictionQuery) : '';
+                console.debug("queryParam: " + queryParam);
+                $http.get('/db/info/' + ref + '/' + schema + '/' + table + queryParam)
                     .success(function(data) { callback(data); })
                     .error(onError)
             };

@@ -11,7 +11,7 @@
   <div class="row">
     <div class="col-xs-12 col-sm-4 col-md-4">
       <h4 class="db-info-header">Connections</h4>
-      <div ng-repeat="c in connections" ng-click="select_connection(c)" class="db-info-item"><span>{{ c }}</span></div>
+      <div ng-repeat="c in connections" ng-click="select_connection(c)" class="db-info-item"><span>{{ c.name }}</span></div>
     </div>
     <div class="col-xs-12 col-sm-4 col-md-4">
       <h4 class="db-info-header">Schemas/Databases</h4>
@@ -37,14 +37,20 @@
         <div class="clearfix"></div>
       </div>
       <div class="modal-body">
-        <form role="form">
+        <form name="form" role="form" novalidate="novalidate" class="css-form">
           <div class="form-group">
             <label for="dataSetName">Name</label>
-            <input id="dataSetName" type="text" placeholder="Enter Graph name" ng-model="dataSetName" class="form-control"/>
+            <input name="dataSetName" type="text" placeholder="Enter Graph name" ng-model="dataSetName" class="form-control"/>
           </div>
           <div class="form-group">
             <label for="dataSetDescription">Description</label>
-            <textarea id="dataSetDescription" rows="3" ng-model="dataSetDescription" placeholder="Describe the Graph" class="form-control"></textarea>
+            <textarea name="dataSetDescription" rows="3" ng-model="dataSetDescription" placeholder="Describe the Graph" class="form-control"></textarea>
+          </div>
+          <!-- Must use ng-show and not ng-if here since there is a break.  I assume the break is due to ng-if-->
+          <!-- being evaluated after the angular bindings therefore the ng-model is no longer watched-->
+          <div ng-show="connection.type == 'mongo'" class="form-group">
+            <label for="optionalRestrictionQuery">Query to restrict Fields&nbsp;</label><i tooltip="If your collection has mixed documents, you may want to set a query here to make sure the right doc format is read.  Ex. {key: 'server_log'} or {key: 'access_log'}" class="icon-info-sign"></i>
+            <input type="text" name="restrictionQuery" placeholder="{&quot;somefield&quot;: &quot;somevalue&quot;}" ng-model="restrictionQuery" json="json" class="form-control"/><span ng-show="form.restrictionQuery.$error.json">Not valid Json. Make sure fields are quoted.</span>
           </div>
         </form>
       </div>

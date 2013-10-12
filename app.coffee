@@ -108,7 +108,10 @@ app.get '/dataset/query/:_id', (req, res) ->
 ########################################################################################################################
 # Get fields
 app.get '/db/info/:ref/:schema/:table', (req, res) ->
-  dbInfo.getFields req.param('ref'), req.param('schema'), req.param('table'), (err, output) ->
+  fieldRestrictionQuery = req.query['fieldRestrictionQuery']
+  fieldRestrictionQuery = if (fieldRestrictionQuery? and fieldRestrictionQuery isnt '') then JSON.parse(new Buffer(fieldRestrictionQuery, 'base64').toString('ascii')) else undefined
+  logger.debug prettyjson.render fieldRestrictionQuery
+  dbInfo.getFields req.param('ref'), req.param('schema'), req.param('table'), fieldRestrictionQuery, (err, output) ->
     res.send output
 
 # Get tables
@@ -121,9 +124,10 @@ app.get '/db/info/:ref', (req, res) ->
   dbInfo.getSchemas req.param('ref'), (err, output) ->
     res.send output
 
-# Get list of database connection references
+# Get list of database connection references and map the name and type
 app.get '/db/info', (req, res) ->
-  res.send _.keys settings.db_refs
+  #res.send _.keys settings.db_refs
+  res.send _.map settings.db_refs, (item) -> {name: item.name, type: item.type}
 
 
 ########################################################################################################################

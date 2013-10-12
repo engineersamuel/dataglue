@@ -16,7 +16,7 @@
 
   DbInfo = {};
 
-  DbInfo.getFields = function(dbRefName, schemaName, tableName, callback) {
+  DbInfo.getFields = function(dbRefName, schemaName, tableName, fieldRestrictionQuery, callback) {
     var dbReference, sql, type;
 
     dbReference = settings.db_refs[dbRefName];
@@ -30,7 +30,7 @@
         return callback(err, fields);
       });
     } else if (type === 'mongo') {
-      DbQuery.showFields(dbReference, schemaName, tableName, function(err, results) {
+      DbQuery.showFields(dbReference, schemaName, tableName, fieldRestrictionQuery, function(err, results) {
         return callback(err, results);
       });
     }

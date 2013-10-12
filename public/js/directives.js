@@ -7,7 +7,31 @@
           return elm.text(version);
         };
       }
-    ]).directive("d3Visualization", function() {
+    ]).directive('json', function() {
+      return {
+        require: 'ngModel',
+        link: function(scope, elm, attrs, ctrl) {
+          return ctrl.$parsers.unshift(function(viewValue) {
+            var e;
+
+            if (viewValue === void 0 || viewValue === '') {
+              ctrl.$setValidity('json', true);
+              return viewValue;
+            }
+            try {
+              JSON.parse(viewValue);
+              ctrl.$setValidity('json', true);
+              return viewValue;
+            } catch (_error) {
+              e = _error;
+              ctrl.$setValidity('json', false);
+              return void 0;
+            }
+            return true;
+          });
+        }
+      };
+    }).directive("d3Visualization", function() {
       return {
         restrict: "E",
         scope: {
@@ -38,7 +62,15 @@
               chart.yAxis.tickFormat(d3.format(',.2f'));
             }
             if (_.contains(['datetime', 'date'], xAxisDataType)) {
-              if (xAxisGroupBy === 'hour') {
+              if (xAxisGroupBy === 'second') {
+                return chart.xAxis.tickFormat(function(d) {
+                  return moment.utc(d).format('YYYY-MM-DD HH:mm:ss');
+                });
+              } else if (xAxisGroupBy === 'minute') {
+                return chart.xAxis.tickFormat(function(d) {
+                  return moment.utc(d).format('YYYY-MM-DD HH:mm');
+                });
+              } else if (xAxisGroupBy === 'hour') {
                 return chart.xAxis.tickFormat(function(d) {
                   return moment.utc(d).format('YYYY-MM-DD HH');
                 });
@@ -92,11 +124,33 @@
               }).clipEdge(true).tooltip(function(key, x, y, e, graph) {
                 return "<h3>" + key + "</h3><p>" + y + " on " + x + "</p>";
               });
+            } else if (chartType === 'line') {
+              chart = nv.models.lineChart().margin({
+                top: 10,
+                right: 30,
+                bottom: 150,
+                left: 60
+              }).x(function(d) {
+                return d.x;
+              }).y(function(d) {
+                return d.y;
+              });
+            } else if (chartType === 'lineWithFocusChart') {
+              chart = nv.models.lineWithFocusChart().margin({
+                top: 10,
+                right: 30,
+                bottom: 150,
+                left: 60
+              }).x(function(d) {
+                return d.x;
+              }).y(function(d) {
+                return d.y;
+              });
             }
             return void 0;
           };
           updateChartByType = function() {
-            if (chartType === 'multiBarChart' || chartType === 'stackedAreaChart') {
+            if (chartType === 'multiBarChart' || chartType === 'stackedAreaChart' || chartType === 'line' || chartType === 'lineWithFocusChart') {
               console.log("Updating the d3 graph with: " + (JSON.stringify(dataSet)));
               setAxisFormatting(dataSet);
               d3.select(svgSelector).datum(dataSet).transition().duration(500).call(chart);
@@ -152,7 +206,7 @@
           };
           handleOptionsChanges = function() {
             if ((dataSet != null ? dataSet.length : void 0) > 0) {
-              if (chartType === 'multiBarChart' || chartType === 'stackedAreaChart') {
+              if (chartType === 'multiBarChart' || chartType === 'stackedAreaChart' || chartType === 'line' || chartType === 'lineWithFocusChart') {
                 return handleChart();
               } else if (chartType === 'bubble') {
                 return handleBubble();

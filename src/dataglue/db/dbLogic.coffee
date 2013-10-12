@@ -33,6 +33,8 @@ CachedDataSet.queryDynamic = (dbReference, callback) ->
       logger.error "Error building query: #{prettyjson.render err}"
       callback err
     else
+      logger.debug prettyjson.render queryHash
+
       # To compute the query and transform to the d3 results requires an x or a y to be set, if not, do nothing
       if queryHash.d3Lookup.x isnt undefined and queryHash.d3Lookup.y isnt undefined
 
@@ -97,6 +99,9 @@ CachedDataSet.loadDataSet = (doc, callback) ->
       logger.error "Error querying dbReferences: #{prettyjson.render err}"
       callback err
     else
+
+      logger.debug prettyjson.render arrayOfDataSetResults
+
       _.each arrayOfDataSetResults, (dataSetResult, idx) ->
 
         #logger.debug "arrayOfDataSetResults: #{prettyjson.render arrayOfDataSetResults}"

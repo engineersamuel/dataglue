@@ -58,8 +58,9 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
         field = $scope.dataSet.dbReferences[dbRefIdx].fields[fieldIdx]
         if field.groupBy? and field.groupBy not in [undefined, ''] then return true
         if field.aggregation? and field.aggregation not in [undefined, ''] then return true
-        if field.beginValue? and field.beginValue not in [undefined, ''] then return true
-        if field.endValue? and field.endValue not in [undefined, ''] then return true
+        if field.cond? and field.condValue not in [undefined, ''] then return true
+        if field.beginCond? and field.beginValue not in [undefined, ''] then return true
+        if field.endCond? and field.endValue not in [undefined, ''] then return true
         return false
 
       # Returns true if there is a group by set on the field
@@ -82,8 +83,11 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
         theHtml = []
         if field?.groupBy? and field.groupBy not in [undefined, ''] then theHtml.push "Group by #{field.groupBy}"
         if field?.aggregation? and field.aggregation not in [undefined, ''] then theHtml.push "Aggregate by #{field.aggregation}"
-        if field?.beginValue? and field.beginValue not in [undefined, ''] then theHtml.push "Date > #{moment(field.beginValue).format('YYYY-MM-DD')}"
-        if field?.endValue? and field.endValue not in [undefined, ''] then theHtml.push "Date <= #{moment(field.endValue).format('YYYY-MM-DD')}"
+        if field?.cond? and field.condValue not in [undefined, ''] then theHtml.push "Field #{field.cond} #{field.condValue}"
+        if field?.beginCond? and field.beginValue not in [undefined, ''] then theHtml.push "Field #{field.cond} #{field.condValue}"
+        if field?.endCond? and field.endValue not in [undefined, ''] then theHtml.push "Field #{field.cond} #{field.condValue}"
+#        if field?.beginValue? and field.beginValue not in [undefined, ''] then theHtml.push "Date > #{moment(field.beginValue).format('YYYY-MM-DD')}"
+#        if field?.endValue? and field.endValue not in [undefined, ''] then theHtml.push "Date <= #{moment(field.endValue).format('YYYY-MM-DD')}"
 #        console.log JSON.stringify(field)
         if theHtml.length is 0
           return 'Field being used.'
@@ -168,6 +172,8 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
         {name: 'groupBy', value: 'month', label: 'Month', tooltip: "Groups on DATE_FORMAT(field, '%Y-%m')", dataTypes: dbService.dateGroupByTypes},
         {name: 'groupBy', value: 'day', label: 'Day', tooltip: "Groups on DATE_FORMAT(field, '%Y-%m-%d')", dataTypes: dbService.dateGroupByTypes},
         {name: 'groupBy', value: 'hour', label: 'Hour', tooltip: "Groups on DATE_FORMAT(field, '%Y-%m-%d %H')", dataTypes: dbService.dateGroupByTypes},
+        {name: 'groupBy', value: 'minute', label: 'Minute', tooltip: "Groups on DATE_FORMAT(field, '%Y-%m-%d %H:%M')", dataTypes: dbService.dateGroupByTypes},
+        {name: 'groupBy', value: 'second', label: 'Second', tooltip: "Groups on DATE_FORMAT(field, '%Y-%m-%d %H:%M:%S')", dataTypes: dbService.dateGroupByTypes},
       ]
 
       ##################################################################################################################

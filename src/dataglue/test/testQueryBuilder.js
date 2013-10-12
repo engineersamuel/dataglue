@@ -385,7 +385,7 @@
             "$project": {
               "_id": 0,
               "x": {
-                "$concat": ["$_id.year", "-", "$_id.month", "-", "$_id.day", "-", "$_id.hour"]
+                "$concat": ["$_id.year", "-", "$_id.month", "-", "$_id.day", " ", "$_id.hour"]
               }
             }
           }
@@ -696,7 +696,7 @@
           {
             '$match': {
               "id": {
-                "$regex": "" + (regx.toString()) + "i"
+                "$regex": {}
               },
               "geo": {
                 "$exists": true

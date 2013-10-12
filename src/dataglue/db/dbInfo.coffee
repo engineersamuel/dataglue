@@ -7,7 +7,7 @@ prettyjson    = require 'prettyjson'
 
 DbInfo = {}
 
-DbInfo.getFields = (dbRefName, schemaName, tableName, callback) ->
+DbInfo.getFields = (dbRefName, schemaName, tableName, fieldRestrictionQuery, callback) ->
   dbReference = settings.db_refs[dbRefName]
   type = dbReference['type']
 
@@ -18,7 +18,7 @@ DbInfo.getFields = (dbRefName, schemaName, tableName, callback) ->
   else if type in ['mongo']
     # Since mongo has no listFields or anything of the nature, we are making the assumption that the schema is consistent
     # i.e. pulling one since doc represents all docs.  This is the only/quickest way to simulate an info schema
-    DbQuery.showFields dbReference, schemaName, tableName, (err, results) ->
+    DbQuery.showFields dbReference, schemaName, tableName, fieldRestrictionQuery, (err, results) ->
       callback err, results
 
   return @

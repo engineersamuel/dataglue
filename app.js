@@ -121,7 +121,12 @@
   });
 
   app.get('/db/info/:ref/:schema/:table', function(req, res) {
-    return dbInfo.getFields(req.param('ref'), req.param('schema'), req.param('table'), function(err, output) {
+    var fieldRestrictionQuery;
+
+    fieldRestrictionQuery = req.query['fieldRestrictionQuery'];
+    fieldRestrictionQuery = (fieldRestrictionQuery != null) && fieldRestrictionQuery !== '' ? JSON.parse(new Buffer(fieldRestrictionQuery, 'base64').toString('ascii')) : void 0;
+    logger.debug(prettyjson.render(fieldRestrictionQuery));
+    return dbInfo.getFields(req.param('ref'), req.param('schema'), req.param('table'), fieldRestrictionQuery, function(err, output) {
       return res.send(output);
     });
   });
@@ -139,7 +144,12 @@
   });
 
   app.get('/db/info', function(req, res) {
-    return res.send(_.keys(settings.db_refs));
+    return res.send(_.map(settings.db_refs, function(item) {
+      return {
+        name: item.name,
+        type: item.type
+      };
+    }));
   });
 
   process.on('exit', function() {

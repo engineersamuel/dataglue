@@ -40,7 +40,7 @@
         $scope.beginRangeConds = dbService.beginRangeConds;
         $scope.endRangeConds = dbService.endRangeConds;
         $scope.optionsSetOnField = function(dbRefIdx, fieldIdx) {
-          var field, _ref, _ref1, _ref2, _ref3;
+          var field, _ref, _ref1, _ref2, _ref3, _ref4;
 
           field = $scope.dataSet.dbReferences[dbRefIdx].fields[fieldIdx];
           if ((field.groupBy != null) && ((_ref = field.groupBy) !== (void 0) && _ref !== '')) {
@@ -49,10 +49,13 @@
           if ((field.aggregation != null) && ((_ref1 = field.aggregation) !== (void 0) && _ref1 !== '')) {
             return true;
           }
-          if ((field.beginValue != null) && ((_ref2 = field.beginValue) !== (void 0) && _ref2 !== '')) {
+          if ((field.cond != null) && ((_ref2 = field.condValue) !== (void 0) && _ref2 !== '')) {
             return true;
           }
-          if ((field.endValue != null) && ((_ref3 = field.endValue) !== (void 0) && _ref3 !== '')) {
+          if ((field.beginCond != null) && ((_ref3 = field.beginValue) !== (void 0) && _ref3 !== '')) {
+            return true;
+          }
+          if ((field.endCond != null) && ((_ref4 = field.endValue) !== (void 0) && _ref4 !== '')) {
             return true;
           }
           return false;
@@ -87,7 +90,7 @@
           return false;
         };
         $scope.fieldOptionDisplay = function(selectedDbReference, fieldIdx) {
-          var field, theHtml, _ref, _ref1, _ref2, _ref3;
+          var field, theHtml, _ref, _ref1, _ref2, _ref3, _ref4;
 
           field = selectedDbReference != null ? selectedDbReference.fields[fieldIdx] : void 0;
           theHtml = [];
@@ -97,11 +100,14 @@
           if (((field != null ? field.aggregation : void 0) != null) && ((_ref1 = field.aggregation) !== (void 0) && _ref1 !== '')) {
             theHtml.push("Aggregate by " + field.aggregation);
           }
-          if (((field != null ? field.beginValue : void 0) != null) && ((_ref2 = field.beginValue) !== (void 0) && _ref2 !== '')) {
-            theHtml.push("Date > " + (moment(field.beginValue).format('YYYY-MM-DD')));
+          if (((field != null ? field.cond : void 0) != null) && ((_ref2 = field.condValue) !== (void 0) && _ref2 !== '')) {
+            theHtml.push("Field " + field.cond + " " + field.condValue);
           }
-          if (((field != null ? field.endValue : void 0) != null) && ((_ref3 = field.endValue) !== (void 0) && _ref3 !== '')) {
-            theHtml.push("Date <= " + (moment(field.endValue).format('YYYY-MM-DD')));
+          if (((field != null ? field.beginCond : void 0) != null) && ((_ref3 = field.beginValue) !== (void 0) && _ref3 !== '')) {
+            theHtml.push("Field " + field.cond + " " + field.condValue);
+          }
+          if (((field != null ? field.endCond : void 0) != null) && ((_ref4 = field.endValue) !== (void 0) && _ref4 !== '')) {
+            theHtml.push("Field " + field.cond + " " + field.condValue);
           }
           if (theHtml.length === 0) {
             return 'Field being used.';
@@ -222,6 +228,18 @@
             value: 'hour',
             label: 'Hour',
             tooltip: "Groups on DATE_FORMAT(field, '%Y-%m-%d %H')",
+            dataTypes: dbService.dateGroupByTypes
+          }, {
+            name: 'groupBy',
+            value: 'minute',
+            label: 'Minute',
+            tooltip: "Groups on DATE_FORMAT(field, '%Y-%m-%d %H:%M')",
+            dataTypes: dbService.dateGroupByTypes
+          }, {
+            name: 'groupBy',
+            value: 'second',
+            label: 'Second',
+            tooltip: "Groups on DATE_FORMAT(field, '%Y-%m-%d %H:%M:%S')",
             dataTypes: dbService.dateGroupByTypes
           }
         ];

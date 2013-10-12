@@ -59,7 +59,6 @@
     output = field.COLUMN_NAME;
     if (regex) {
       output = new RegExp("" + value, 'i');
-      output = output.toString();
     } else if (_.contains(exports.dateDateTypes, field.DATA_TYPE)) {
       if (type === 'sql') {
         output = moment.utc(value, 'YYYY-MM-DD').toISOString();
@@ -202,6 +201,10 @@
           return 'YYYY-MM-DD';
         case 'hour':
           return 'YYYY-MM-DD HH';
+        case 'minute':
+          return 'YYYY-MM-DD HH:mm';
+        case 'second':
+          return 'YYYY-MM-DD HH:mm:ss';
         default:
           return void 0;
       }
@@ -249,7 +252,7 @@
   };
 
   exports.sqlToMongoOperand = function(op) {
-    switch (op.toLowerCase()) {
+    switch (op != null ? op.toLowerCase() : void 0) {
       case '<':
         return '$lt';
       case '<=':
@@ -265,7 +268,7 @@
       case 'like':
         return '$regex';
       default:
-        return raise(Error("op: " + op + " could not be translated"));
+        throw Error("op: " + op + " could not be translated");
     }
   };
 

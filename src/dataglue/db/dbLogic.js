@@ -49,6 +49,7 @@
         logger.error("Error building query: " + (prettyjson.render(err)));
         return callback(err);
       } else {
+        logger.debug(prettyjson.render(queryHash));
         if (queryHash.d3Lookup.x !== void 0 && queryHash.d3Lookup.y !== void 0) {
           if (utils.truthy(dbReference.cache)) {
             return dataSetCache.statementCacheGet(dbReference, queryHash, function(err, cachedD3Data) {
@@ -104,6 +105,7 @@
         logger.error("Error querying dbReferences: " + (prettyjson.render(err)));
         return callback(err);
       } else {
+        logger.debug(prettyjson.render(arrayOfDataSetResults));
         _.each(arrayOfDataSetResults, function(dataSetResult, idx) {
           var refItem, stream, streams, uniqueMutliplexedXs, uniqueXs, _ref;
 
