@@ -108,7 +108,7 @@ exports.generateMongoUrl = (obj) ->
   o.port = exports.resolveEnvVar(obj.port) || obj.port || 27017
   o.db = exports.resolveEnvVar(obj.db) || obj.db || 'test'
   o.user = exports.resolveEnvVar(obj.user) || obj.user || undefined
-  o.pass = exports.resolveEnvVar(obj.user) || obj.pass || undefined
+  o.pass = exports.resolveEnvVar(obj.pass) || obj.pass || undefined
 
   mongourl = undefined
   if (o.user? and o.user isnt '') and (o.pass? and o.pass isnt '')
@@ -116,7 +116,7 @@ exports.generateMongoUrl = (obj) ->
   else
     mongourl = "mongodb://#{o.host}:#{o.port}/#{o.db}" #"?auto_reconnect=true"
 
-  logger.info "Finished generating mongo url: #{mongourl}"
+  #logger.info "Finished generating mongo url: #{mongourl}"
   return mongourl
 
 exports.isInteger = (f) -> f isnt undefined and typeof(f) is 'number' and Math.round(f) == f
