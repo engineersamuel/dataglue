@@ -11,6 +11,11 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
       # Bind LoDash to _ in the scope for {{}} view expressions
       $scope._ = _
 
+      # Handle the div resizing.  Chrome is happy without this, but FF will not propagate the height through the nested
+      # Divs so that height: 100% actually has any meaningful effect.  Must force setting the height.  There *must* be
+      # a more elegant solution to this but in combing through about 40-50 articles, I've yet to find one other than this
+
+
       # If the _id param exists in the url go ahead and load the cached data
       $scope._id = $routeParams['_id']
       if $routeParams['_id']?

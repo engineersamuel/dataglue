@@ -1,7 +1,23 @@
-https://www.openshift.com/kb/kb-e1006-sync-new-git-repo-with-your-own-existing-git-repo
+### Introduction
 
+Dataglue is an open source sandbox data visualization application.
+
+
+The objective of this project is to be able to consume data from any datasource and quickly visualize in most any manner desired.
+
+### Features
+* Reading from SQL and NoSQL datasources
+* Ability to multiplex time series data
+* Single page design faciliting graph changes on the fly with D3
+* No ETL required for working with data sets that don't require ETL
+* Deploys locally and to Openshift
+
+
+### Screenshots
 
 ### Deployment
+
+https://www.openshift.com/kb/kb-e1006-sync-new-git-repo-with-your-own-existing-git-repo
 
 Create a ~/.dataglue-settings.yml in your home directory if you are deploying locally or in $OPENSHIFT_DATA_DIR/.dataglue-settings.yml if deploying to Openshift.
 

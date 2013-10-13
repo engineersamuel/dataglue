@@ -1,4 +1,4 @@
-define ["angular", "services", "nv", "moment", "bubble"], (angular, services, nv, moment, Bubble) ->
+define ["angular", "services", "jquery", "nv", "moment", "bubble"], (angular, services, $, nv, moment, Bubble) ->
   "use strict"
   angular.module("dataGlue.directives", ["dataGlue.services"])
   .directive("appVersion", ["version", (version) ->
@@ -65,7 +65,7 @@ define ["angular", "services", "nv", "moment", "bubble"], (angular, services, nv
 #
 #        tables newVal
 
-  .directive "d3Visualization", () ->
+  .directive "d3Visualization", ($timeout) ->
     restrict: "E"
     scope: {
       val: "=",
@@ -251,6 +251,7 @@ define ["angular", "services", "nv", "moment", "bubble"], (angular, services, nv
         console.debug "Dataset changed to: #{JSON.stringify(dataSet)}"
 
         handleOptionsChanges()
+
       scope.$watch "type", (newVal, oldVal) ->
         chartType = newVal
         console.debug "chartType changed to: #{chartType}"
@@ -261,6 +262,29 @@ define ["angular", "services", "nv", "moment", "bubble"], (angular, services, nv
         # Now handle the options changes
         handleOptionsChanges()
 
+        # Trigger a resize if firefox so the svg can be sized accordingly
+        if navigator.userAgent.toLowerCase().indexOf('firefox') > -1
+          $timeout ( ->
+            $(window).trigger('resize')
+          ), 300
+
+      # It pains me to implement this hack.  The core issue is FF doesn't dynamically inheirit the height from parent
+      # Containers like Chrome does.  This causes the graph to have a very small height and not really visible.
+      # Whenever the window is resized, change the height of the svg element
+      $(window).resize () ->
+        # If on firefox resize the svg div
+        #if not $(window).chrome
+        if navigator.userAgent.toLowerCase().indexOf('firefox') > -1
+          innerHeight = $(window).innerHeight()
+          #innerHeightAdjusted = innerHeight - ($("#main-navigation").height() / 2)
+          $("#graph_container svg").height(innerHeight)
+
+
+      #$(window).trigger('resize')
+      if navigator.userAgent.toLowerCase().indexOf('firefox') > -1
+        $timeout ( ->
+          $(window).trigger('resize')
+        ), 300
 
 
 #  .directive "d3Graph", ["dbInfo", (dbInfo) ->

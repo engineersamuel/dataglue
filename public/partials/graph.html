@@ -1,6 +1,6 @@
 
 <!-- TODO add in an accordian -- http://getbootstrap.com/javascript/#collapse-->
-<div class="row">
+<div class="row-fluid">
   <div class="col-lg-3">
     <!-- TODO -- Really this Graph button isn't necessary.  I should watch the dataSet for changes and-->
     <!-- Dynamically update the graph based on the selected options and such-->
@@ -41,7 +41,7 @@
       </div>
     </accordion-group>-->
   </div>
-  <div class="col-lg-9">
+  <div id="main_container" class="col-lg-9">
     <d3-visualization id="graph_container" val="d3DataSet" type="dataSet.graphType">
       <svg></svg>
     </d3-visualization>
