@@ -200,13 +200,13 @@
             value: 'multiplex',
             label: 'Multiplex',
             tooltip: 'Multiplexes the x-axis over this field.',
-            dataTypes: dbService.multiplexGroupByTypes
+            dataTypes: ['*']
           }, {
             name: 'groupBy',
             value: 'field',
             label: 'Field Itself',
             tooltip: 'Adds this field as the primary x axis group',
-            dataTypes: dbService.fieldGroupByTypes
+            dataTypes: ['*']
           }, {
             name: 'groupBy',
             value: 'year',

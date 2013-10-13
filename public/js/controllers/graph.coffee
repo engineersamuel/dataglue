@@ -167,8 +167,10 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
       $scope.filterByFieldDataType = (opt) -> _.contains(opt.dataTypes, $scope.selectedField?.DATA_TYPE) or _.contains(opt.dataTypes, '*')
       $scope.groupByOptions = [
         {name: 'groupBy', value: undefined, label: 'No Selection', dataTypes: ['*']},
-        {name: 'groupBy', value: 'multiplex', label: 'Multiplex', tooltip: 'Multiplexes the x-axis over this field.', dataTypes: dbService.multiplexGroupByTypes},
-        {name: 'groupBy', value: 'field', label: 'Field Itself', tooltip: 'Adds this field as the primary x axis group', dataTypes: dbService.fieldGroupByTypes},
+        {name: 'groupBy', value: 'multiplex', label: 'Multiplex', tooltip: 'Multiplexes the x-axis over this field.', dataTypes: ['*']},
+#        {name: 'groupBy', value: 'multiplex', label: 'Multiplex', tooltip: 'Multiplexes the x-axis over this field.', dataTypes: dbService.multiplexGroupByTypes},
+#        {name: 'groupBy', value: 'field', label: 'Field Itself', tooltip: 'Adds this field as the primary x axis group', dataTypes: dbService.fieldGroupByTypes},
+        {name: 'groupBy', value: 'field', label: 'Field Itself', tooltip: 'Adds this field as the primary x axis group', dataTypes: ['*']},
 #        {name: 'groupBy', value: 'quarter', label: 'Quarter'},
         {name: 'groupBy', value: 'year', label: 'Year', tooltip: "Groups on DATE_FORMAT(field, '%Y')", dataTypes: dbService.dateGroupByTypes},
         {name: 'groupBy', value: 'month', label: 'Month', tooltip: "Groups on DATE_FORMAT(field, '%Y-%m')", dataTypes: dbService.dateGroupByTypes},
