@@ -130,11 +130,12 @@
     o.user = exports.resolveEnvVar(obj.user) || obj.user || void 0;
     o.pass = exports.resolveEnvVar(obj.user) || obj.pass || void 0;
     mongourl = void 0;
-    if ((o.user && o.user !== '') && (o.pass && o.pass !== '')) {
+    if (((o.user != null) && o.user !== '') && ((o.pass != null) && o.pass !== '')) {
       mongourl = "mongodb://" + o.user + ":" + o.pass + "@" + o.host + ":" + o.port + "/" + o.db;
     } else {
       mongourl = "mongodb://" + o.host + ":" + o.port + "/" + o.db;
     }
+    logger.info("Finished generating mongo url: " + mongourl);
     return mongourl;
   };
 

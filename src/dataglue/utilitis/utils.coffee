@@ -104,19 +104,19 @@ exports.truthy = (obj) ->
 
 exports.generateMongoUrl = (obj) ->
   o = _.cloneDeep obj
-  o.host = (exports.resolveEnvVar(obj.host) || obj.host || '127.0.0.1')
-  o.port = (exports.resolveEnvVar(obj.port) || obj.port || 27017)
-  o.db = (exports.resolveEnvVar(obj.db) || obj.db || 'test')
+  o.host = exports.resolveEnvVar(obj.host) || obj.host || '127.0.0.1'
+  o.port = exports.resolveEnvVar(obj.port) || obj.port || 27017
+  o.db = exports.resolveEnvVar(obj.db) || obj.db || 'test'
   o.user = exports.resolveEnvVar(obj.user) || obj.user || undefined
   o.pass = exports.resolveEnvVar(obj.user) || obj.pass || undefined
 
   mongourl = undefined
-  if (o.user and o.user isnt '') and (o.pass and o.pass isnt '')
+  if (o.user? and o.user isnt '') and (o.pass? and o.pass isnt '')
     mongourl = "mongodb://#{o.user}:#{o.pass}@#{o.host}:#{o.port}/#{o.db}" #"?auto_reconnect=true"
   else
     mongourl = "mongodb://#{o.host}:#{o.port}/#{o.db}" #"?auto_reconnect=true"
 
-  #logger.debug "Finished generating mongo url: #{mongourl}"
+  logger.info "Finished generating mongo url: #{mongourl}"
   return mongourl
 
 exports.isInteger = (f) -> f isnt undefined and typeof(f) is 'number' and Math.round(f) == f
