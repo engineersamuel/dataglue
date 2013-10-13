@@ -140,7 +140,7 @@
         ref.fields[0].cond = '=';
         ref.fields[0].condValue = 1;
         ref.fields[1].groupBy = "month";
-        expectedSql = 'SELECT COUNT(id) AS "y", created_date, DATE_FORMAT(created_date, \'%Y-%m\') AS "x" FROM some_schema.some_table WHERE (id = \'1\') GROUP BY x LIMIT 1000';
+        expectedSql = 'SELECT COUNT(id) AS "y", created_date, DATE_FORMAT(created_date, \'%Y-%m\') AS "x" FROM some_schema.some_table WHERE (id = 1) GROUP BY x LIMIT 1000';
         return queryBuilder.buildQuery(ref, function(err, output) {
           if (err) {
             return done(err);
@@ -157,7 +157,7 @@
         ref.fields[0].cond = '!=';
         ref.fields[0].condValue = 1;
         ref.fields[1].groupBy = "month";
-        expectedSql = 'SELECT COUNT(id) AS "y", created_date, DATE_FORMAT(created_date, \'%Y-%m\') AS "x" FROM some_schema.some_table WHERE (id != \'1\') GROUP BY x LIMIT 1000';
+        expectedSql = 'SELECT COUNT(id) AS "y", created_date, DATE_FORMAT(created_date, \'%Y-%m\') AS "x" FROM some_schema.some_table WHERE (id != 1) GROUP BY x LIMIT 1000';
         return queryBuilder.buildQuery(ref, function(err, output) {
           if (err) {
             return done(err);
@@ -203,7 +203,7 @@
           return done();
         });
       });
-      return it('build a simple multiplexed mysql query', function(done) {
+      it('build a simple multiplexed mysql query', function(done) {
         var expectedSql, ref;
 
         ref = _.cloneDeep(simpleMysqlDbReference);
@@ -214,6 +214,26 @@
           groupBy: 'multiplex'
         });
         expectedSql = 'SELECT COUNT(id) AS "y", created_date, geo, geo AS "x_multiplex" FROM some_schema.some_table GROUP BY x_multiplex LIMIT 1000';
+        return queryBuilder.buildQuery(ref, function(err, output) {
+          if (err) {
+            return done(err);
+          }
+          output.query.should.equal(expectedSql);
+          return done();
+        });
+      });
+      return it('sql where restrict on = string', function(done) {
+        var expectedSql, ref;
+
+        ref = _.cloneDeep(simpleMysqlDbReference);
+        ref.fields[0].aggregation = "count";
+        ref.fields.push({
+          COLUMN_NAME: "geo",
+          DATA_TYPE: "varchar",
+          cond: '=',
+          condValue: 'NA'
+        });
+        expectedSql = 'SELECT COUNT(id) AS "y", created_date, geo FROM some_schema.some_table WHERE (geo = \'NA\') LIMIT 1000';
         return queryBuilder.buildQuery(ref, function(err, output) {
           if (err) {
             return done(err);

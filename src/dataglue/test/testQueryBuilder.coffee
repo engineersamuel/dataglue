@@ -110,7 +110,7 @@ describe 'queryBuilder', ->
       ref.fields[0].cond = '='
       ref.fields[0].condValue = 1
       ref.fields[1].groupBy = "month"
-      expectedSql = 'SELECT COUNT(id) AS "y", created_date, DATE_FORMAT(created_date, \'%Y-%m\') AS "x" FROM some_schema.some_table WHERE (id = \'1\') GROUP BY x LIMIT 1000'
+      expectedSql = 'SELECT COUNT(id) AS "y", created_date, DATE_FORMAT(created_date, \'%Y-%m\') AS "x" FROM some_schema.some_table WHERE (id = 1) GROUP BY x LIMIT 1000'
       queryBuilder.buildQuery ref, (err, output) ->
         if err then return done(err)
         output.query.should.equal expectedSql
@@ -122,7 +122,7 @@ describe 'queryBuilder', ->
       ref.fields[0].cond = '!='
       ref.fields[0].condValue = 1
       ref.fields[1].groupBy = "month"
-      expectedSql = 'SELECT COUNT(id) AS "y", created_date, DATE_FORMAT(created_date, \'%Y-%m\') AS "x" FROM some_schema.some_table WHERE (id != \'1\') GROUP BY x LIMIT 1000'
+      expectedSql = 'SELECT COUNT(id) AS "y", created_date, DATE_FORMAT(created_date, \'%Y-%m\') AS "x" FROM some_schema.some_table WHERE (id != 1) GROUP BY x LIMIT 1000'
       queryBuilder.buildQuery ref, (err, output) ->
         if err then return done(err)
         output.query.should.equal expectedSql
@@ -164,6 +164,21 @@ describe 'queryBuilder', ->
         groupBy: 'multiplex'
       })
       expectedSql = 'SELECT COUNT(id) AS "y", created_date, geo, geo AS "x_multiplex" FROM some_schema.some_table GROUP BY x_multiplex LIMIT 1000'
+      queryBuilder.buildQuery ref, (err, output) ->
+        if err then return done(err)
+        output.query.should.equal expectedSql
+        done()
+
+    it 'sql where restrict on = string', (done) ->
+      ref = _.cloneDeep simpleMysqlDbReference
+      ref.fields[0].aggregation = "count"
+      ref.fields.push({
+        COLUMN_NAME : "geo",
+        DATA_TYPE : "varchar",
+        cond: '=',
+        condValue: 'NA'
+      })
+      expectedSql = 'SELECT COUNT(id) AS "y", created_date, geo FROM some_schema.some_table WHERE (geo = \'NA\') LIMIT 1000'
       queryBuilder.buildQuery ref, (err, output) ->
         if err then return done(err)
         output.query.should.equal expectedSql

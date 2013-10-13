@@ -230,6 +230,7 @@ sandbox.test_array_concat = () ->
   logger.info prettyjson.render b
 
 sandbox.test_mysql_escape = () ->
+  logger.debug mysql.escape("NA")
   beginCond = mysql.escape("!=").replace /'/g, ""
   logger.debug beginCond
 

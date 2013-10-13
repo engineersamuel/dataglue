@@ -500,6 +500,7 @@
   sandbox.test_mysql_escape = function() {
     var beginCond;
 
+    logger.debug(mysql.escape("NA"));
     beginCond = mysql.escape("!=").replace(/'/g, "");
     return logger.debug(beginCond);
   };
