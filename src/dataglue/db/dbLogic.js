@@ -191,20 +191,22 @@
                   values: []
                 };
                 _.each(dataSetResult.results, function(item) {
-                  stream.values.push({
-                    x: utils.parseX(item.x, {
+                  if (item.x != null) {
+                    stream.values.push({
+                      x: utils.parseX(item.x, {
+                        xType: dataSetResult.queryHash.d3Lookup.xType,
+                        xGroupBy: dataSetResult.queryHash.d3Lookup.xGroupBy
+                      }),
+                      xOrig: item.x,
                       xType: dataSetResult.queryHash.d3Lookup.xType,
-                      xGroupBy: dataSetResult.queryHash.d3Lookup.xGroupBy
-                    }),
-                    xOrig: item.x,
-                    xType: dataSetResult.queryHash.d3Lookup.xType,
-                    xGroupBy: dataSetResult.queryHash.d3Lookup.xGroupBy,
-                    xMultiplex: dataSetResult.queryHash.d3Lookup.xMultiplex,
-                    xMultiplexType: dataSetResult.queryHash.d3Lookup.xMultiplexType,
-                    y: item.y,
-                    yType: dataSetResult.queryHash.d3Lookup.yType
-                  });
-                  return dataSetResult.d3Data = [stream];
+                      xGroupBy: dataSetResult.queryHash.d3Lookup.xGroupBy,
+                      xMultiplex: dataSetResult.queryHash.d3Lookup.xMultiplex,
+                      xMultiplexType: dataSetResult.queryHash.d3Lookup.xMultiplexType,
+                      y: item.y,
+                      yType: dataSetResult.queryHash.d3Lookup.yType
+                    });
+                    return dataSetResult.d3Data = [stream];
+                  }
                 });
                 delete dataSetResult.results;
               }

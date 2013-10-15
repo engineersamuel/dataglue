@@ -198,20 +198,23 @@ CachedDataSet.loadDataSet = (doc, callback) ->
               stream = {key: dataSetResult.queryHash.d3Lookup.key, values: []}
               _.each dataSetResult.results, (item) ->
 
-                # logger.debug "item: #{prettyjson.render item}"
-                stream.values.push
-                  # x: item.x,
-                  x: utils.parseX(item.x, {xType: dataSetResult.queryHash.d3Lookup.xType, xGroupBy: dataSetResult.queryHash.d3Lookup.xGroupBy})
-                  xOrig: item.x
-                  #x: if dataSetResult.queryHash.d3Lookup.xType in ['date', 'datetime'] then +moment(item.x) else item.x
-                  xType: dataSetResult.queryHash.d3Lookup.xType
-                  xGroupBy: dataSetResult.queryHash.d3Lookup.xGroupBy
-                  xMultiplex: dataSetResult.queryHash.d3Lookup.xMultiplex
-                  xMultiplexType: dataSetResult.queryHash.d3Lookup.xMultiplexType
-                  y: item.y
-                  yType: dataSetResult.queryHash.d3Lookup.yType
+                # TODO optionally allow null eventually, for now filter it out of the x
+                if item.x?
 
-                 dataSetResult.d3Data = [stream]
+                  # logger.debug "item: #{prettyjson.render item}"
+                  stream.values.push
+                    # x: item.x,
+                    x: utils.parseX(item.x, {xType: dataSetResult.queryHash.d3Lookup.xType, xGroupBy: dataSetResult.queryHash.d3Lookup.xGroupBy})
+                    xOrig: item.x
+                    #x: if dataSetResult.queryHash.d3Lookup.xType in ['date', 'datetime'] then +moment(item.x) else item.x
+                    xType: dataSetResult.queryHash.d3Lookup.xType
+                    xGroupBy: dataSetResult.queryHash.d3Lookup.xGroupBy
+                    xMultiplex: dataSetResult.queryHash.d3Lookup.xMultiplex
+                    xMultiplexType: dataSetResult.queryHash.d3Lookup.xMultiplexType
+                    y: item.y
+                    yType: dataSetResult.queryHash.d3Lookup.yType
+
+                   dataSetResult.d3Data = [stream]
               delete dataSetResult.results
 
           # Now that we have a d3Data composed of one or more streams each those streams and sort by x
