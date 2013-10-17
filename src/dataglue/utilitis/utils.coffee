@@ -45,9 +45,9 @@ exports.formatFieldValue = (field, value, type, opts) ->
   else if _.contains exports.dateDateTypes, field.DATA_TYPE
     if type is 'sql'
       #output = "TIMESTAMP('#{moment.utc(value, 'YYYY-MM-DD').toISOString()}')"
-      output = moment.utc(value, 'YYYY-MM-DD').toISOString()
+      output = moment.utc(value, 'YYYY-MM-DD HH:mm:ss').toISOString()
     else if type is 'mongo'
-      output = moment.utc(value, 'YYYY-MM-DD').toDate()
+      output = moment.utc(value, 'YYYY-MM-DD HH:mm:ss').toDate()
 
   # Numbers
   else if _.contains exports.numericalDataTypes, field.DATA_TYPE

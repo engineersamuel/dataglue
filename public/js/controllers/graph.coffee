@@ -246,8 +246,9 @@ define ['jquery', 'underscore', 'moment', 'dbLogic'], ($, _, moment, dbLogic) ->
       $scope.today = () -> $scope.dt = new Date()
       $scope.clearBeginDate = () -> $scope.beginValue = undefined
       $scope.clearEndDate = () -> $scope.endValue = undefined
-      $scope.openBeginDate = () -> $timeout () -> $scope.beginValueOpened = true
-      $scope.openEndDate = () -> $timeout () -> $scope.endValueOpened = true
+      $scope.beginValueOpen = () -> $timeout () -> $scope.beginValueOpened = true
+      $scope.endValueOpen = () -> $timeout () -> $scope.endValueOpened = true
+
       ##################################################################################################################
 
       $scope.testGraph = () ->

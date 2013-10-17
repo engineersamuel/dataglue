@@ -23,33 +23,24 @@ mixin valueForm(optionsName, condName, condValue, type, optionalText)
             else if type == 'boolean'
                 select(ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].#{condValue}", ng-options="x.value as x.label for x in booleanOptions")
                     option(value="")
+            else if type == 'date'
+                input(type="text", datepicker-popup="MM-dd-yyyy", ng-change="resetOtherFields(dbRefIndex, fieldIndex, #{condValue})", ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].#{condValue}", open="#{condValue}Opened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")
+                span(style="display:inline-block;")
+                    | &nbsp;
+                    // See graph.coffee $scope.beginValueOpen = () -> $timeout () -> $scope.beginValueOpened = true
+                    i.icon-calendar(ng-click="#{condValue}Open()")
+                    span(ng-if="o.tooltip != undefined")
+                        | &nbsp;
+                        i.icon-info-sign(tooltip="{{o.tooltip}}")
+                    | &nbsp;
+                    //div(ng-model="mytime",ng-change="changed()")
+                    //    timepicker(show-meridian="ismeridian")
+
             | &nbsp;
             span(ng-if="o.tooltip != undefined")
                 | &nbsp;
                 i.icon-info-sign(tooltip="{{o.tooltip}}")
             | &nbsp;#{optionalText}
-
-div(ng-if="_.contains(['date', 'datetime'], dataSet.dbReferences[dbRefIndex].fields[fieldIndex].DATA_TYPE)")
-    div.form-horizontal
-        //input(type="text", datepicker-popup="MM-dd-yyyy", ng-model="beginValue", open="beginValueOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")
-        input(type="text", datepicker-popup="MM-dd-yyyy", ng-change="resetOtherFields(dbRefIndex, fieldIndex, 'beginValue')", ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].beginValue", open="beginValueOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")
-        span
-            | &nbsp;
-            i.icon-calendar(ng-click="openBeginDate()")
-            span(ng-if="o.tooltip != undefined")
-                | &nbsp;
-                i.icon-info-sign(tooltip="{{o.tooltip}}")
-            | &nbsp;Begin Date
-    div.form-horizontal
-        //input(type="text", datepicker-popup="MM-dd-yyyy", ng-model="endValue", open="endValueOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")
-        input(type="text", datepicker-popup="MM-dd-yyyy", ng-change="resetOtherFields(dbRefIndex, fieldIndex, 'beginValue')", ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].endValue", open="endValueOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")
-        span
-            | &nbsp;
-            i.icon-calendar(ng-click="openEndDate()")
-            span(ng-if="o.tooltip != undefined")
-                | &nbsp;
-                i.icon-info-sign(tooltip="{{o.tooltip}}")
-            | &nbsp;End Date
 
 div(ng-if="_.contains(['tinyint', 'boolean'], dataSet.dbReferences[dbRefIndex].fields[fieldIndex].DATA_TYPE)")
     +singleCondRestrictHeader
@@ -64,3 +55,8 @@ div(ng-if="_.contains(['varchar', 'text', 'longtext'], dataSet.dbReferences[dbRe
     +rangeCondRestrictHeader
     +valueForm('beginRangeConds', 'beginCond', 'beginValue', 'text', 'Begin')
     +valueForm('endRangeConds', 'endCond', 'endValue', 'text', 'End')
+div(ng-if="_.contains(['date', 'datetime'], dataSet.dbReferences[dbRefIndex].fields[fieldIndex].DATA_TYPE)")
+    +valueForm('beginRangeConds', 'beginCond', 'beginValue', 'date', 'Begin Date')
+    +valueForm('endRangeConds', 'endCond', 'endValue', 'date', 'End Date')
+
+// If you ever need to implement a more custom non-mixin logic, then create another div matching a DATA_TYPE and copy the main mixin and deparametarize

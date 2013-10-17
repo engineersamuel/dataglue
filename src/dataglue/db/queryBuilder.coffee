@@ -82,7 +82,7 @@ QueryBuilder.buildSqlQuery = (dbReference, callback) ->
         # Escape the cond to prevent malicious input, but replace the ' with nothing
         beginCond = mysql.escape(field.beginCond).replace /'/g, ""
         if _.contains ['date', 'datetime'], field.DATA_TYPE
-          sql.where("#{fieldName} #{beginCond} TIMESTAMP(#{utils.formatFieldValue(field, field.beginValue, 'sql')})")
+          sql.where("#{fieldName} #{beginCond} TIMESTAMP('#{utils.formatFieldValue(field, field.beginValue, 'sql')}')")
         else
           sql.where("#{fieldName} #{beginCond} ?", utils.formatFieldValue(field, field.beginValue, 'sql'))
 
@@ -90,7 +90,7 @@ QueryBuilder.buildSqlQuery = (dbReference, callback) ->
         # Escape the cond to prevent malicious input, but replace the ' with nothing
         endCond = mysql.escape(field.endCond).replace /'/g, ""
         if _.contains ['date', 'datetime'], field.DATA_TYPE
-          sql.where("#{fieldName} #{endCond} TIMESTAMP(#{utils.formatFieldValue(field, field.endValue, 'sql')})")
+          sql.where("#{fieldName} #{endCond} TIMESTAMP('#{utils.formatFieldValue(field, field.endValue, 'sql')}')")
         else
           sql.where("#{fieldName} #{endCond} ?", utils.formatFieldValue(field, field.endValue, 'sql'))
 

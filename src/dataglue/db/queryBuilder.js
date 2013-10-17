@@ -72,7 +72,7 @@
         if (utils.verifyPropertyExists(field, 'beginCond') && (field.beginCond != null)) {
           beginCond = mysql.escape(field.beginCond).replace(/'/g, "");
           if (_.contains(['date', 'datetime'], field.DATA_TYPE)) {
-            sql.where("" + fieldName + " " + beginCond + " TIMESTAMP(" + (utils.formatFieldValue(field, field.beginValue, 'sql')) + ")");
+            sql.where("" + fieldName + " " + beginCond + " TIMESTAMP('" + (utils.formatFieldValue(field, field.beginValue, 'sql')) + "')");
           } else {
             sql.where("" + fieldName + " " + beginCond + " ?", utils.formatFieldValue(field, field.beginValue, 'sql'));
           }
@@ -80,7 +80,7 @@
         if (utils.verifyPropertyExists(field, 'endCond') && (field.endCond != null)) {
           endCond = mysql.escape(field.endCond).replace(/'/g, "");
           if (_.contains(['date', 'datetime'], field.DATA_TYPE)) {
-            sql.where("" + fieldName + " " + endCond + " TIMESTAMP(" + (utils.formatFieldValue(field, field.endValue, 'sql')) + ")");
+            sql.where("" + fieldName + " " + endCond + " TIMESTAMP('" + (utils.formatFieldValue(field, field.endValue, 'sql')) + "')");
           } else {
             sql.where("" + fieldName + " " + endCond + " ?", utils.formatFieldValue(field, field.endValue, 'sql'));
           }

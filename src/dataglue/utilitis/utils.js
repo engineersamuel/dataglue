@@ -61,9 +61,9 @@
       output = new RegExp("" + value, 'i');
     } else if (_.contains(exports.dateDateTypes, field.DATA_TYPE)) {
       if (type === 'sql') {
-        output = moment.utc(value, 'YYYY-MM-DD').toISOString();
+        output = moment.utc(value, 'YYYY-MM-DD HH:mm:ss').toISOString();
       } else if (type === 'mongo') {
-        output = moment.utc(value, 'YYYY-MM-DD').toDate();
+        output = moment.utc(value, 'YYYY-MM-DD HH:mm:ss').toDate();
       }
     } else if (_.contains(exports.numericalDataTypes, field.DATA_TYPE)) {
       if (value === true) {

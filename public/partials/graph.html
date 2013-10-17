@@ -162,16 +162,6 @@
             </div>
             <div id="where" class="tab-pane"><br/>
               <!-- Not putting dates in here yet since it gets a bit messy, regular inputs work best-->
-              <div ng-if="_.contains(['date', 'datetime'], dataSet.dbReferences[dbRefIndex].fields[fieldIndex].DATA_TYPE)">
-                <div class="form-horizontal">
-                  <!--input(type="text", datepicker-popup="MM-dd-yyyy", ng-model="beginValue", open="beginValueOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")-->
-                  <input type="text" datepicker-popup="MM-dd-yyyy" ng-change="resetOtherFields(dbRefIndex, fieldIndex, 'beginValue')" ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].beginValue" open="beginValueOpened" min="minDate" max="'2016-06-22'" datepicker-options="dateOptions" show-weeks="false" ng-required="true"/><span>&nbsp;<i ng-click="openBeginDate()" class="icon-calendar"></i><span ng-if="o.tooltip != undefined">&nbsp;<i tooltip="{{o.tooltip}}" class="icon-info-sign"></i></span>&nbsp;Begin Date</span>
-                </div>
-                <div class="form-horizontal">
-                  <!--input(type="text", datepicker-popup="MM-dd-yyyy", ng-model="endValue", open="endValueOpened", min="minDate", max="'2016-06-22'", datepicker-options="dateOptions", show-weeks="false", ng-required="true")-->
-                  <input type="text" datepicker-popup="MM-dd-yyyy" ng-change="resetOtherFields(dbRefIndex, fieldIndex, 'beginValue')" ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].endValue" open="endValueOpened" min="minDate" max="'2016-06-22'" datepicker-options="dateOptions" show-weeks="false" ng-required="true"/><span>&nbsp;<i ng-click="openEndDate()" class="icon-calendar"></i><span ng-if="o.tooltip != undefined">&nbsp;<i tooltip="{{o.tooltip}}" class="icon-info-sign"></i></span>&nbsp;End Date</span>
-                </div>
-              </div>
               <div ng-if="_.contains(['tinyint', 'boolean'], dataSet.dbReferences[dbRefIndex].fields[fieldIndex].DATA_TYPE)">
                               <h4><span>Restrict<span class="dataglue-green">&nbsp;{{dataSet.dbReferences[dbRefIndex].fields[fieldIndex].COLUMN_NAME}}</span>&nbsp;by a specific condition</span></h4>
                               <div class="form-horizontal"><span>
@@ -215,6 +205,27 @@
                                   </select>&nbsp;
                                   <input type="text" placeholder="Enter a string/text" ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].endValue" ng-disabled="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].endCond === null"/>&nbsp;<span ng-if="o.tooltip != undefined">&nbsp;<i tooltip="{{o.tooltip}}" class="icon-info-sign"></i></span>&nbsp;End</span></div>
               </div>
+              <div ng-if="_.contains(['date', 'datetime'], dataSet.dbReferences[dbRefIndex].fields[fieldIndex].DATA_TYPE)">
+                              <div class="form-horizontal"><span>
+                                  <!--beginCond -- beginRangeConds-->
+                                  <select ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].beginCond" ng-options="x.value as x.label for x in beginRangeConds">
+                                    <option value=""></option>
+                                  </select>&nbsp;
+                                  <input type="text" datepicker-popup="MM-dd-yyyy" ng-change="resetOtherFields(dbRefIndex, fieldIndex, beginValue)" ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].beginValue" open="beginValueOpened" min="minDate" max="'2016-06-22'" datepicker-options="dateOptions" show-weeks="false" ng-required="true"/><span style="display:inline-block;">&nbsp;
+                                    <!-- See graph.coffee $scope.beginValueOpen = () -> $timeout () -> $scope.beginValueOpened = true--><i ng-click="beginValueOpen()" class="icon-calendar"></i><span ng-if="o.tooltip != undefined">&nbsp;<i tooltip="{{o.tooltip}}" class="icon-info-sign"></i></span>&nbsp;
+                                    <!--div(ng-model="mytime",ng-change="changed()")-->
+                                    <!--    timepicker(show-meridian="ismeridian")--></span>&nbsp;<span ng-if="o.tooltip != undefined">&nbsp;<i tooltip="{{o.tooltip}}" class="icon-info-sign"></i></span>&nbsp;Begin Date</span></div>
+                              <div class="form-horizontal"><span>
+                                  <!--beginCond -- beginRangeConds-->
+                                  <select ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].endCond" ng-options="x.value as x.label for x in endRangeConds">
+                                    <option value=""></option>
+                                  </select>&nbsp;
+                                  <input type="text" datepicker-popup="MM-dd-yyyy" ng-change="resetOtherFields(dbRefIndex, fieldIndex, endValue)" ng-model="dataSet.dbReferences[dbRefIndex].fields[fieldIndex].endValue" open="endValueOpened" min="minDate" max="'2016-06-22'" datepicker-options="dateOptions" show-weeks="false" ng-required="true"/><span style="display:inline-block;">&nbsp;
+                                    <!-- See graph.coffee $scope.beginValueOpen = () -> $timeout () -> $scope.beginValueOpened = true--><i ng-click="endValueOpen()" class="icon-calendar"></i><span ng-if="o.tooltip != undefined">&nbsp;<i tooltip="{{o.tooltip}}" class="icon-info-sign"></i></span>&nbsp;
+                                    <!--div(ng-model="mytime",ng-change="changed()")-->
+                                    <!--    timepicker(show-meridian="ismeridian")--></span>&nbsp;<span ng-if="o.tooltip != undefined">&nbsp;<i tooltip="{{o.tooltip}}" class="icon-info-sign"></i></span>&nbsp;End Date</span></div>
+              </div>
+              <!-- If you ever need to implement a more custom non-mixin logic, then create another div matching a DATA_TYPE and copy the main mixin and deparametarize-->
             </div>
             <div id="info" class="tab-pane">
               <table class="table table-condensed">

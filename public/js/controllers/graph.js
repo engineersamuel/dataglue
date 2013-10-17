@@ -313,12 +313,12 @@
         $scope.clearEndDate = function() {
           return $scope.endValue = void 0;
         };
-        $scope.openBeginDate = function() {
+        $scope.beginValueOpen = function() {
           return $timeout(function() {
             return $scope.beginValueOpened = true;
           });
         };
-        $scope.openEndDate = function() {
+        $scope.endValueOpen = function() {
           return $timeout(function() {
             return $scope.endValueOpened = true;
           });

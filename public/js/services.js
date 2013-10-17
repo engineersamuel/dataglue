@@ -73,10 +73,10 @@ define(['angular', 'jquery', 'underscore', 'base64', 'pnotify'], function (angul
                 {name: 'cond', value: '=', label: '=', boolean: true},
                 {name: 'cond', value: '!=', label: '!='},
                 {name: 'cond', value: 'like', label: 'Like'},
-                {name: 'cond', value: 'gt', label: '>', range: true, begin: true},
-                {name: 'cond', value: 'gte', label: '>=', range: true, begin: true},
-                {name: 'cond', value: 'lt', label: '<', range: true, end: true},
-                {name: 'cond', value: 'lte', label: '<=', range: true, end: true }
+                {name: 'cond', value: '>', label: '>', range: true, begin: true},
+                {name: 'cond', value: '>=', label: '>=', range: true, begin: true},
+                {name: 'cond', value: '<', label: '<', range: true, end: true},
+                {name: 'cond', value: '<=', label: '<=', range: true, end: true }
             ];
             service.rangeConds = _.where(service.whereConds, {range: true});
             service.beginRangeConds = _.where(service.whereConds, {range: true, begin: true});

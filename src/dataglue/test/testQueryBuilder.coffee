@@ -141,6 +141,47 @@ describe 'queryBuilder', ->
         output.query.should.equal expectedSql
         done()
 
+    it 'build a sql query where a date  > 2013-01-02 00:30:15', (done) ->
+      beginValue = moment.utc("2013-01-02T00:30:15")
+
+      ref = _.cloneDeep simpleMysqlDbReference
+      ref.fields[0].aggregation = "count"
+      ref.fields[0].DATA_TYPE = "int"
+      ref.fields[0].cond = '>'
+      ref.fields[0].condValue = 1
+      ref.fields[1].groupBy = "month"
+      ref.fields[1].DATA_TYPE = "datetime"
+      ref.fields[1].beginCond = ">"
+      ref.fields[1].beginValue = beginValue
+
+      expectedSql = 'SELECT COUNT(id) AS "y", created_date, DATE_FORMAT(created_date, \'%Y-%m\') AS "x" FROM some_schema.some_table WHERE (id > 1) AND (created_date > TIMESTAMP(\'2013-01-02T00:30:15.000Z\')) GROUP BY x LIMIT 1000'
+      queryBuilder.buildQuery ref, (err, output) ->
+        if err then return done(err)
+        output.query.should.equal expectedSql
+        done()
+
+    it 'build a sql query where a date  > 2013-01-02 00:30:15 and <= 2013-02-01 00:45:00', (done) ->
+      beginValue = moment.utc("2013-01-02T00:30:15")
+      endValue = moment.utc("2013-02-01T00:45:00")
+
+      ref = _.cloneDeep simpleMysqlDbReference
+      ref.fields[0].aggregation = "count"
+      ref.fields[0].DATA_TYPE = "int"
+      ref.fields[0].cond = '>'
+      ref.fields[0].condValue = 1
+      ref.fields[1].groupBy = "month"
+      ref.fields[1].DATA_TYPE = "datetime"
+      ref.fields[1].beginCond = ">"
+      ref.fields[1].beginValue = beginValue
+      ref.fields[1].endCond = "<="
+      ref.fields[1].endValue = endValue
+
+      expectedSql = 'SELECT COUNT(id) AS "y", created_date, DATE_FORMAT(created_date, \'%Y-%m\') AS "x" FROM some_schema.some_table WHERE (id > 1) AND (created_date > TIMESTAMP(\'2013-01-02T00:30:15.000Z\')) AND (created_date <= TIMESTAMP(\'2013-02-01T00:45:00.000Z\')) GROUP BY x LIMIT 1000'
+      queryBuilder.buildQuery ref, (err, output) ->
+        if err then return done(err)
+        output.query.should.equal expectedSql
+        done()
+
     it 'build a mysql query where 1 < id <= 10', (done) ->
       ref = _.cloneDeep simpleMysqlDbReference
       ref.fields[0].aggregation = "count"
