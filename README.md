@@ -154,9 +154,22 @@ To create this github project which is also pushed to openshift:
 * Bower
  * For zsh, to ~/.zshrc add alias bower='noglob bower'
 
-* Testing
+### Testing
 `npm install`
 `grunt mochaTest`
+
+### Migrating in Openshift
+
+If needing to change gears or change cartridges or update cartridges, follow these steps:
+
+https://www.openshift.com/kb/kb-e1052-how-do-i-migrate-my-app
+* `rhc snapshot save -a dataglue`
+* mongo dump as well, as the snapshot did not appear to save the mongo data
+* `rhc delete-app dataglue`
+* `rhc create-app -g <gear name|int_general_medium> dataglue "http://cartreflect-claytondev.rhcloud.com/reflect?github=wshearn/openshift-origin-cartridge-nodejs"`
+* `rhc cartridge add mongodb-2.2 -a dataglue`
+* `rhc snapshot restore -a dataglue -f /tmp/dataglue.tar.gz`
+* Then Update the .git/config openshift ssh references to point to the new openshift app ssh git location.  This can be found by logging into openshift and going to the app.
 
 ### References
 * [Getting Started with Openshift](https://www.openshift.com/get-started)
