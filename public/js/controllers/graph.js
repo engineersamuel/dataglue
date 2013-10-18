@@ -106,10 +106,10 @@
             theHtml.push("Field " + field.cond + " " + field.condValue);
           }
           if (((field != null ? field.beginCond : void 0) != null) && ((_ref3 = field.beginValue) !== (void 0) && _ref3 !== '')) {
-            theHtml.push("Field " + field.cond + " " + field.condValue);
+            theHtml.push("Field " + field.beginCond + " " + field.beginValue);
           }
           if (((field != null ? field.endCond : void 0) != null) && ((_ref4 = field.endValue) !== (void 0) && _ref4 !== '')) {
-            theHtml.push("Field " + field.cond + " " + field.condValue);
+            theHtml.push("Field " + field.endCond + " " + field.endValue);
           }
           if (theHtml.length === 0) {
             return 'Field being used.';
