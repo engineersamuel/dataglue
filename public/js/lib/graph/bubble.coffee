@@ -16,11 +16,6 @@ define ['underscore', 'd3', 'customTooltip'], (_, d3, CustomTooltip) ->
       @layout_gravity = -0.01
       @damper = 0.1
 
-#      myOperative = operative (a, b, c, callback) ->
-#        result = a + b + c
-#        callback(result)
-#      myOperative(1, 2, 3, (result) -> console.log(JSON.stringify(result)) )
-
 #      @origins = {
 #        "Search": {x: @width / 6, y: @height / 2, color: "#BFBFBF"}
 #        "Search;Suggestion": {x: (@width / 6) * 2, y: @height / 2, color: "#FFA200"}

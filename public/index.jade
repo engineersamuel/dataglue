@@ -6,12 +6,13 @@ html(lang="en")
         title Data Glue
         //base(href="/index.html")
         meta(name="viewport",content="width=device-width, initial-scale=1.0")
-        script(data-main="js/main",src="js/bower_components/requirejs/require.js")
-        link(rel="stylesheet",type="text/css",media="all",href="css/bootstrap.min.css")
-        link(rel="stylesheet",type="text/css",media="all",href="js/bower_components/pines-notify/jquery.pnotify.default.css")
-        link(rel="stylesheet",type="text/css",media="all",href="js/bower_components/pines-notify/jquery.pnotify.default.icons.css")
-        link(rel="stylesheet",type="text/css",media="all",href="js/bower_components/font-awesome/css/font-awesome.css")
-        link(rel="stylesheet",type="text/css",media="all",href="css/app.css")
+        if env == "development"
+            script(data-main="js/main",src="js/bower_components/requirejs/require.js")
+            link(rel="stylesheet",type="text/css",media="all",href="css/app.css")
+        else if  env == "production"
+            link(rel="stylesheet",type="text/css",media="all",href="dist/dataglue.min.css")
+            script(src="js/bower_components/almond/almond.js")
+            script(data-main="main",src="dist/optimized.min.js")
 
     body(ng-cloak="")
         div.navbar.navbar-static-top.navbar-inverse#main-navigation

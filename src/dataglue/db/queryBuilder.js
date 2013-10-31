@@ -355,6 +355,13 @@
             };
             theProject['$project'].y = '$count';
             return d3Lookup.key = "" + fieldName + " count";
+          } else if (field.aggregation === 'sum') {
+            addY(field, 'y');
+            theGroup['$group']['sum'] = {
+              '$sum': "$" + field.COLUMN_NAME
+            };
+            theProject['$project'].y = '$sum';
+            return d3Lookup.key = "" + fieldName + " sum";
           }
         }
       }

@@ -9,6 +9,80 @@
   should = require('should');
 
   describe('utils', function() {
+    describe('#test', function() {
+      var dataSet;
+
+      dataSet = {
+        "_id": "5260218133ff1defb7000001",
+        "name": "Test",
+        "graphType": "multiBarChart",
+        "dbReferences": [
+          {
+            "key": "a⦀b⦀people",
+            "connection": "a",
+            "schema": "b",
+            "table": "persons",
+            "fields": [
+              {
+                "COLUMN_NAME": "id",
+                "DATA_TYPE": "varchar",
+                "COLUMN_KEY": "PRI",
+                "COLUMN_TYPE": "varchar(18)",
+                "aggregation": "count"
+              }, {
+                "COLUMN_NAME": "companyid",
+                "DATA_TYPE": "varchar",
+                "COLUMN_KEY": "MUL",
+                "COLUMN_TYPE": "varchar(254)",
+                "joinTo": "a⦀b⦀company",
+                "joinOn": "id",
+                "joinType": "inner"
+              }
+            ],
+            "cache": true,
+            "limit": 1000,
+            "type": "mysql"
+          }, {
+            "key": "a⦀b⦀company",
+            "connection": "a",
+            "schema": "b",
+            "table": "company",
+            "fields": [
+              {
+                "COLUMN_NAME": "id",
+                "DATA_TYPE": "varchar",
+                "COLUMN_KEY": "PRI",
+                "COLUMN_TYPE": "varchar(18)",
+                "aggregation": "count"
+              }
+            ],
+            "cache": true,
+            "limit": 1000,
+            "type": "mysql"
+          }, {
+            "key": "d⦀e⦀foo",
+            "connection": "a",
+            "schema": "b",
+            "table": "bar",
+            "fields": [
+              {
+                "COLUMN_NAME": "id",
+                "DATA_TYPE": "varchar",
+                "COLUMN_KEY": "PRI",
+                "COLUMN_TYPE": "varchar(18)",
+                "aggregation": "count"
+              }
+            ],
+            "cache": true,
+            "limit": 1000,
+            "type": "mongo"
+          }
+        ]
+      };
+      return it('should split the dbReferences into 2 groups', function() {
+        return utils.splitByJoinedDbReferences(dataSet.dbReferences).length.should.equal(2);
+      });
+    });
     describe('#testTruthy', function() {
       it('undefined should be false', function() {
         return utils.truthy(void 0).should.be["false"];

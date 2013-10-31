@@ -359,6 +359,15 @@ QueryBuilder.buildMongoQuery = (dbReference, callback) ->
           # Must also set the key in the final multiplexed operation
           # So if counting over the _id we'd have "<multiplex> _id count
           #theMultiplexProject['$project']['key']['$concat'] = theMultiplexProject['$project']['key']['$concat'].concat [' ', fieldName, ' ', 'count']
+        else if field.aggregation is 'sum'
+          # Add the y field to the d3Lookup
+          addY field, 'y'
+          # The count is simply the count of all docs in the group so $sum 1 for each grouped doc
+          theGroup['$group']['sum'] = {'$sum': "$#{field.COLUMN_NAME}"}
+          # Project the y as the $count set in the $group
+          theProject['$project'].y = '$sum'
+          # Set the key to a human readable format for d3
+          d3Lookup.key = "#{fieldName} sum"
 
 
   pipeline.push theMatch

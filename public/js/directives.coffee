@@ -2,29 +2,31 @@ define ["angular", "services", "jquery", "nv", "moment", "bubble"], (angular, se
   "use strict"
   angular.module("dataGlue.directives", ["dataGlue.services"])
   .directive("appVersion", ["version", (version) ->
-    (scope, elm, attrs) ->
+    return (scope, elm, attrs) ->
       elm.text version
   ])
   # Validates that the string input is valid json
   # TODO figure out how to conditionally parse based on required or not required
   .directive 'json', () ->
-    require: 'ngModel',
-    link: (scope, elm, attrs, ctrl) ->
-      ctrl.$parsers.unshift (viewValue) ->
-        # For not if no value or '' return true.  This should not return true if required but no docs on that I can find
-        if viewValue is undefined or viewValue is ''
-          ctrl.$setValidity('json', true)
-          return viewValue
+    return {
+      require: 'ngModel',
+      link: (scope, elm, attrs, ctrl) ->
+        ctrl.$parsers.unshift (viewValue) ->
+          # For not if no value or '' return true.  This should not return true if required but no docs on that I can find
+          if viewValue is undefined or viewValue is ''
+            ctrl.$setValidity('json', true)
+            return viewValue
 
-        # Otherwise attempt to parse the string as json return false if error
-        try
-          JSON.parse(viewValue)
-          ctrl.$setValidity('json', true)
-          return viewValue
-        catch e
-          ctrl.$setValidity('json', false)
-          return undefined
-        return true
+          # Otherwise attempt to parse the string as json return false if error
+          try
+            JSON.parse(viewValue)
+            ctrl.$setValidity('json', true)
+            return viewValue
+          catch e
+            ctrl.$setValidity('json', false)
+            return undefined
+          return true
+    }
 
 #  .directive "dirTableVis", ->
 #    restrict: "E"
@@ -66,225 +68,250 @@ define ["angular", "services", "jquery", "nv", "moment", "bubble"], (angular, se
 #        tables newVal
 
   .directive "d3Visualization", ($timeout) ->
-    restrict: "E"
-    scope: {
-      val: "=",
-      type: "="
-    }
-    link: (scope, element, attrs) ->
+    return {
+      restrict: "E"
+      scope: {
+        val: "=",
+        type: "="
+        legend: "="
+      }
+      link: (scope, element, attrs) ->
 
-      elementId = element.attr('id')
-      containerSelector = "##{elementId}"
-      svgSelector = "##{elementId} svg"
+        elementId = element.attr('id')
+        containerSelector = "##{elementId}"
+        svgSelector = "##{elementId} svg"
 
-      dataSet = undefined
-      chartType = undefined
-      chart = undefined
-      chartXType = undefined
+        dataSet = undefined
+        chartType = undefined
+        chart = undefined
+        chartXType = undefined
+        showLegend = true
 
-      setAxisFormatting = (dataSet) ->
-        xAxisDataType = dataSet[0]?['values']?[0]?.xType
-        chartXType = xAxisDataType
-        xAxisGroupBy = dataSet[0]?['values']?[0]?.xGroupBy
-        yAxisDataType = dataSet[0]?['values']?[0]?.yType
-        console.debug "xAxisDataType: #{xAxisDataType}"
-        console.debug "xAxisGroupBy: #{xAxisGroupBy}"
-        console.debug "yAxisDataType: #{yAxisDataType}"
+        setAxisFormatting = (dataSet) ->
+          xAxisDataType = dataSet[0]?['values']?[0]?.xType
+          chartXType = xAxisDataType
+          xAxisGroupBy = dataSet[0]?['values']?[0]?.xGroupBy
+          yAxisDataType = dataSet[0]?['values']?[0]?.yType
+          console.debug "xAxisDataType: #{xAxisDataType}"
+          console.debug "xAxisGroupBy: #{xAxisGroupBy}"
+          console.debug "yAxisDataType: #{yAxisDataType}"
 
-        # I may do some better logic in the future but for now float is the safe case
-        if _.contains ['int', 'float'], yAxisDataType
-          chart.yAxis.tickFormat(d3.format(',.2f'))
-        #if yAxisDataType in ['int']
-        #  chart.yAxis.tickFormat((d) -> d3.format("d")(d))
-        #else if yAxisDataType in ['float']
-        #  chart.yAxis.tickFormat(d3.format(',.1f'))
-        #chart.yAxis.tickFormat((d) -> d3.format("d")(d))
+          # I may do some better logic in the future but for now float is the safe case
+          if _.contains ['int', 'float'], yAxisDataType
+            chart.yAxis.tickFormat(d3.format(',.2f'))
+          #if yAxisDataType in ['int']
+          #  chart.yAxis.tickFormat((d) -> d3.format("d")(d))
+          #else if yAxisDataType in ['float']
+          #  chart.yAxis.tickFormat(d3.format(',.1f'))
+          #chart.yAxis.tickFormat((d) -> d3.format("d")(d))
 
-        if _.contains ['datetime', 'date'], xAxisDataType
-          if xAxisGroupBy is 'second'
-            chart.xAxis.tickFormat((d) -> moment.utc(d).format('YYYY-MM-DD HH:mm:ss'))
-          else if xAxisGroupBy is 'minute'
-            chart.xAxis.tickFormat((d) -> moment.utc(d).format('YYYY-MM-DD HH:mm'))
-          else if xAxisGroupBy is 'hour'
-            chart.xAxis.tickFormat((d) -> moment.utc(d).format('YYYY-MM-DD HH'))
-          else if xAxisGroupBy is 'day'
-            chart.xAxis.tickFormat((d) -> moment.utc(d).format('YYYY-MM-DD'))
-          else if xAxisGroupBy is 'month'
-            chart.xAxis.tickFormat((d) -> moment.utc(d).format('YYYY-MM'))
-          else if xAxisGroupBy is 'year'
-            chart.xAxis.tickFormat((d) -> moment.utc(d).format('YYYY'))
-          # Default
-          else
-            chart.xAxis.tickFormat((d) -> moment.utc(d).format('YYYY-MM-DD'))
-        else if xAxisDataType is 'varchar'
-          chart.xAxis.tickFormat((d) -> d)
+          if _.contains ['datetime', 'date'], xAxisDataType
+            if xAxisGroupBy is 'second'
+              chart.xAxis.tickFormat((d) -> moment.utc(d).format('YYYY-MM-DD HH:mm:ss'))
+            else if xAxisGroupBy is 'minute'
+              chart.xAxis.tickFormat((d) -> moment.utc(d).format('YYYY-MM-DD HH:mm'))
+            else if xAxisGroupBy is 'hour'
+              chart.xAxis.tickFormat((d) -> moment.utc(d).format('YYYY-MM-DD HH'))
+            else if xAxisGroupBy is 'day'
+              chart.xAxis.tickFormat((d) -> moment.utc(d).format('YYYY-MM-DD'))
+            else if xAxisGroupBy is 'month'
+              chart.xAxis.tickFormat((d) -> moment.utc(d).format('YYYY-MM'))
+            else if xAxisGroupBy is 'year'
+              chart.xAxis.tickFormat((d) -> moment.utc(d).format('YYYY'))
+            # Default
+            else
+              chart.xAxis.tickFormat((d) -> moment.utc(d).format('YYYY-MM-DD'))
+          else if xAxisDataType is 'varchar'
+            chart.xAxis.tickFormat((d) -> d)
 
-      createChartByType = () ->
-        if chartType is 'multiBarChart'
-          chart = nv.models.multiBarChart()
-            .margin({top: 10, right: 30, bottom: 150, left: 60})
-            #.staggerLabels(true)
-            .x((d) -> d.x)
-            .y((d) -> d.y)
-            .tooltip((key, x, y, e, graph) ->
-                return "<h3>#{key}</h3><p>#{y} on #{x}</p>"
-            )
-        else if chartType is 'stackedAreaChart'
-          chart = nv.models.stackedAreaChart()
-            .margin({top: 10, right: 30, bottom: 150, left: 60})
-            #.staggerLabels(true)
-            .x((d) -> d.x)
-            .y((d) -> d.y)
-            .clipEdge(true)
-            .tooltip((key, x, y, e, graph) ->
-                return "<h3>#{key}</h3><p>#{y} on #{x}</p>"
-            )
-        else if chartType is 'line'
-#          chart = nv.models.lineChart()
-          chart = nv.models.lineChart()
-            .margin({top: 10, right: 30, bottom: 150, left: 60})
-            #.staggerLabels(true)
-            .x((d) -> d.x)
-            .y((d) -> d.y)
-#            .clipEdge(true)
-#            .tooltip((key, x, y, e, graph) -> "<h3>#{key}</h3><p>#{y} on #{x}</p>")
-        else if chartType is 'lineWithFocusChart'
-#          chart = nv.models.lineChart()
-          chart = nv.models.lineWithFocusChart()
-            .margin({top: 10, right: 30, bottom: 150, left: 60})
-            #.staggerLabels(true)
-            .x((d) -> d.x)
-            .y((d) -> d.y)
-        return undefined
+        createChartByType = () ->
+          if chartType is 'multiBarChart'
+            chart = nv.models.multiBarChart()
+              .margin({top: 10, right: 30, bottom: 150, left: 60})
+              #.staggerLabels(true)
+              .x((d) -> d.x)
+              .y((d) -> d.y)
+              .tooltip((key, x, y, e, graph) ->
+                  return "<h3>#{key}</h3><p>#{y} on #{x}</p>"
+              )
+              .showLegend(showLegend)
+          else if chartType is 'stackedAreaChart'
+            chart = nv.models.stackedAreaChart()
+              .margin({top: 10, right: 30, bottom: 150, left: 60})
+              #.staggerLabels(true)
+              .x((d) -> d.x)
+              .y((d) -> d.y)
+              .clipEdge(true)
+              .tooltip((key, x, y, e, graph) ->
+                  return "<h3>#{key}</h3><p>#{y} on #{x}</p>"
+              )
+              .showLegend(showLegend)
+          else if chartType is 'line'
+  #          chart = nv.models.lineChart()
+            chart = nv.models.lineChart()
+              .margin({top: 10, right: 30, bottom: 150, left: 60})
+              #.staggerLabels(true)
+              .x((d) -> d.x)
+              .y((d) -> d.y)
+              .showLegend(showLegend)
+  #            .clipEdge(true)
+  #            .tooltip((key, x, y, e, graph) -> "<h3>#{key}</h3><p>#{y} on #{x}</p>")
+          else if chartType is 'lineWithFocusChart'
+  #          chart = nv.models.lineChart()
+            chart = nv.models.lineWithFocusChart()
+              .margin({top: 10, right: 30, bottom: 150, left: 60})
+              #.staggerLabels(true)
+              .x((d) -> d.x)
+              .y((d) -> d.y)
+              .showLegend(showLegend)
+          return undefined
 
-      updateChartByType = () ->
-        if chartType in ['multiBarChart', 'stackedAreaChart', 'line', 'lineWithFocusChart']
-          console.log "Updating the d3 graph with: #{JSON.stringify(dataSet)}"
+        updateChartByType = () ->
+          if chartType in ['multiBarChart', 'stackedAreaChart', 'line', 'lineWithFocusChart']
+            console.log "Updating the d3 graph with: #{JSON.stringify(dataSet)}"
 
-          setAxisFormatting(dataSet)
-
-          d3.select(svgSelector)
-            .datum(dataSet)
-            .transition().duration(500).call(chart)
-
-          chart.update()
-
-        return undefined
-
-      handleChart = () ->
-        # If no chart create the chart and add it to nv
-        if chart is undefined
-          console.log "Creating a new d3 Graph"
-          nv.addGraph () ->
-            createChartByType()
             setAxisFormatting(dataSet)
 
             d3.select(svgSelector)
               .datum(dataSet)
               .transition().duration(500).call(chart)
 
-            nv.utils.windowResize chart.update
+            chart.update()
 
-            return chart
-        # Otherwise just update the data and redraw
-        else
-          updateChartByType()
+          return undefined
 
-      handlePie = () ->
-        # There is a major discrepency with the pieChart
-        pieData = _.flatten _.map dataSet, (stream) -> _.map stream.values, (item) -> item
+        handleChart = () ->
+          # If no chart create the chart and add it to nv
+          if chart is undefined
+            console.log "Creating a new d3 Graph"
+            nv.addGraph () ->
+              createChartByType()
+              setAxisFormatting(dataSet)
 
-        # If no chart create the chart and add it to nv
-        if chart is undefined
-          console.log "Creating a new Pie Graph with dataSet: #{JSON.stringify(dataSet)}"
-          nv.addGraph () ->
-            chart = nv.models.pieChart()
-              .x((d) -> d.x )
-              .y((d) -> d.y )
-              .showLabels(true)
+              d3.select(svgSelector)
+                .datum(dataSet)
+                .transition().duration(500).call(chart)
+
+              nv.utils.windowResize chart.update
+
+              return chart
+          # Otherwise just update the data and redraw
+          else
+            updateChartByType()
+
+        handlePie = () ->
+          # There is a major discrepency with the pieChart
+          pieData = _.flatten _.map dataSet, (stream) -> _.map stream.values, (item) -> item
+
+          # If no chart create the chart and add it to nv
+          if chart is undefined
+            console.log "Creating a new Pie Graph with dataSet: #{JSON.stringify(dataSet)}"
+            nv.addGraph () ->
+              chart = nv.models.pieChart()
+                .x((d) -> d.x )
+                .y((d) -> d.y )
+                .showLabels(true)
+                .showLegend(showLegend)
+
+              d3.select(svgSelector)
+                .datum(pieData)
+                .transition().duration(500).call(chart)
+
+              nv.utils.windowResize chart.update
+
+              return chart
+            # Otherwise just update the data and redraw
+          else
+            console.log "Updating the Pie graph with: #{JSON.stringify(dataSet)}"
 
             d3.select(svgSelector)
               .datum(pieData)
               .transition().duration(500).call(chart)
 
-            nv.utils.windowResize chart.update
+            chart.update()
 
-            return chart
-          # Otherwise just update the data and redraw
-        else
-          console.log "Updating the Pie graph with: #{JSON.stringify(dataSet)}"
+        handleBubble = () ->
+          chart = new Bubble "graph_container"
+          chart.initialize_data dataSet
+          chart.start()
+          chart.display_group_all()
 
-          d3.select(svgSelector)
-            .datum(pieData)
-            .transition().duration(500).call(chart)
-
-          chart.update()
-
-      handleBubble = () ->
-        chart = new Bubble "graph_container"
-        chart.initialize_data dataSet
-        chart.start()
-        chart.display_group_all()
-
-      handleOptionsChanges = () ->
-        if dataSet?.length > 0
-          if chartType in ['multiBarChart', 'stackedAreaChart', 'line', 'lineWithFocusChart']
-            handleChart()
-          else if chartType is 'bubble'
-            handleBubble()
-          else if chartType is 'pie'
-            handlePie()
+        handleOptionsChanges = () ->
+          if dataSet?.length > 0
+            if chartType in ['multiBarChart', 'stackedAreaChart', 'line', 'lineWithFocusChart']
+              handleChart()
+            else if chartType is 'bubble'
+              handleBubble()
+            else if chartType is 'pie'
+              handlePie()
+            else
+              console.warn "Data to graph but no type of Graph selected!"
           else
-            console.warn "Data to graph but no type of Graph selected!"
-        else
-          console.warn "No data given to graph!"
+            console.warn "No data given to graph!"
 
-      resetSvg = () ->
-        chart = undefined
-        console.debug "Resetting SVG"
-        d3.selectAll(svgSelector).remove()
-        d3.select(containerSelector).append("svg")
+        resetSvg = () ->
+          chart = undefined
+          console.debug "Resetting SVG"
+          d3.selectAll(svgSelector).remove()
+          d3.select(containerSelector).append("svg")
 
-      scope.$watch "val", (newVal, oldVal) ->
-        dataSet = newVal
+        scope.$watch "val", (newVal, oldVal) ->
+          dataSet = newVal
 
-        console.debug "Dataset changed to: #{JSON.stringify(dataSet)}"
+          console.debug "Dataset changed to: #{JSON.stringify(dataSet)}"
 
-        handleOptionsChanges()
+          handleOptionsChanges()
 
-      scope.$watch "type", (newVal, oldVal) ->
-        chartType = newVal
-        console.debug "chartType changed to: #{chartType}"
+        scope.$watch "legend", (newVal, oldVal) ->
+          showLegend = newVal
+          console.debug "Legend changed to: #{newVal}"
+          # If the type of the graph has changed, remove the current element
+          if (newVal isnt oldVal and newVal isnt undefined) then resetSvg()
 
-        # If the type of the graph has changed, remove the current element
-        if (newVal isnt oldVal and newVal isnt undefined) then resetSvg()
+          # Now handle the options changes
+          handleOptionsChanges()
 
-        # Now handle the options changes
-        handleOptionsChanges()
+          # Trigger a resize if firefox so the svg can be sized accordingly
+          if navigator.userAgent.toLowerCase().indexOf('firefox') > -1
+            $timeout ( ->
+              $(window).trigger('resize')
+            ), 300
 
-        # Trigger a resize if firefox so the svg can be sized accordingly
+        scope.$watch "type", (newVal, oldVal) ->
+          chartType = newVal
+          console.debug "chartType changed to: #{chartType}"
+
+          # If the type of the graph has changed, remove the current element
+          if (newVal isnt oldVal and newVal isnt undefined) then resetSvg()
+
+          # Now handle the options changes
+          handleOptionsChanges()
+
+          # Trigger a resize if firefox so the svg can be sized accordingly
+          if navigator.userAgent.toLowerCase().indexOf('firefox') > -1
+            $timeout ( ->
+              $(window).trigger('resize')
+            ), 300
+
+        # It pains me to implement this hack.  The core issue is FF doesn't dynamically inheirit the height from parent
+        # Containers like Chrome does.  This causes the graph to have a very small height and not really visible.
+        # Whenever the window is resized, change the height of the svg element
+        $(window).resize () ->
+          # If on firefox resize the svg div
+          #if not $(window).chrome
+          if navigator.userAgent.toLowerCase().indexOf('firefox') > -1
+            innerHeight = $(window).innerHeight()
+            #innerHeightAdjusted = innerHeight - ($("#main-navigation").height() / 2)
+            $("#graph_container svg").height(innerHeight)
+
+
+        #$(window).trigger('resize')
         if navigator.userAgent.toLowerCase().indexOf('firefox') > -1
           $timeout ( ->
             $(window).trigger('resize')
           ), 300
 
-      # It pains me to implement this hack.  The core issue is FF doesn't dynamically inheirit the height from parent
-      # Containers like Chrome does.  This causes the graph to have a very small height and not really visible.
-      # Whenever the window is resized, change the height of the svg element
-      $(window).resize () ->
-        # If on firefox resize the svg div
-        #if not $(window).chrome
-        if navigator.userAgent.toLowerCase().indexOf('firefox') > -1
-          innerHeight = $(window).innerHeight()
-          #innerHeightAdjusted = innerHeight - ($("#main-navigation").height() / 2)
-          $("#graph_container svg").height(innerHeight)
-
-
-      #$(window).trigger('resize')
-      if navigator.userAgent.toLowerCase().indexOf('firefox') > -1
-        $timeout ( ->
-          $(window).trigger('resize')
-        ), 300
+    }
 
 
 #  .directive "d3Graph", ["dbInfo", (dbInfo) ->

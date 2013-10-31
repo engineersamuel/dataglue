@@ -205,3 +205,34 @@ exports.sqlToMongoOperand = (op) ->
     when '!=' then '$ne'
     when 'like' then '$regex'
     else throw Error("op: #{op} could not be translated")
+
+# Accepts an array of dbReferences and groups them if any of the dbReferences are joined to each other in the same connection
+exports.groupDbReferencesByJoins = (dbReferences) ->
+  groupedDbReferences = []
+
+  # There is an implied assumption that when grouping a dbReference there are not duplicate of the same table
+  # In the dataSet.  This is a limitation!  The limitation exists because without it, the UI would need to be much
+  # more complicated.  To explain that.  The dataSet is composed of a list of dbReferences.  It is a list since
+  # there can be the same table multiple times.  If joining the table to itself, that would not be deterministic with
+  # multiple of the same table.  Ways around either uuids for the dbReferences to handle the edge case, or simply place
+  # A limitation as to where a dbReference can only join a non-duplicated dbReference.  For alts, use custom SQL or ETL.
+
+#  keyedDbReferences = _.
+
+  # Iterate the dbReferences
+  _.each dbReferences, (dbReference) ->
+    # Iterate the fields
+    _.each dbReference.fields, (field) ->
+      # If the dbReference has a joinType
+      if _.has field, 'joinType'
+
+        console.log ""
+
+
+
+
+
+
+
+
+

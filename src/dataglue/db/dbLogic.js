@@ -105,7 +105,6 @@
         logger.error("Error querying dbReferences: " + (prettyjson.render(err)));
         return callback(err);
       } else {
-        logger.debug(prettyjson.render(arrayOfDataSetResults));
         _.each(arrayOfDataSetResults, function(dataSetResult, idx) {
           var refItem, stream, streams, uniqueMutliplexedXs, uniqueXs, _ref;
 

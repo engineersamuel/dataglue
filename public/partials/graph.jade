@@ -8,12 +8,12 @@ div.row-fluid
         div
             div.pull-left
                 a.add-data-href(ng-href="#/AddData/{{_id}}")
-                    i.icon-plus
+                    i.fa.fa-plus
                     span &nbsp;Add more data&nbsp;
             div.pull-right
                 a.add-data-href(ng-click="openModalForOptions()")
                     span &nbsp;Options&nbsp;
-                    i.icon-bar-chart
+                    i.fa.fa-bar-chart-o
 
         div.clearfix
 
@@ -26,7 +26,7 @@ div.row-fluid
                     div.pull-left
                         | {{ r.table }}
                     div.pull-right
-                        i.icon-cog.pointer(ng-click="openModalForReference($index, r); $event.preventDefault(); $event.stopPropagation();")
+                        i.fa.fa-cog.pointer(ng-click="openModalForReference($index, r); $event.preventDefault(); $event.stopPropagation();")
                         //i.btn.icon-copy(tooltip="Duplicate this Table", ng-click="copyDbReference($index); $event.preventDefault();")
                         //i.btn.icon-remove(tooltip="Remove this Table", ng-click="removeDbReference($index); $event.preventDefault();")
                     div.clearfix
@@ -36,11 +36,11 @@ div.row-fluid
             div.panel-collapse.collapse(id="{{$index}}", ng-class="{in: $index == 0}")
               div.panel-body
                 div.db-info-item.text-right(ng-repeat="f in r.fields")
-                    i.icon-info-sign(ng-if="optionsSetOnField($parent.$index, $index)", tooltip="{{fieldOptionDisplay(r, $index)}}")
+                    i.fa.fa-info-circle(ng-if="optionsSetOnField($parent.$index, $index)", tooltip="{{fieldOptionDisplay(r, $index)}}")
                     // If there are any field options set glow the field green
                     span(ng-class="optionsSetOnField($parent.$index, $index) ? 'dataglue-green' : ''")
                         | &nbsp;{{f.COLUMN_NAME}}&nbsp;
-                    i.icon-edit.pointer(ng-click="openModalForField($parent.$index, r, $index, f)")
+                    i.fa.fa-edit.pointer(ng-click="openModalForField($parent.$index, r, $index, f)")
 
         //Example using the accordion bootstrap angular directive.  I find the above to be more flexible
             accordion-group(ng-repeat="r in dataSet.dbReferences")
@@ -50,7 +50,7 @@ div.row-fluid
                     select(ng-model="f.selectedOptions", ng-options="x.value as x.label for x in fieldOptions")
 
     div.col-lg-9#main_container
-        d3-visualization#graph_container(val="d3DataSet", type="dataSet.graphType")
+        d3-visualization#graph_container(val="d3DataSet", type="dataSet.graphType", legend="dataSet.showLegend")
             svg
 
 div#dbReferenceModal.modal.fade(tabindex="-1",role="dialog",aria-labelledby="dbReferenceModalLabel",aria-hidden="true")
@@ -102,6 +102,11 @@ div#graph_options_modal.modal.fade(tabindex="-1",role="dialog",aria-labelledby="
                             label
                                 input(type="radio", name="{{o.name}}", value="{{o.value}}", ng-model="dataSet.graphType")
                                 | {{o.label}}
+                    div.form-group
+                        div.checkbox
+                            label
+                                input(type="checkbox", ng-model="dataSet.dbReferences[dbRefIndex].showLegend")
+                                | Show Graph Legend
 
             div.modal-footer
                 div.pull-left

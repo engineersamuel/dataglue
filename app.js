@@ -45,14 +45,16 @@
     app.use(express.bodyParser());
     app.use(app.router);
     app.use(express["static"](path.join(__dirname, 'public')));
-    return app.configure('development', function() {
+    return app.configure(settings.env, function() {
       return app.use(express.errorHandler());
     });
   });
 
   app.get('/', function(req, res) {
     console.log("Hello World!");
-    return res.render('index.jade', {});
+    return res.render('index.jade', {
+      env: settings.env
+    });
   });
 
   app.post('/db/ref', function(req, res) {

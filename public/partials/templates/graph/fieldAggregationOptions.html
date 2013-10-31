@@ -2,7 +2,7 @@
 <div ng-repeat="o in aggregationOptions" class="radio">
   <label>
     <!--input(type="radio", name="{{o.name}}", value="{{o.value}}", ng-model="$parent.aggregation")-->
-    <input type="radio" name="{{o.name}}" value="{{o.value}}" ng-change="$parent.resetOtherFields($parent.dbRefIndex, $parent.fieldIndex, o.name)" ng-model="$parent.dataSet.dbReferences[$parent.dbRefIndex].fields[$parent.fieldIndex].aggregation"/>{{o.label}}<span ng-if="o.tooltip != undefined">&nbsp;<i tooltip="{{o.tooltip}}" class="icon-info-sign"></i></span>
+    <input type="radio" name="{{o.name}}" value="{{o.value}}" ng-change="$parent.resetOtherFields($parent.dbRefIndex, $parent.fieldIndex, o.name)" ng-model="$parent.dataSet.dbReferences[$parent.dbRefIndex].fields[$parent.fieldIndex].aggregation"/>{{o.label}}<span ng-if="o.tooltip != undefined">&nbsp;<i tooltip="{{o.tooltip}}" class="fa fa-info-circle"></i></span>
   </label>
 </div>
 <p class="muted">* Determines the Y axis</p>

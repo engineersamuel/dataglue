@@ -36,7 +36,7 @@ app.configure () ->
 
   app.use(express.static(path.join(__dirname, 'public')))
 
-  app.configure 'development', () ->
+  app.configure settings.env, () ->
     app.use(express.errorHandler())
 
 ##########################################################
@@ -47,7 +47,7 @@ app.configure () ->
 ##########################################################
 app.get '/', (req, res) ->
   console.log "Hello World!"
-  res.render('index.jade', {})
+  res.render('index.jade', {env: settings.env})
 #  res.sendfile(path.join(__dirname, 'public', 'index.html'))
 #  res.send("<h1>Hello World!</h1>")
 

@@ -94,13 +94,19 @@ CachedDataSet.loadDataSet = (doc, callback) ->
   # Maybe a first implementation will be an all or nothing cache, but why not make it more intelligent the first time
   # around?
 
+  # TODO if two dbReferences are of the same connection and are joined to each other, must map those as a set
+  # Let's say we have doc.dbReferences = [a, b, c, d, e] where b, c, d are joined, then need to pass
+  # [a, [b, c, d], e] which would result in 3 mapped results, not 5.
+
+  # TODO create a method in utils.coffee which will utils.splitByJoinedDbReferences
+
   async.map _.values(doc.dbReferences), self.queryDynamic, (err, arrayOfDataSetResults) ->
     if err
       logger.error "Error querying dbReferences: #{prettyjson.render err}"
       callback err
     else
 
-      logger.debug prettyjson.render arrayOfDataSetResults
+#      logger.debug prettyjson.render arrayOfDataSetResults
 
       _.each arrayOfDataSetResults, (dataSetResult, idx) ->
 

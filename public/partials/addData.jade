@@ -50,7 +50,7 @@ div#graph_options_modal.modal.fade(tabindex="-1",role="dialog",aria-labelledby="
                     // being evaluated after the angular bindings therefore the ng-model is no longer watched
                     div.form-group(ng-show="connection.type == 'mongo'")
                         label(for="optionalRestrictionQuery") Query to restrict Fields&nbsp;
-                        i.icon-info-sign(tooltip="If your collection has mixed documents, you may want to set a query here to make sure the right doc format is read.  Ex. {key: 'server_log'} or {key: 'access_log'}")
+                        i.fa.fa-info-circle(tooltip="If your collection has mixed documents, you may want to set a query here to make sure the right doc format is read.  Ex. {key: 'server_log'} or {key: 'access_log'}")
                         input.form-control(type="text", name="restrictionQuery", placeholder='{"somefield": "somevalue"}', ng-model="restrictionQuery", json)
                         span(ng-show="form.restrictionQuery.$error.json") Not valid Json. Make sure fields are quoted.
 

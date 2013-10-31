@@ -36,10 +36,11 @@
         restrict: "E",
         scope: {
           val: "=",
-          type: "="
+          type: "=",
+          legend: "="
         },
         link: function(scope, element, attrs) {
-          var chart, chartType, chartXType, containerSelector, createChartByType, dataSet, elementId, handleBubble, handleChart, handleOptionsChanges, handlePie, resetSvg, setAxisFormatting, svgSelector, updateChartByType;
+          var chart, chartType, chartXType, containerSelector, createChartByType, dataSet, elementId, handleBubble, handleChart, handleOptionsChanges, handlePie, resetSvg, setAxisFormatting, showLegend, svgSelector, updateChartByType;
 
           elementId = element.attr('id');
           containerSelector = "#" + elementId;
@@ -48,6 +49,7 @@
           chartType = void 0;
           chart = void 0;
           chartXType = void 0;
+          showLegend = true;
           setAxisFormatting = function(dataSet) {
             var xAxisDataType, xAxisGroupBy, yAxisDataType, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8;
 
@@ -110,7 +112,7 @@
                 return d.y;
               }).tooltip(function(key, x, y, e, graph) {
                 return "<h3>" + key + "</h3><p>" + y + " on " + x + "</p>";
-              });
+              }).showLegend(showLegend);
             } else if (chartType === 'stackedAreaChart') {
               chart = nv.models.stackedAreaChart().margin({
                 top: 10,
@@ -123,7 +125,7 @@
                 return d.y;
               }).clipEdge(true).tooltip(function(key, x, y, e, graph) {
                 return "<h3>" + key + "</h3><p>" + y + " on " + x + "</p>";
-              });
+              }).showLegend(showLegend);
             } else if (chartType === 'line') {
               chart = nv.models.lineChart().margin({
                 top: 10,
@@ -134,7 +136,7 @@
                 return d.x;
               }).y(function(d) {
                 return d.y;
-              });
+              }).showLegend(showLegend);
             } else if (chartType === 'lineWithFocusChart') {
               chart = nv.models.lineWithFocusChart().margin({
                 top: 10,
@@ -145,7 +147,7 @@
                 return d.x;
               }).y(function(d) {
                 return d.y;
-              });
+              }).showLegend(showLegend);
             }
             return void 0;
           };
@@ -187,7 +189,7 @@
                   return d.x;
                 }).y(function(d) {
                   return d.y;
-                }).showLabels(true);
+                }).showLabels(true).showLegend(showLegend);
                 d3.select(svgSelector).datum(pieData).transition().duration(500).call(chart);
                 nv.utils.windowResize(chart.update);
                 return chart;
@@ -229,6 +231,19 @@
             dataSet = newVal;
             console.debug("Dataset changed to: " + (JSON.stringify(dataSet)));
             return handleOptionsChanges();
+          });
+          scope.$watch("legend", function(newVal, oldVal) {
+            showLegend = newVal;
+            console.debug("Legend changed to: " + newVal);
+            if (newVal !== oldVal && newVal !== void 0) {
+              resetSvg();
+            }
+            handleOptionsChanges();
+            if (navigator.userAgent.toLowerCase().indexOf('firefox') > -1) {
+              return $timeout((function() {
+                return $(window).trigger('resize');
+              }), 300);
+            }
           });
           scope.$watch("type", function(newVal, oldVal) {
             chartType = newVal;

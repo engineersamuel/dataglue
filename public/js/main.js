@@ -20,7 +20,6 @@ require.config({
         dbLogic: 'lib/db/dbLogic',
         bubble: 'lib/graph/bubble',
         customTooltip: 'lib/graph/customTooltip',
-        operative: 'bower_components/operative/dist/operative'
 
         //pnotify: 'https://raw.github.com/sciactive/pnotify/master/jquery.pnotify.min'
 
@@ -50,8 +49,7 @@ require.config({
         pnotify: ['jquery'],
         d3: { exports: 'd3' },
         nv: { deps:['d3'], exports: 'nv'},
-        operative: {exports: 'operative'},
-        bubble: ['d3', 'operative']
+        bubble: ['d3']
 
 
 

@@ -49,7 +49,7 @@
           <!-- Must use ng-show and not ng-if here since there is a break.  I assume the break is due to ng-if-->
           <!-- being evaluated after the angular bindings therefore the ng-model is no longer watched-->
           <div ng-show="connection.type == 'mongo'" class="form-group">
-            <label for="optionalRestrictionQuery">Query to restrict Fields&nbsp;</label><i tooltip="If your collection has mixed documents, you may want to set a query here to make sure the right doc format is read.  Ex. {key: 'server_log'} or {key: 'access_log'}" class="icon-info-sign"></i>
+            <label for="optionalRestrictionQuery">Query to restrict Fields&nbsp;</label><i tooltip="If your collection has mixed documents, you may want to set a query here to make sure the right doc format is read.  Ex. {key: 'server_log'} or {key: 'access_log'}" class="fa fa-info-circle"></i>
             <input type="text" name="restrictionQuery" placeholder="{&quot;somefield&quot;: &quot;somevalue&quot;}" ng-model="restrictionQuery" json="json" class="form-control"/><span ng-show="form.restrictionQuery.$error.json">Not valid Json. Make sure fields are quoted.</span>
           </div>
         </form>

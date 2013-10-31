@@ -276,6 +276,19 @@
     }
   };
 
+  exports.groupDbReferencesByJoins = function(dbReferences) {
+    var groupedDbReferences;
+
+    groupedDbReferences = [];
+    return _.each(dbReferences, function(dbReference) {
+      return _.each(dbReference.fields, function(field) {
+        if (_.has(field, 'joinType')) {
+          return console.log("");
+        }
+      });
+    });
+  };
+
 }).call(this);
 
 /*

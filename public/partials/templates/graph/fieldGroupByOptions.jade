@@ -4,6 +4,6 @@ div.radio(ng-repeat="o in groupByOptions | filter:filterByFieldDataType")
         | {{o.label}}
         span(ng-if="o.tooltip != undefined")
             | &nbsp;
-            i.icon-info-sign(tooltip="{{o.tooltip}}")
+            i.fa.fa-info-circle(tooltip="{{o.tooltip}}")
 p.muted * Determines the X axis
 
