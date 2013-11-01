@@ -12,7 +12,6 @@ The objective of this project is to be able to consume data from any datasource 
 * No ETL required for working with data sets that don't require ETL
 * Deploys locally and to Openshift
 
-
 ### Screenshots
 
 ### Deployment
@@ -122,10 +121,10 @@ git push -f openshift
 ### Project creation and internals
 To create this github project which is also pushed to openshift:
 
-* Cartridge https://github.com/wshearn/openshift-origin-cartridge-nodejs
+* Cartridge https://github.com/engineersamuel/openshift-origin-cartridge-nodejs
 * Create the github project and do the intial push
 * Create the openshift project in a seperate directory so Openshift will create the app on the server
-    `rhc create-app -g <gear size name> dataglue "http://cartreflect-claytondev.rhcloud.com/reflect?github=wshearn/openshift-origin-cartridge-nodejs"`
+    `rhc create-app -g <gear size name> dataglue "http://cartreflect-claytondev.rhcloud.com/reflect?github=engineersamuel/openshift-origin-cartridge-nodejs"`
 * Add the mongo cartridge:
     `rhc cartridge add mongodb-2.2 -a dataglue`
 * In your project directory:
@@ -166,10 +165,12 @@ https://www.openshift.com/kb/kb-e1052-how-do-i-migrate-my-app
 * `rhc snapshot save -a dataglue`
 * mongo dump as well, as the snapshot did not appear to save the mongo data
 * `rhc delete-app dataglue`
-* `rhc create-app -g <gear name|int_general_medium> dataglue "http://cartreflect-claytondev.rhcloud.com/reflect?github=wshearn/openshift-origin-cartridge-nodejs"`
+* `rhc create-app -g <gear name|int_general_medium> dataglue "http://cartreflect-claytondev.rhcloud.com/reflect?github=engineersamuel/openshift-origin-cartridge-nodejs"`
 * `rhc cartridge add mongodb-2.2 -a dataglue`
 * `rhc snapshot restore -a dataglue -f /tmp/dataglue.tar.gz`
 * Then Update the .git/config openshift ssh references to point to the new openshift app ssh git location.  This can be found by logging into openshift and going to the app.
+
+If not snapshotting the data you the final command would be `git push -f openshift master` based on adding openshift as a remote in the `.git/config`
 
 ### References
 * [Getting Started with Openshift](https://www.openshift.com/get-started)
