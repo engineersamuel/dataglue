@@ -2,7 +2,10 @@
 public/js/bower_components/*
 
 # Ignore Jetbrains
-.idea/
+.idea/workspace.xml
+.idea
+.iml
+src/unified.iml
 
 # Ignore node_modules which will be rebuilt in openshift
 node_modules/*
@@ -11,6 +14,16 @@ npm-debug.log
 # Ignore the public/dist dir as it will contain combined/minified code
 public/dist/
 public/dist/**/*.*
+
+# Ignore all js and map files in the src dir since in prod the files are minified regardless
+# TODO -- can't do this until adding coffee compile to grunt
+#src/**/*.js
+#src/**/*.map
+
+# Not all Angular files are CS'd, so ignore the ones that are
+# TODO -- can't do this until adding coffee compile to grunt
+# public/js/directives.js
+# public/js/directives.map
 
 # OS generated files #
 # ######################
