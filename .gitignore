@@ -1,7 +1,5 @@
 # Include your project-specific ignores in this file
-# Read about how to use .gitignore: https://help.github.com/articles/ignoring-files
-# TODO I really need to ignore bower components, but I can't do that until I have grunt in place
-# public/js/bower_components
+public/js/bower_components/*
 
 # Ignore Jetbrains
 .idea/
