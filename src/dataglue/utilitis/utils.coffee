@@ -158,8 +158,8 @@ exports.parseDateToOffset = (theDate, opts = {}) ->
   utc = opts?.utc || true
 
   # Assume if a number and if of length 1230768000000 then a unix offset, length of 10 is unix timestamp
-  isUnixOffset = exports.isUnixOffset(theDate)
-  isUnixTimestamp = exports.isUnixOffset(theDate)
+  #isUnixOffset = exports.isUnixOffset(theDate)
+  #isUnixTimestamp = exports.isUnixOffset(theDate)
 
   pFormat = switch format
     when 'year'  then 'YYYY'
@@ -170,7 +170,12 @@ exports.parseDateToOffset = (theDate, opts = {}) ->
     when 'second'  then 'YYYY-MM-DD HH:mm:ss'
     else  undefined
 
-  if exports.isUnixOffset(theDate)
+  # First test to see if theDate is an obj of date components.  If so it will always have year
+  if theDate.year?
+    #moment({year: 2010, month: 3, day: 5, hour: 15, minute: 10, second: 3, millisecond: 123});
+    return +moment.utc(theDate)
+    undefined
+  else if exports.isUnixOffset(theDate)
     return if utc then +moment.utc(theDate) else +moment(theDate)
   else if exports.isUnixTimestamp(theDate)
     return +moment.unix(theDate)

@@ -306,7 +306,8 @@ QueryBuilder.buildMongoQuery = (dbReference, callback) ->
             theGroup['$group']['_id'].year = {'$year': "$#{fieldName}"}
             theGroup['$group']['_id'].month = {'$month': "$#{fieldName}"}
             addX field, fieldAlias
-            theProject['$project'].x = {'$concat': ['$_id.year', '-', '$_id.month']}
+            #theProject['$project'].x = {'$concat': ['$_id.year', '-', '$_id.month']}
+            theProject['$project'].x = {'year': '$_id.year', 'month': '$_id.month'}
 
             # TODO for each one of these add a project to project the x to this field?
             # theProject['$project'] = {x : year + month ?}
@@ -314,7 +315,8 @@ QueryBuilder.buildMongoQuery = (dbReference, callback) ->
             theGroup['$group']['_id'].year = {'$year': "$#{fieldName}"}
             theGroup['$group']['_id'].month = {'$month': "$#{fieldName}"}
             theGroup['$group']['_id'].day = {'$dayOfMonth': "$#{fieldName}"}
-            theProject['$project'].x = {'$concat': ['$_id.year', '-', '$_id.month', '-', '$_id.day']}
+            #theProject['$project'].x = {'$concat': ['$_id.year', '-', '$_id.month', '-', '$_id.day']}
+            theProject['$project'].x = {'year': '$_id.year', 'month': '$_id.month', 'day': '$_id.day'}
             addX field, fieldAlias
           else if field.groupBy is 'hour'
             theGroup['$group']['_id'].year = {'$year': "$#{fieldName}"}

@@ -21,7 +21,6 @@
     "almond": "~0.2.6"
   },
   "resolutions": {
-    "font-awesome": "~4.0.1",
     "d3": "3.3.9"
   }
 }

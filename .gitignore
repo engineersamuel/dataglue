@@ -5,7 +5,7 @@ public/js/bower_components/*
 .idea/workspace.xml
 .idea
 .iml
-src/unified.iml
+dataglue.iml
 
 # Ignore node_modules which will be rebuilt in openshift
 node_modules/*

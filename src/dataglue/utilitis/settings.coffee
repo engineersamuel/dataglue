@@ -1,5 +1,5 @@
 # https://github.com/nodeca/js-yaml
-require('js-yaml')
+yaml        = require('js-yaml')
 fs          = require('fs')
 utils       = require('./utils')
 logger      = require('tracer').colorConsole(utils.logger_config)
@@ -14,7 +14,7 @@ else
   config_file = "#{process.env['HOME']}/.dataglue-settings.yml"
 
 try
-  doc = require(config_file)
+  doc = yaml.safeLoad(fs.readFileSync(config_file, 'utf-8'))
   logger.debug "Succssfully read #{config_file}"
 #  logger.debug prettyjson.render doc
 #  exports.config = doc
